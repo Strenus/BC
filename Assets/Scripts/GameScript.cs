@@ -15,6 +15,7 @@ public class GameScript : MonoBehaviour {
 	List<GameObject> buttonsIngame = new List<GameObject>();
 
 	ushort ticks = 0;
+	bool breaking = true;
 	bool pause = true;
 
 	void Start () 
@@ -116,6 +117,21 @@ public class GameScript : MonoBehaviour {
 		}
 	}
 
+	void touchCube (GameObject cube)
+	{
+		if (breaking)
+		{
+			if(cube.renderer.materials[0].name == "cubeBase (Instance)")
+				breakCube (cube);
+		}
+		else
+		{
+			brushCube(cube);
+		}
+
+		checkCompletion ();
+	}
+
 	void breakCube (GameObject cube)
 	{
 		GameObject fragment = GameObject.Instantiate(Resources.Load("CubeFragment1")) as GameObject;
@@ -167,6 +183,37 @@ public class GameScript : MonoBehaviour {
 		fragments.Add (fragment);
 		
 		GameObject.Destroy(cube);
+	}
+
+	void brushCube (GameObject cube)
+	{
+		if(cube.renderer.materials[0].name == "cubeBase (Instance)")
+		{
+			Material[] mats = new Material[cube.renderer.materials.Length];
+
+			mats[0] = Resources.Load("Materials/cubeBlue", typeof(Material)) as Material;
+
+			for (int i = 1; i < mats.Length; i++) 
+			{
+				mats[i] = cube.renderer.materials[i];
+			}
+
+			cube.renderer.materials = mats;
+
+		}
+		else
+		{
+			Material[] mats = new Material[cube.renderer.materials.Length];
+			
+			mats[0] = Resources.Load("Materials/cubeBase", typeof(Material)) as Material;
+			
+			for (int i = 1; i < mats.Length; i++) 
+			{
+				mats[i] = cube.renderer.materials[i];
+			}
+			
+			cube.renderer.materials = mats;
+		}
 	}
 
 	bool checkCompletion()
@@ -224,6 +271,17 @@ public class GameScript : MonoBehaviour {
 		pause = false;
 		SpawnCubes ();
 	}
+
+	void buttonHammer()
+	{
+		breaking = true;
+	}
+
+	void buttonBrush()
+	{
+		breaking = false;
+	}
+
 }
 
 

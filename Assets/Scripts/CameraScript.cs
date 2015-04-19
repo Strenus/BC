@@ -24,10 +24,7 @@ public class CameraScript : MonoBehaviour {
 					//Debug.Log(" You just hit " + hit.collider.gameObject.name);
 					//Destroy(hit.collider.gameObject);
 
-					GameObject gc = GameObject.FindGameObjectWithTag("GameController");
-
-					gc.SendMessage ("breakCube", hit.collider.gameObject);
-					gc.SendMessage("checkCompletion");
+					GameObject.FindGameObjectWithTag("GameController").SendMessage ("touchCube", hit.collider.gameObject);
 				}
 
 			}
