@@ -11,78 +11,48 @@ public class GameScript : MonoBehaviour {
 
 	List<GameObject> fragments = new List<GameObject>();
 
+	List<GameObject> buttonsMenu = new List<GameObject>();
+	List<GameObject> buttonsIngame = new List<GameObject>();
+
 	ushort ticks = 0;
-	byte temp = 0;
+	bool pause = true;
 
 	void Start () 
 	{
-		Debug.Log (array3Da.Rank);
-		Debug.Log (array3Da.GetLength(0));
-		Debug.Log (array3Da.GetLength(1));
-		Debug.Log (array3Da.GetLength(2));
+		DontDestroyOnLoad(this.gameObject);
 
-		grid = new Cube[array3Da.GetLength (0), array3Da.GetLength (1), array3Da.GetLength (2)];
+		buttonsMenu.AddRange(GameObject.FindGameObjectsWithTag("button"));
 
-		for (int x=0; x<array3Da.GetLength(0); x++)
+		buttonsIngame.Add(GameObject.Find("buttonHammer"));
+		buttonsIngame.Add(GameObject.Find("buttonBrush"));
+
+		foreach(GameObject go in buttonsIngame)
 		{
-			for (int y=0; y<array3Da.GetLength(1); y++)
+			go.SetActive(false);
+		}
+
+		//SpawnCubes ();
+
+		Debug.Log (Screen.width);
+		Debug.Log (Screen.height);
+	}
+
+	void Update () 
+	{
+		if(!pause)
+		{
+			ticks++;
+
+			if (ticks % 60 == 0)
 			{
-				for (int z=0; z<array3Da.GetLength(2); z++)
+				if(checkCompletion())
 				{
-					Debug.Log(array3Da[x,y,z]);
-
-					grid[x,y,z] = new Cube();
-					grid[x,y,z].cube.transform.position = new Vector3(x - array3Da.GetLength(0)/2.0f + 0.5f,y - array3Da.GetLength(1)/2.0f + 0.5f,z - array3Da.GetLength(2)/2.0f + 0.5f);
-
-					sbyte tempCount = 0;
-
-
-					for(int i=0;i<array3Da.GetLength(2);i++)
-					{
-						if(array3Da[x,y,i] == true)
-							tempCount++;
-					}
-					grid[x,y,z].setSide (0, tempCount);
-					grid[x,y,z].setSide (2, tempCount);
-
-
-					tempCount = 0;
-					for(int i=0;i<array3Da.GetLength(0);i++)
-					{
-						if(array3Da[i,y,z] == true)
-							tempCount++;
-					}
-					grid[x,y,z].setSide (1, tempCount);
-					grid[x,y,z].setSide (3, tempCount);
-
-
-					tempCount = 0;
-					for(int i=0;i<array3Da.GetLength(1);i++)
-					{
-						if(array3Da[x,i,z] == true)
-							tempCount++;
-					}
-					grid[x,y,z].setSide (4, tempCount);
-					grid[x,y,z].setSide (5, tempCount);
-
-
+					completed();
 				}
 			}
 		}
-	}
 
-	void Update () {
-		ticks++;
-
-		if (ticks % 180 == 0) 
-		{
-			if(temp < 3)
-			{
-				breakCube(grid[0,0,temp]);
-				temp++;
-			}
-		}
-
+		//---Cleaning cube fragments------------------------------------------
 		fragments.ForEach(delegate(GameObject fragment)
 		{
 			fragment.transform.localScale = new Vector3(fragment.transform.localScale.x - 0.015f, fragment.transform.localScale.y - 0.015f, fragment.transform.localScale.z - 0.015f);
@@ -95,57 +65,164 @@ public class GameScript : MonoBehaviour {
 		});	
 	}
 
-	void breakCube (Cube cube)
+	void SpawnCubes () 
+	{
+		grid = new Cube[array3Da.GetLength (0), array3Da.GetLength (1), array3Da.GetLength (2)];
+		
+		for (int x=0; x<array3Da.GetLength(0); x++)
+		{
+			for (int y=0; y<array3Da.GetLength(1); y++)
+			{
+				for (int z=0; z<array3Da.GetLength(2); z++)
+				{
+					
+					grid[x,y,z] = new Cube();
+					grid[x,y,z].cube.transform.position = new Vector3(x - array3Da.GetLength(0)/2.0f + 0.5f,y - array3Da.GetLength(1)/2.0f + 0.5f,z - array3Da.GetLength(2)/2.0f + 0.5f);
+					
+					sbyte tempCount = 0;
+					
+					
+					for(int i=0;i<array3Da.GetLength(2);i++)
+					{
+						if(array3Da[x,y,i] == true)
+							tempCount++;
+					}
+					grid[x,y,z].setSide (0, tempCount);
+					grid[x,y,z].setSide (2, tempCount);
+					
+					
+					tempCount = 0;
+					for(int i=0;i<array3Da.GetLength(0);i++)
+					{
+						if(array3Da[i,y,z] == true)
+							tempCount++;
+					}
+					grid[x,y,z].setSide (1, tempCount);
+					grid[x,y,z].setSide (3, tempCount);
+					
+					
+					tempCount = 0;
+					for(int i=0;i<array3Da.GetLength(1);i++)
+					{
+						if(array3Da[x,i,z] == true)
+							tempCount++;
+					}
+					grid[x,y,z].setSide (4, tempCount);
+					grid[x,y,z].setSide (5, tempCount);
+					
+					
+				}
+			}
+		}
+	}
+
+	void breakCube (GameObject cube)
 	{
 		GameObject fragment = GameObject.Instantiate(Resources.Load("CubeFragment1")) as GameObject;
-		fragment.transform.position = cube.cube.transform.position;
-		fragment.renderer.materials = cube.cube.renderer.materials;
+		fragment.transform.position = cube.transform.position;
+		fragment.renderer.materials = cube.renderer.materials;
 		float rot = Random.Range (-50f, 50f);
 		fragment.rigidbody.AddTorque (new Vector3(rot,rot,rot));
 		fragment.rigidbody.AddForce (new Vector3(Random.Range (-100f, 100f),Random.Range (0f, 150f),Random.Range (-100f, 100f)));
 		fragments.Add (fragment);
 		
 		fragment = GameObject.Instantiate(Resources.Load("CubeFragment2")) as GameObject;
-		fragment.transform.position = cube.cube.transform.position;
-		fragment.renderer.materials = cube.cube.renderer.materials;
+		fragment.transform.position = cube.transform.position;
+		fragment.renderer.materials = cube.renderer.materials;
 		rot = Random.Range (-50f, 50f);
 		fragment.rigidbody.AddTorque (new Vector3(rot,rot,rot));
 		fragment.rigidbody.AddForce (new Vector3(Random.Range (-100f, 100f),Random.Range (0f, 150f),Random.Range (-100f, 100f)));
 		fragments.Add (fragment);
 		
 		fragment = GameObject.Instantiate(Resources.Load("CubeFragment3")) as GameObject;
-		fragment.transform.position = cube.cube.transform.position;
-		fragment.renderer.materials = cube.cube.renderer.materials;
+		fragment.transform.position = cube.transform.position;
+		fragment.renderer.materials = cube.renderer.materials;
 		rot = Random.Range (-50f, 50f);
 		fragment.rigidbody.AddTorque (new Vector3(rot,rot,rot));
 		fragment.rigidbody.AddForce (new Vector3(Random.Range (-100f, 100f),Random.Range (0f, 150f),Random.Range (-100f, 100f)));
 		fragments.Add (fragment);
 		
 		fragment = GameObject.Instantiate(Resources.Load("CubeFragment4")) as GameObject;
-		fragment.transform.position = cube.cube.transform.position;
-		fragment.renderer.materials = cube.cube.renderer.materials;
+		fragment.transform.position = cube.transform.position;
+		fragment.renderer.materials = cube.renderer.materials;
 		rot = Random.Range (-50f, 50f);
 		fragment.rigidbody.AddTorque (new Vector3(rot,rot,rot));
 		fragment.rigidbody.AddForce (new Vector3(Random.Range (-100f, 100f),Random.Range (0f, 150f),Random.Range (-100f, 100f)));
 		fragments.Add (fragment);
 		
 		fragment = GameObject.Instantiate(Resources.Load("CubeFragment5")) as GameObject;
-		fragment.transform.position = cube.cube.transform.position;
-		fragment.renderer.materials = cube.cube.renderer.materials;
+		fragment.transform.position = cube.transform.position;
+		fragment.renderer.materials = cube.renderer.materials;
 		rot = Random.Range (-50f, 50f);
 		fragment.rigidbody.AddTorque (new Vector3(rot,rot,rot));
 		fragment.rigidbody.AddForce (new Vector3(Random.Range (-100f, 100f),Random.Range (0f, 150f),Random.Range (-100f, 100f)));
 		fragments.Add (fragment);
 		
 		fragment = GameObject.Instantiate(Resources.Load("CubeFragment6")) as GameObject;
-		fragment.transform.position = cube.cube.transform.position;
-		fragment.renderer.materials = cube.cube.renderer.materials;
+		fragment.transform.position = cube.transform.position;
+		fragment.renderer.materials = cube.renderer.materials;
 		rot = Random.Range (-50f, 50f);
 		fragment.rigidbody.AddTorque (new Vector3(rot,rot,rot));
 		fragment.rigidbody.AddForce (new Vector3(Random.Range (-100f, 100f),Random.Range (0f, 150f),Random.Range (-100f, 100f)));
 		fragments.Add (fragment);
 		
-		GameObject.Destroy(cube.cube);
+		GameObject.Destroy(cube);
+	}
+
+	bool checkCompletion()
+	{
+		for (int x=0; x<array3Da.GetLength(0); x++)
+		{
+			for (int y=0; y<array3Da.GetLength(1); y++)
+			{
+				for (int z=0; z<array3Da.GetLength(2); z++)
+				{
+					if(((grid[x,y,z].cube != null) && (!array3Da[x,y,z])) || ((grid[x,y,z].cube == null) && (array3Da[x,y,z])))
+					{
+						return false;
+					}
+				}
+			}
+		}
+
+		return true;
+	}
+
+	void completed()
+	{
+		foreach (Cube cube in grid) 
+		{
+			if(cube != null)
+				Destroy(cube.cube);
+		}
+		grid = null;
+		pause = true;
+
+		foreach(GameObject button in buttonsMenu)
+		{
+			button.SetActive(true);
+		}
+
+		foreach(GameObject go in buttonsIngame)
+		{
+			go.SetActive(false);
+		}
+	}
+
+	void buttonStart()
+	{
+		foreach(GameObject button in buttonsMenu)
+		{
+			button.SetActive(false);
+		}
+
+		foreach(GameObject go in buttonsIngame)
+		{
+			go.SetActive(true);
+		}
+
+		pause = false;
+		SpawnCubes ();
 	}
 }
 

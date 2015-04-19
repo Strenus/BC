@@ -1,0 +1,10 @@
+fileFormatVersion: 2
+guid: 5838234f149af63409dbf10cea80459b
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences:
+  - idle: {fileID: 2800000, guid: 4db3cc139e2ca1a41837c034dd344eb6, type: 3}
+  - hover: {fileID: 2800000, guid: 0b277d023f6cc86428dc768f29b1ab93, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
