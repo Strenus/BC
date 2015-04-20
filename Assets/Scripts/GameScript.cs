@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -121,7 +122,7 @@ public class GameScript : MonoBehaviour {
 	{
 		if (breaking)
 		{
-			if(cube.renderer.materials[0].name == "cubeBase (Instance)")
+			if(cube.renderer.materials[0].color.r == 1)
 				breakCube (cube);
 		}
 		else
@@ -187,32 +188,13 @@ public class GameScript : MonoBehaviour {
 
 	void brushCube (GameObject cube)
 	{
-		if(cube.renderer.materials[0].name == "cubeBase (Instance)")
+		if(cube.renderer.materials[0].color.r == 1)
 		{
-			Material[] mats = new Material[cube.renderer.materials.Length];
-
-			mats[0] = Resources.Load("Materials/cubeBlue", typeof(Material)) as Material;
-
-			for (int i = 1; i < mats.Length; i++) 
-			{
-				mats[i] = cube.renderer.materials[i];
-			}
-
-			cube.renderer.materials = mats;
-
+			cube.renderer.materials[0].color = new Color(0.5f,1,1,1);
 		}
 		else
 		{
-			Material[] mats = new Material[cube.renderer.materials.Length];
-			
-			mats[0] = Resources.Load("Materials/cubeBase", typeof(Material)) as Material;
-			
-			for (int i = 1; i < mats.Length; i++) 
-			{
-				mats[i] = cube.renderer.materials[i];
-			}
-			
-			cube.renderer.materials = mats;
+			cube.renderer.materials[0].color = new Color(1,1,1,1);
 		}
 	}
 
@@ -275,11 +257,15 @@ public class GameScript : MonoBehaviour {
 	void buttonHammer()
 	{
 		breaking = true;
+		buttonsIngame [1].guiTexture.color = new Color (0.25f, 0.25f, 0.25f, 0.5f);
+		buttonsIngame [0].guiTexture.color = new Color (0.5f, 0.5f, 0.5f, 0.5f);
 	}
 
 	void buttonBrush()
 	{
 		breaking = false;
+		buttonsIngame [0].guiTexture.color = new Color (0.25f, 0.25f, 0.25f, 0.5f);
+		buttonsIngame [1].guiTexture.color = new Color (0.5f, 0.5f, 0.5f, 0.5f);
 	}
 
 }

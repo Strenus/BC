@@ -3,9 +3,6 @@ using System.Collections;
 
 public class ButtonMenuScript : MonoBehaviour 
 {
-	public Texture idle;
-	public Texture hover;
-
 	// Use this for initialization
 	void Start () {
 
@@ -24,17 +21,17 @@ public class ButtonMenuScript : MonoBehaviour
 
 			if(!guiTexture.HitTest(touch.position))
 			{
-				this.guiTexture.texture = idle;
+				this.guiTexture.color = new Color (0.5f, 0.5f, 0.5f, 0.5f);
 			}
 			else
 			{
 				if(touch.phase != TouchPhase.Ended)
 				{
-					this.guiTexture.texture = hover;
+					this.guiTexture.color = new Color (0.25f, 0.5f, 0.5f, 0.5f);
 				}
 				else
 				{
-					this.guiTexture.texture = idle;
+					this.guiTexture.color = new Color (0.5f, 0.5f, 0.5f, 0.5f);
 					GameObject.FindGameObjectWithTag("GameController").SendMessage("buttonStart");
 				}
 			}
