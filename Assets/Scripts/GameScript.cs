@@ -7,13 +7,14 @@ public class GameScript : MonoBehaviour {
 
 	public Cube[, ,] grid;
 
-	public bool[, ,] array3Da = new bool[2, 2, 3] { { { false, true, false }, { true, false, true } }, 
-		{ { false, true, false }, { true, false, true } } };
+	public bool[, ,] array3Da;
+
+	public Material[] numMat = new Material[10];
 
 	List<GameObject> fragments = new List<GameObject>();
 
-	List<GameObject> buttonsMenu = new List<GameObject>();
-	List<GameObject> buttonsIngame = new List<GameObject>();
+	public List<GameObject> buttonsMenu = new List<GameObject>();
+	public List<GameObject> buttonsIngame = new List<GameObject>();
 
 	ushort ticks = 0;
 	bool breaking = true;
@@ -22,11 +23,6 @@ public class GameScript : MonoBehaviour {
 	void Start () 
 	{
 		DontDestroyOnLoad(this.gameObject);
-
-		buttonsMenu.AddRange(GameObject.FindGameObjectsWithTag("button"));
-
-		buttonsIngame.Add(GameObject.Find("buttonHammer"));
-		buttonsIngame.Add(GameObject.Find("buttonBrush"));
 
 		foreach(GameObject go in buttonsIngame)
 		{
@@ -69,7 +65,16 @@ public class GameScript : MonoBehaviour {
 
 	void SpawnCubes () 
 	{
+		int tempMax = Mathf.Max (array3Da.GetLength (0), Mathf.Max (array3Da.GetLength (1), array3Da.GetLength (2)));
+
+		GameObject camera = GameObject.FindGameObjectWithTag ("MainCamera");
+
+		camera.transform.position = new Vector3 (0, 0, 10);
+		camera.transform.LookAt (new Vector3(0, 0, 0), Vector3.up);
+		camera.camera.fieldOfView = tempMax * 10f;
+
 		grid = new Cube[array3Da.GetLength (0), array3Da.GetLength (1), array3Da.GetLength (2)];
+
 		
 		for (int x=0; x<array3Da.GetLength(0); x++)
 		{
@@ -89,8 +94,8 @@ public class GameScript : MonoBehaviour {
 						if(array3Da[x,y,i] == true)
 							tempCount++;
 					}
-					grid[x,y,z].setSide (0, tempCount);
-					grid[x,y,z].setSide (2, tempCount);
+					grid[x,y,z].setSide (0, tempCount, numMat[tempCount]);
+					grid[x,y,z].setSide (2, tempCount, numMat[tempCount]);
 					
 					
 					tempCount = 0;
@@ -99,8 +104,8 @@ public class GameScript : MonoBehaviour {
 						if(array3Da[i,y,z] == true)
 							tempCount++;
 					}
-					grid[x,y,z].setSide (1, tempCount);
-					grid[x,y,z].setSide (3, tempCount);
+					grid[x,y,z].setSide (1, tempCount, numMat[tempCount]);
+					grid[x,y,z].setSide (3, tempCount, numMat[tempCount]);
 					
 					
 					tempCount = 0;
@@ -109,8 +114,8 @@ public class GameScript : MonoBehaviour {
 						if(array3Da[x,i,z] == true)
 							tempCount++;
 					}
-					grid[x,y,z].setSide (4, tempCount);
-					grid[x,y,z].setSide (5, tempCount);
+					grid[x,y,z].setSide (4, tempCount, numMat[tempCount]);
+					grid[x,y,z].setSide (5, tempCount, numMat[tempCount]);
 					
 					
 				}
@@ -123,7 +128,30 @@ public class GameScript : MonoBehaviour {
 		if (breaking)
 		{
 			if(cube.renderer.materials[0].color.r == 1)
-				breakCube (cube);
+			{
+				for (int x=0; x<array3Da.GetLength(0); x++)
+				{
+					for (int y=0; y<array3Da.GetLength(1); y++)
+					{
+						for (int z=0; z<array3Da.GetLength(2); z++)
+						{
+							if(grid[x,y,z].cube.Equals(cube))
+							{
+								if(array3Da[x,y,z])
+								{
+									breakWrongCube(cube);
+								}
+								else
+								{
+									breakCube(cube);
+								}
+								return;
+							}
+						}
+					}
+				}
+			}
+				
 		}
 		else
 		{
@@ -186,6 +214,11 @@ public class GameScript : MonoBehaviour {
 		GameObject.Destroy(cube);
 	}
 
+	void breakWrongCube (GameObject cube)
+	{
+		cube.renderer.material = Resources.Load ("Materials/cubeCracks") as Material;
+	}
+
 	void brushCube (GameObject cube)
 	{
 		if(cube.renderer.materials[0].color.r == 1)
@@ -227,48 +260,86 @@ public class GameScript : MonoBehaviour {
 		grid = null;
 		pause = true;
 
-		foreach(GameObject button in buttonsMenu)
+		foreach(GameObject button in buttonsIngame)
 		{
-			button.SetActive(true);
+			button.SetActive(false);
 		}
 
-		foreach(GameObject go in buttonsIngame)
-		{
-			go.SetActive(false);
-		}
+		buttonsMenu [0].SetActive (true);
 	}
 
 	void buttonStart()
+	{
+		buttonsMenu[0].SetActive (false);
+		buttonsMenu[1].SetActive (true);
+		buttonsMenu[2].SetActive (true);
+		buttonsMenu[3].SetActive (true);
+	}
+
+	void button1()
 	{
 		foreach(GameObject button in buttonsMenu)
 		{
 			button.SetActive(false);
 		}
-
+		
 		foreach(GameObject go in buttonsIngame)
 		{
 			go.SetActive(true);
 		}
 
+		array3Da = new bool[2, 2, 3] { { { false, true, false }, { true, false, true } }, { { false, true, false }, { true, false, true } } };
+		
 		pause = false;
 		SpawnCubes ();
 	}
 
+	void button2()
+	{
+		foreach(GameObject button in buttonsMenu)
+		{
+			button.SetActive(false);
+		}
+		
+		foreach(GameObject go in buttonsIngame)
+		{
+			go.SetActive(true);
+		}
+		
+		array3Da = new bool[3, 5, 5] { { { true, false, false, true, true }, { true, true, true, false, false }, { false, false, true, true, true }, { false, false, true, true, false },
+				{ false, false, true, false, false }}, { { false, false, false, false, false }, { true, true, true, false, false }, { false, false, true, true, true }, 
+				{ false, false, true, true, false },{ false, false, false, false, false }},{ { true, false, false, true, true }, { true, true, true, false, false }, 
+				{ false, false, true, true, true }, { false, false, true, true, false },{ false, false, true, false, false }}};
+		
+		pause = false;
+		SpawnCubes ();
+
+	}
+
+	void button3()
+	{
+		
+	}
+
+
 	void buttonHammer()
 	{
 		breaking = true;
-		buttonsIngame [1].guiTexture.color = new Color (0.25f, 0.25f, 0.25f, 0.5f);
-		buttonsIngame [0].guiTexture.color = new Color (0.5f, 0.5f, 0.5f, 0.5f);
+		buttonsIngame [0].guiTexture.color = new Color (0.25f, 0.25f, 0.25f, 0.5f);
+		buttonsIngame [1].guiTexture.color = new Color (0.5f, 0.5f, 0.5f, 0.5f);
 	}
 
 	void buttonBrush()
 	{
 		breaking = false;
-		buttonsIngame [0].guiTexture.color = new Color (0.25f, 0.25f, 0.25f, 0.5f);
-		buttonsIngame [1].guiTexture.color = new Color (0.5f, 0.5f, 0.5f, 0.5f);
+		buttonsIngame [1].guiTexture.color = new Color (0.25f, 0.25f, 0.25f, 0.5f);
+		buttonsIngame [0].guiTexture.color = new Color (0.5f, 0.5f, 0.5f, 0.5f);
 	}
 
 }
+
+
+
 
 
 
@@ -287,7 +358,7 @@ public class Cube
 		}
 	}
 
-	public void setSide(byte side, sbyte num)
+	public void setSide(byte side, sbyte num, Material mat)
 	{
 		if(num == sides[side])
 		{
@@ -309,7 +380,7 @@ public class Cube
 		if (side == 5)
 			sideOffset = new Vector2 (0, 0.25f);
 
-		Material[] mats = new Material[7];
+		Material[] mats = new Material[cube.renderer.materials.Length];
 
 		for (int i = 0; i < 7; i++) 
 		{
@@ -320,47 +391,12 @@ public class Cube
 		{
 			mats[side + 1] = new Material(Shader.Find ("Diffuse"));
 		}
-		if (num == 0)
+		else
 		{
-			mats[side + 1] = GameObject.Instantiate(Resources.Load("Materials/cube0", typeof(Material)) as Material) as Material;
-		}
-		if (num == 1)
-		{
-			mats[side + 1] = GameObject.Instantiate(Resources.Load("Materials/cube1", typeof(Material)) as Material) as Material;
-		}
-		if (num == 2)
-		{
-			mats[side + 1] = GameObject.Instantiate(Resources.Load("Materials/cube2", typeof(Material)) as Material) as Material;
-		}
-		if (num == 3)
-		{
-			mats[side + 1] = GameObject.Instantiate(Resources.Load("Materials/cube3", typeof(Material)) as Material) as Material;
-		}
-		if (num == 4)
-		{
-			mats[side + 1] = GameObject.Instantiate(Resources.Load("Materials/cube4", typeof(Material)) as Material) as Material;
-		}
-		if (num == 5)
-		{
-			mats[side + 1] = GameObject.Instantiate(Resources.Load("Materials/cube5", typeof(Material)) as Material) as Material;
-		}
-		if (num == 6)
-		{
-			mats[side + 1] = GameObject.Instantiate(Resources.Load("Materials/cube6", typeof(Material)) as Material) as Material;
-		}
-		if (num == 7)
-		{
-			mats[side + 1] = GameObject.Instantiate(Resources.Load("Materials/cube7", typeof(Material)) as Material) as Material;
-		}
-		if (num == 8)
-		{
-			mats[side + 1] = GameObject.Instantiate(Resources.Load("Materials/cube8", typeof(Material)) as Material) as Material;
-		}
-		if (num == 9)
-		{
-			mats[side + 1] = GameObject.Instantiate(Resources.Load("Materials/cube9", typeof(Material)) as Material) as Material;
+			mats [side + 1] = mat;
 		}
 
+		sides[side] = num;
 		cube.renderer.materials = mats;
 		cube.renderer.materials[side + 1].mainTextureOffset = sideOffset;
 	}

@@ -6,8 +6,18 @@ public class ButtonMenuScript : MonoBehaviour
 	// Use this for initialization
 	void Start () {
 
-		if((this.name == "buttonStart") || (this.name == "textStart"))
-			this.guiTexture.pixelInset = new Rect (-Screen.width / 6, -Screen.height * 5 / 12, Screen.width / 3, Screen.height / 6);
+		if((this.name == "buttonStart") || (this.name == "button3"))
+			this.guiTexture.pixelInset = new Rect (-Screen.width / 6, -Screen.height * 46 / 100, Screen.width / 3, Screen.height / 6);
+
+		if(this.name == "button2")
+		{
+			this.guiTexture.pixelInset = new Rect (-Screen.width / 6, -Screen.height * 28 / 100, Screen.width / 3, Screen.height / 6);
+		}
+
+		if(this.name == "button1")
+		{
+			this.guiTexture.pixelInset = new Rect (-Screen.width / 6, -Screen.height * 10 / 100, Screen.width / 3, Screen.height / 6);
+		}
 
 	
 	}
@@ -32,7 +42,7 @@ public class ButtonMenuScript : MonoBehaviour
 				else
 				{
 					this.guiTexture.color = new Color (0.5f, 0.5f, 0.5f, 0.5f);
-					GameObject.FindGameObjectWithTag("GameController").SendMessage("buttonStart");
+					GameObject.FindGameObjectWithTag("GameController").SendMessage(this.name);
 				}
 			}
 		}	
