@@ -48,7 +48,7 @@
   <ItemGroup>
      <Compile Include="Assets\Scripts\ButtonIngameScript.cs" />
      <Compile Include="Assets\Scripts\ButtonMenuScript.cs" />
-     <Compile Include="Assets\Scripts\CameraScript.cs" />
+     <Compile Include="Assets\Scripts\CameraBackgroundScript.cs" />
      <Compile Include="Assets\Scripts\GameScript.cs" />
      <Compile Include="Assets\Scripts\textMenuScript.cs" />
   </ItemGroup>

@@ -4,22 +4,22 @@ using System.Collections;
 public class ButtonMenuScript : MonoBehaviour 
 {
 	// Use this for initialization
-	void Start () {
-
-		if((this.name == "buttonStart") || (this.name == "button3"))
-			this.guiTexture.pixelInset = new Rect (-Screen.width / 6, -Screen.height * 46 / 100, Screen.width / 3, Screen.height / 6);
-
-		if(this.name == "button2")
+	void Start () 
+	{
+		if(this.name == "buttonPicube")
 		{
-			this.guiTexture.pixelInset = new Rect (-Screen.width / 6, -Screen.height * 28 / 100, Screen.width / 3, Screen.height / 6);
+			this.guiTexture.pixelInset = new Rect (-Screen.width / 4, -Screen.height / 9, Screen.width / 2, Screen.height * 2 / 9);
 		}
 
-		if(this.name == "button1")
+		if((this.name == "buttonStart") || (this.name == "buttonSettings"))
 		{
-			this.guiTexture.pixelInset = new Rect (-Screen.width / 6, -Screen.height * 10 / 100, Screen.width / 3, Screen.height / 6);
+			this.guiTexture.pixelInset = new Rect (-Screen.width / 6, -Screen.height / 12, Screen.width / 3, Screen.height / 6);
 		}
-
-	
+		
+		if((this.name == "buttonStage1") || (this.name == "buttonStage2") || (this.name == "buttonStage3") || (this.name == "buttonStage4"))
+		{
+			this.guiTexture.pixelInset = new Rect (-Screen.width / 8, -Screen.height / 12, Screen.width / 4, Screen.height / 6);
+		}	
 	}
 	
 	// Update is called once per frame

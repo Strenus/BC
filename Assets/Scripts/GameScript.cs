@@ -7,7 +7,7 @@ public class GameScript : MonoBehaviour {
 
 	public Cube[, ,] grid;
 
-	public bool[, ,] array3Da;
+	public bool[, ,] levelArray;
 
 	public Material[] numMat = new Material[10];
 
@@ -15,21 +15,29 @@ public class GameScript : MonoBehaviour {
 
 	public List<GameObject> buttonsMenu = new List<GameObject>();
 	public List<GameObject> buttonsIngame = new List<GameObject>();
+	public List<GameObject> starsIngame = new List<GameObject>();
+	ushort score;
+
+	GameObject justTouched;
+	ushort touchTicks = 0;
 
 	ushort ticks = 0;
 	bool breaking = true;
 	bool pause = true;
+	bool inMenu = true;
+
+
 
 	void Start () 
 	{
 		DontDestroyOnLoad(this.gameObject);
 
-		foreach(GameObject go in buttonsIngame)
+		foreach(GameObject go in starsIngame)
 		{
-			go.SetActive(false);
+			go.guiTexture.pixelInset = new Rect (-Screen.height / 20, -Screen.height / 20, Screen.height / 10, Screen.height / 10);
 		}
 
-		//SpawnCubes ();
+		spawnMenuCubes ();
 
 		Debug.Log (Screen.width);
 		Debug.Log (Screen.height);
@@ -45,9 +53,65 @@ public class GameScript : MonoBehaviour {
 			{
 				if(checkCompletion())
 				{
-					completed();
+					openMainMenu();
 				}
 			}
+		}
+
+		//---TouchControl------------------------------------------------------
+		Camera cam = GameObject.FindGameObjectWithTag ("MainCamera").camera;
+
+		if(!pause)
+		{
+			if (Input.touchCount > 0)
+			{
+				if(Input.GetTouch(0).phase == TouchPhase.Began)
+				{
+					Ray ray = cam.ScreenPointToRay (Input.GetTouch(0).position);
+					RaycastHit hit = new RaycastHit();
+					
+					if (Physics.Raycast (ray, out hit)) 
+					{
+						justTouched = hit.collider.gameObject;
+					}
+				}
+				
+				if(Input.GetTouch(0).phase == TouchPhase.Ended)
+				{
+					Ray ray = cam.ScreenPointToRay (Input.GetTouch(0).position);
+					RaycastHit hit = new RaycastHit();
+					
+					if (Physics.Raycast (ray, out hit)) 
+					{					
+						if(justTouched != null)
+						{
+							if(hit.collider.gameObject.Equals(justTouched))
+							{
+								touchCube (hit.collider.gameObject);
+							}
+							justTouched = null;
+						}
+					}
+				}
+				
+				cam.transform.LookAt (new Vector3(0, 0, 0), Vector3.up);
+				
+				if(!(((cam.transform.position.y > 9.8f) && (Input.GetTouch(0).deltaPosition.y < 0.0f)) || ((cam.transform.position.y < -9.8f) && (Input.GetTouch(0).deltaPosition.y > 0.0f))))
+				{
+					cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.right, -Input.GetTouch(0).deltaPosition.y * 800.0f / Screen.height);
+					//cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.right, -Input.GetTouch(0).deltaPosition.y * 300.0f / Screen.height);
+				}
+				cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.up, Input.GetTouch(0).deltaPosition.x * 600.0f / Screen.height);
+				//cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.up, Input.GetTouch(0).deltaPosition.x * 230.0f / Screen.height);
+			}
+		}
+
+		//---MainMenuAnimation-------------------------------------------------
+
+		if(inMenu)
+		{
+			cam.transform.LookAt (new Vector3(0, 0, 0), Vector3.up);
+			cam.transform.RotateAround (new Vector3 (0, 0, 0), transform.up, 0.5f);
 		}
 
 		//---Cleaning cube fragments------------------------------------------
@@ -65,53 +129,60 @@ public class GameScript : MonoBehaviour {
 
 	void SpawnCubes () 
 	{
-		int tempMax = Mathf.Max (array3Da.GetLength (0), Mathf.Max (array3Da.GetLength (1), array3Da.GetLength (2)));
+		//---Nastavenie kamery zo zakladnej pozicie------------------------------
+
+		int tempMax = Mathf.Max (levelArray.GetLength (0), Mathf.Max (levelArray.GetLength (1), levelArray.GetLength (2)));
 
 		GameObject camera = GameObject.FindGameObjectWithTag ("MainCamera");
-
 		camera.transform.position = new Vector3 (0, 0, 10);
 		camera.transform.LookAt (new Vector3(0, 0, 0), Vector3.up);
 		camera.camera.fieldOfView = tempMax * 10f;
 
-		grid = new Cube[array3Da.GetLength (0), array3Da.GetLength (1), array3Da.GetLength (2)];
-
-		
-		for (int x=0; x<array3Da.GetLength(0); x++)
+		//---Vytvorenie kociek--------------------------------------------------
+		if(grid != null)
 		{
-			for (int y=0; y<array3Da.GetLength(1); y++)
+			foreach (Cube cube in grid) 
 			{
-				for (int z=0; z<array3Da.GetLength(2); z++)
+				if(cube != null)
+					Destroy(cube.cube);
+			}
+			grid = null;
+		}
+		grid = new Cube[levelArray.GetLength (0), levelArray.GetLength (1), levelArray.GetLength (2)];
+
+		for (int x=0; x<levelArray.GetLength(0); x++)
+		{
+			for (int y=0; y<levelArray.GetLength(1); y++)
+			{
+				for (int z=0; z<levelArray.GetLength(2); z++)
 				{
 					
 					grid[x,y,z] = new Cube();
-					grid[x,y,z].cube.transform.position = new Vector3(x - array3Da.GetLength(0)/2.0f + 0.5f,y - array3Da.GetLength(1)/2.0f + 0.5f,z - array3Da.GetLength(2)/2.0f + 0.5f);
+					grid[x,y,z].cube.transform.position = new Vector3(x - levelArray.GetLength(0)/2.0f + 0.5f,y - levelArray.GetLength(1)/2.0f + 0.5f,z - levelArray.GetLength(2)/2.0f + 0.5f);
 					
-					sbyte tempCount = 0;
+					sbyte tempCount = 0;			
 					
-					
-					for(int i=0;i<array3Da.GetLength(2);i++)
+					for(int i=0;i<levelArray.GetLength(2);i++)
 					{
-						if(array3Da[x,y,i] == true)
+						if(levelArray[x,y,i] == true)
 							tempCount++;
 					}
 					grid[x,y,z].setSide (0, tempCount, numMat[tempCount]);
 					grid[x,y,z].setSide (2, tempCount, numMat[tempCount]);
 					
-					
 					tempCount = 0;
-					for(int i=0;i<array3Da.GetLength(0);i++)
+					for(int i=0;i<levelArray.GetLength(0);i++)
 					{
-						if(array3Da[i,y,z] == true)
+						if(levelArray[i,y,z] == true)
 							tempCount++;
 					}
 					grid[x,y,z].setSide (1, tempCount, numMat[tempCount]);
 					grid[x,y,z].setSide (3, tempCount, numMat[tempCount]);
 					
-					
 					tempCount = 0;
-					for(int i=0;i<array3Da.GetLength(1);i++)
+					for(int i=0;i<levelArray.GetLength(1);i++)
 					{
-						if(array3Da[x,i,z] == true)
+						if(levelArray[x,i,z] == true)
 							tempCount++;
 					}
 					grid[x,y,z].setSide (4, tempCount, numMat[tempCount]);
@@ -129,15 +200,15 @@ public class GameScript : MonoBehaviour {
 		{
 			if(cube.renderer.materials[0].color.r == 1)
 			{
-				for (int x=0; x<array3Da.GetLength(0); x++)
+				for (int x=0; x<levelArray.GetLength(0); x++)
 				{
-					for (int y=0; y<array3Da.GetLength(1); y++)
+					for (int y=0; y<levelArray.GetLength(1); y++)
 					{
-						for (int z=0; z<array3Da.GetLength(2); z++)
+						for (int z=0; z<levelArray.GetLength(2); z++)
 						{
 							if(grid[x,y,z].cube.Equals(cube))
 							{
-								if(array3Da[x,y,z])
+								if(levelArray[x,y,z])
 								{
 									breakWrongCube(cube);
 								}
@@ -157,8 +228,6 @@ public class GameScript : MonoBehaviour {
 		{
 			brushCube(cube);
 		}
-
-		checkCompletion ();
 	}
 
 	void breakCube (GameObject cube)
@@ -217,6 +286,17 @@ public class GameScript : MonoBehaviour {
 	void breakWrongCube (GameObject cube)
 	{
 		cube.renderer.material = Resources.Load ("Materials/cubeCracks") as Material;
+
+		score--;
+
+		starsIngame[score].guiTexture.color = new Color (40.0f/255, 40.0f/255, 40.0f/255, 0.5f);
+
+		if(score == 0)
+		{
+			openMainMenu();
+		}
+
+
 	}
 
 	void brushCube (GameObject cube)
@@ -233,13 +313,15 @@ public class GameScript : MonoBehaviour {
 
 	bool checkCompletion()
 	{
-		for (int x=0; x<array3Da.GetLength(0); x++)
+		for (int x=0; x<levelArray.GetLength(0); x++)
 		{
-			for (int y=0; y<array3Da.GetLength(1); y++)
+			for (int y=0; y<levelArray.GetLength(1); y++)
 			{
-				for (int z=0; z<array3Da.GetLength(2); z++)
+				for (int z=0; z<levelArray.GetLength(2); z++)
 				{
-					if(((grid[x,y,z].cube != null) && (!array3Da[x,y,z])) || ((grid[x,y,z].cube == null) && (array3Da[x,y,z])))
+					//if(((grid[x,y,z].cube != null) && (!levelArray[x,y,z])) || ((grid[x,y,z].cube == null) && (levelArray[x,y,z])))
+					//if(((!levelArray[x,y,z]) && (grid[x,y,z].cube != null)) || ((levelArray[x,y,z]) && (grid[x,y,z].cube == null)))
+					if((!levelArray[x,y,z]) && (grid[x,y,z].cube != null))
 					{
 						return false;
 					}
@@ -250,7 +332,7 @@ public class GameScript : MonoBehaviour {
 		return true;
 	}
 
-	void completed()
+	void openMainMenu()
 	{
 		foreach (Cube cube in grid) 
 		{
@@ -259,24 +341,78 @@ public class GameScript : MonoBehaviour {
 		}
 		grid = null;
 		pause = true;
+		inMenu = true;
 
 		foreach(GameObject button in buttonsIngame)
 		{
 			button.SetActive(false);
 		}
 
+		foreach(GameObject star in starsIngame)
+		{
+			star.SetActive(false);
+		}
+
+		Camera.main.SendMessage("setBackground",Resources.Load("Textures/bg", typeof(Texture2D)) as Texture2D);
+
+		spawnMenuCubes ();
+
 		buttonsMenu [0].SetActive (true);
+		buttonsMenu [1].SetActive (true);
+		buttonsMenu [2].SetActive (true);
+	}
+
+	void spawnMenuCubes()
+	{
+		levelArray = new bool[2, 2, 2] { { { false, true }, { true, true } }, { { false, true }, { true, true } } };
+		
+		SpawnCubes ();
+		
+		foreach (Cube cube in grid) 
+		{
+			cube.cube.transform.position = new Vector3(cube.cube.transform.position.x, cube.cube.transform.position.y + 1.8f, cube.cube.transform.position.z);
+		}
+		
+		Camera cam = GameObject.FindGameObjectWithTag ("MainCamera").camera;
+		
+		cam.fieldOfView = 40;
+		cam.transform.position = new Vector3 (-5.22f, 5.29f, 6.69f);
+		cam.transform.LookAt (new Vector3(0, 0, 0), Vector3.up);
 	}
 
 	void buttonStart()
 	{
-		buttonsMenu[0].SetActive (false);
-		buttonsMenu[1].SetActive (true);
-		buttonsMenu[2].SetActive (true);
+		buttonsMenu[1].SetActive (false);
+		buttonsMenu[2].SetActive (false);
 		buttonsMenu[3].SetActive (true);
+		buttonsMenu[4].SetActive (true);
+		buttonsMenu[5].SetActive (true);
+		buttonsMenu[6].SetActive (true);
 	}
 
-	void button1()
+	void buttonSettings()
+	{
+
+	}
+
+	void buttonPicube()
+	{
+		foreach(GameObject button in buttonsIngame)
+		{
+			button.SetActive(false);
+		}
+
+		foreach(GameObject button in buttonsMenu)
+		{
+			button.SetActive(false);
+		}
+		
+		buttonsMenu [0].SetActive (true);
+		buttonsMenu [1].SetActive (true);
+		buttonsMenu [2].SetActive (true);
+	}
+
+	void prepareToStart()
 	{
 		foreach(GameObject button in buttonsMenu)
 		{
@@ -288,39 +424,54 @@ public class GameScript : MonoBehaviour {
 			go.SetActive(true);
 		}
 
-		array3Da = new bool[2, 2, 3] { { { false, true, false }, { true, false, true } }, { { false, true, false }, { true, false, true } } };
+		score = 5;
+		foreach(GameObject go in starsIngame)
+		{
+			go.SetActive(true);
+			go.guiTexture.color = new Color (200/255.0f, 175/255.0f, 50/255.0f, 0.5f);
+		}
 		
 		pause = false;
-		SpawnCubes ();
+		inMenu = false;
 	}
 
-	void button2()
+	void buttonStage1()
 	{
-		foreach(GameObject button in buttonsMenu)
-		{
-			button.SetActive(false);
-		}
+		prepareToStart ();
+
+		levelArray = new bool[2, 2, 3] { { { false, true, false }, { true, false, true } }, { { false, true, false }, { true, false, true } } };
+
+		SpawnCubes ();
+
+		Camera.main.SendMessage("setBackground",Resources.Load("Textures/bg2", typeof(Texture2D)) as Texture2D);
+	}
+
+	void buttonStage2()
+	{
+		prepareToStart ();
 		
-		foreach(GameObject go in buttonsIngame)
-		{
-			go.SetActive(true);
-		}
-		
-		array3Da = new bool[3, 5, 5] { { { true, false, false, true, true }, { true, true, true, false, false }, { false, false, true, true, true }, { false, false, true, true, false },
+		levelArray = new bool[3, 5, 5] { { { true, false, false, true, true }, { true, true, true, false, false }, { false, false, true, true, true }, { false, false, true, true, false },
 				{ false, false, true, false, false }}, { { false, false, false, false, false }, { true, true, true, false, false }, { false, false, true, true, true }, 
 				{ false, false, true, true, false },{ false, false, false, false, false }},{ { true, false, false, true, true }, { true, true, true, false, false }, 
 				{ false, false, true, true, true }, { false, false, true, true, false },{ false, false, true, false, false }}};
-		
-		pause = false;
+
 		SpawnCubes ();
 
 	}
 
-	void button3()
+	void buttonStage3()
+	{
+		prepareToStart ();
+
+		levelArray = new bool[2, 2, 2] { { { false, true }, { true, true } }, { { false, true }, { true, true } } };
+
+		SpawnCubes ();
+	}
+
+	void buttonStage4()
 	{
 		
 	}
-
 
 	void buttonHammer()
 	{

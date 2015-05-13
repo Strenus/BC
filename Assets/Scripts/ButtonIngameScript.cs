@@ -2,20 +2,17 @@
 using System.Collections;
 
 public class ButtonIngameScript : MonoBehaviour 
-{
-	public Texture idle;
-	public Texture hover;
-	
+{	
 	// Use this for initialization
-	void Start () {		
-		if(this.name == "buttonHammer")
+	void Start () 
+	{
+		if(this.name == "buttonPause")
 		{
-			this.guiTexture.pixelInset = new Rect (- Screen.width / 2 + Screen.width / 100, - Screen.height / 2 + Screen.height/50 , Screen.width / 10, Screen.width / 10);
+			this.guiTexture.pixelInset = new Rect ( -Screen.width / 23, -Screen.width / 23 , Screen.width * 2 / 23, Screen.width * 2 / 23);
 		}
-		
-		if(this.name == "buttonBrush")
+		else
 		{
-			this.guiTexture.pixelInset = new Rect (- Screen.width / 2 + Screen.width / 100, - Screen.height / 4 , Screen.width / 10, Screen.width / 10);
+			this.guiTexture.pixelInset = new Rect ( -Screen.width / 16, -Screen.width / 16 , Screen.width / 8, Screen.width / 8);
 		}
 	}
 	
