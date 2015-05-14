@@ -47,9 +47,12 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\Scripts\ButtonIngameScript.cs" />
+     <Compile Include="Assets\Scripts\ButtonLevelScript.cs" />
      <Compile Include="Assets\Scripts\ButtonMenuScript.cs" />
      <Compile Include="Assets\Scripts\CameraBackgroundScript.cs" />
      <Compile Include="Assets\Scripts\GameScript.cs" />
+     <Compile Include="Assets\Scripts\SliderScript.cs" />
+     <Compile Include="Assets\Scripts\SpriteScript.cs" />
      <Compile Include="Assets\Scripts\textMenuScript.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

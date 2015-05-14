@@ -9,17 +9,28 @@ public class ButtonMenuScript : MonoBehaviour
 		if(this.name == "buttonPicube")
 		{
 			this.guiTexture.pixelInset = new Rect (-Screen.width / 4, -Screen.height / 9, Screen.width / 2, Screen.height * 2 / 9);
+			return;
 		}
 
-		if((this.name == "buttonStart") || (this.name == "buttonSettings"))
+		if((this.name == "buttonStart") || (this.name == "buttonSettings") || (this.name == "pauseContinue") || (this.name == "pauseExit") || (this.name == "buttonBack"))
 		{
 			this.guiTexture.pixelInset = new Rect (-Screen.width / 6, -Screen.height / 12, Screen.width / 3, Screen.height / 6);
+			return;
 		}
 		
-		if((this.name == "buttonStage1") || (this.name == "buttonStage2") || (this.name == "buttonStage3") || (this.name == "buttonStage4"))
+		if((this.name == "buttonStage1") || (this.name == "buttonStage2") || (this.name == "buttonStage3") || (this.name == "buttonStage4") || (this.name == "buttonLevelBack"))
 		{
 			this.guiTexture.pixelInset = new Rect (-Screen.width / 8, -Screen.height / 12, Screen.width / 4, Screen.height / 6);
-		}	
+			return;
+		}
+
+		if(this.name == "buttonReset")
+		{
+			this.guiTexture.pixelInset = new Rect (-Screen.width / 4, -Screen.height / 12, Screen.width / 2, Screen.height / 6);
+			return;
+		}
+
+		this.guiTexture.pixelInset = new Rect (-Screen.height / 12, -Screen.height / 12, Screen.height / 6, Screen.height / 6);
 	}
 	
 	// Update is called once per frame

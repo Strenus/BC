@@ -8,12 +8,16 @@ public class ButtonIngameScript : MonoBehaviour
 	{
 		if(this.name == "buttonPause")
 		{
-			this.guiTexture.pixelInset = new Rect ( -Screen.width / 23, -Screen.width / 23 , Screen.width * 2 / 23, Screen.width * 2 / 23);
+			this.guiTexture.pixelInset = new Rect ( -Screen.width / 32, -Screen.width / 32 , Screen.width / 16, Screen.width / 16);
+			return;
 		}
-		else
+		if((this.name == "buttonCamPlus") || (this.name == "buttonCamMinus"))
 		{
-			this.guiTexture.pixelInset = new Rect ( -Screen.width / 16, -Screen.width / 16 , Screen.width / 8, Screen.width / 8);
+			this.guiTexture.pixelInset = new Rect ( -Screen.height / 20, -Screen.height / 20 , Screen.height / 10, Screen.height / 10);
+			return;
 		}
+
+		this.guiTexture.pixelInset = new Rect ( -Screen.width / 16, -Screen.width / 16 , Screen.width / 8, Screen.width / 8);
 	}
 	
 	// Update is called once per frame

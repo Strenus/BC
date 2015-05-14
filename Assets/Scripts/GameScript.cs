@@ -16,15 +16,20 @@ public class GameScript : MonoBehaviour {
 	public List<GameObject> buttonsMenu = new List<GameObject>();
 	public List<GameObject> buttonsIngame = new List<GameObject>();
 	public List<GameObject> starsIngame = new List<GameObject>();
+	public List<GameObject> buttonsPause = new List<GameObject>();
+	public List<GameObject> buttonsLevels = new List<GameObject>();
+
 	ushort score;
+	bool solved = false;
 
 	GameObject justTouched;
-	ushort touchTicks = 0;
 
 	ushort ticks = 0;
 	bool breaking = true;
 	bool pause = true;
 	bool inMenu = true;
+	public float camSen = 1.0f;
+	uint stage;
 
 
 
@@ -53,7 +58,8 @@ public class GameScript : MonoBehaviour {
 			{
 				if(checkCompletion())
 				{
-					openMainMenu();
+					solved = true;
+					openPauseMenu();
 				}
 			}
 		}
@@ -98,10 +104,10 @@ public class GameScript : MonoBehaviour {
 				
 				if(!(((cam.transform.position.y > 9.8f) && (Input.GetTouch(0).deltaPosition.y < 0.0f)) || ((cam.transform.position.y < -9.8f) && (Input.GetTouch(0).deltaPosition.y > 0.0f))))
 				{
-					cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.right, -Input.GetTouch(0).deltaPosition.y * 800.0f / Screen.height);
+					cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.right, -Input.GetTouch(0).deltaPosition.y * 800.0f * camSen / Screen.height);
 					//cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.right, -Input.GetTouch(0).deltaPosition.y * 300.0f / Screen.height);
 				}
-				cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.up, Input.GetTouch(0).deltaPosition.x * 600.0f / Screen.height);
+				cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.up, Input.GetTouch(0).deltaPosition.x * 600.0f * camSen / Screen.height);
 				//cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.up, Input.GetTouch(0).deltaPosition.x * 230.0f / Screen.height);
 			}
 		}
@@ -339,18 +345,27 @@ public class GameScript : MonoBehaviour {
 			if(cube != null)
 				Destroy(cube.cube);
 		}
+
 		grid = null;
 		pause = true;
 		inMenu = true;
+		solved = false;
 
 		foreach(GameObject button in buttonsIngame)
 		{
 			button.SetActive(false);
 		}
 
-		foreach(GameObject star in starsIngame)
+		foreach(GameObject button in buttonsPause)
 		{
-			star.SetActive(false);
+			button.SetActive(false);
+		}
+
+		for(int i=0;i < starsIngame.Count;i++)
+		{
+			starsIngame[i].transform.position = new Vector3(0.68f + i * 0.07f,0.94f,0);
+			starsIngame[i].guiTexture.pixelInset = new Rect (-Screen.height / 20, -Screen.height / 20, Screen.height / 10, Screen.height / 10);
+			starsIngame[i].SetActive(false);
 		}
 
 		Camera.main.SendMessage("setBackground",Resources.Load("Textures/bg", typeof(Texture2D)) as Texture2D);
@@ -360,6 +375,23 @@ public class GameScript : MonoBehaviour {
 		buttonsMenu [0].SetActive (true);
 		buttonsMenu [1].SetActive (true);
 		buttonsMenu [2].SetActive (true);
+	}
+
+	void openPauseMenu()
+	{
+		foreach(GameObject go in buttonsPause)
+		{
+			go.SetActive(true);
+		}
+
+		if(solved)
+		{
+			for(int i=0;i < starsIngame.Count;i++)
+			{
+				starsIngame[i].transform.position = new Vector3(0.3f + i * 0.1f,0.6f,0.2f);
+				starsIngame[i].guiTexture.pixelInset = new Rect (-Screen.height * 3 / 40, -Screen.height * 3 / 40, Screen.height * 3 / 20, Screen.height * 3 / 20);
+			}
+		}
 	}
 
 	void spawnMenuCubes()
@@ -392,7 +424,13 @@ public class GameScript : MonoBehaviour {
 
 	void buttonSettings()
 	{
-
+		buttonsMenu[1].SetActive (false);
+		buttonsMenu[2].SetActive (false);
+		buttonsMenu[7].SetActive (true);
+		buttonsMenu[8].SetActive (true);
+		buttonsMenu[9].SetActive (true);
+		buttonsMenu[10].SetActive (true);
+		buttonsMenu[11].SetActive (true);
 	}
 
 	void buttonPicube()
@@ -400,6 +438,11 @@ public class GameScript : MonoBehaviour {
 		foreach(GameObject button in buttonsIngame)
 		{
 			button.SetActive(false);
+		}
+
+		foreach(GameObject go in buttonsLevels)
+		{
+			go.SetActive(false);
 		}
 
 		foreach(GameObject button in buttonsMenu)
@@ -412,11 +455,46 @@ public class GameScript : MonoBehaviour {
 		buttonsMenu [2].SetActive (true);
 	}
 
+	void buttonReset()
+	{
+
+	}
+
+	void buttonBack()
+	{
+		buttonPicube ();
+	}
+
+	void buttonCamPlus()
+	{
+		if(camSen < 2.95f)
+			camSen += 0.1f;
+
+		int sens = 10 * Mathf.RoundToInt (camSen * 10.0f);
+
+		buttonsMenu [7].GetComponentInChildren<GUIText> ().text = "Camera Sensitivity: " + sens + "%";
+	}
+
+	void buttonCamMinus()
+	{
+		if(camSen > 0.15f)
+			camSen -= 0.1f;
+
+		int sens = 10 * Mathf.RoundToInt (camSen * 10.0f);
+		
+		buttonsMenu [7].GetComponentInChildren<GUIText> ().text = "Camera Sensitivity: " + sens + "%";
+	}
+
 	void prepareToStart()
 	{
 		foreach(GameObject button in buttonsMenu)
 		{
 			button.SetActive(false);
+		}
+
+		foreach(GameObject go in buttonsLevels)
+		{
+			go.SetActive(false);
 		}
 		
 		foreach(GameObject go in buttonsIngame)
@@ -425,6 +503,8 @@ public class GameScript : MonoBehaviour {
 		}
 
 		score = 5;
+		solved = false;
+
 		foreach(GameObject go in starsIngame)
 		{
 			go.SetActive(true);
@@ -435,46 +515,65 @@ public class GameScript : MonoBehaviour {
 		inMenu = false;
 	}
 
+	void buttonStage(uint stage)
+	{
+		this.stage = stage;
+		
+		for(int i=1; i < buttonsMenu.Count; i++)
+		{
+			buttonsMenu[i].SetActive(false);
+		}
+		buttonsMenu [0].SetActive (true);
+		
+		foreach(GameObject go in buttonsLevels)
+		{
+			go.SetActive(true);
+		}
+
+		
+		buttonsLevels[0].guiText.text = "Stage " + stage;
+	}
+
 	void buttonStage1()
 	{
-		prepareToStart ();
-
-		levelArray = new bool[2, 2, 3] { { { false, true, false }, { true, false, true } }, { { false, true, false }, { true, false, true } } };
-
-		SpawnCubes ();
-
-		Camera.main.SendMessage("setBackground",Resources.Load("Textures/bg2", typeof(Texture2D)) as Texture2D);
+		buttonStage (1);
 	}
 
 	void buttonStage2()
 	{
-		prepareToStart ();
-		
-		levelArray = new bool[3, 5, 5] { { { true, false, false, true, true }, { true, true, true, false, false }, { false, false, true, true, true }, { false, false, true, true, false },
-				{ false, false, true, false, false }}, { { false, false, false, false, false }, { true, true, true, false, false }, { false, false, true, true, true }, 
-				{ false, false, true, true, false },{ false, false, false, false, false }},{ { true, false, false, true, true }, { true, true, true, false, false }, 
-				{ false, false, true, true, true }, { false, false, true, true, false },{ false, false, true, false, false }}};
-
-		SpawnCubes ();
-
+		buttonStage (2);
 	}
 
 	void buttonStage3()
 	{
-		prepareToStart ();
-
-		levelArray = new bool[2, 2, 2] { { { false, true }, { true, true } }, { { false, true }, { true, true } } };
-
-		SpawnCubes ();
+		buttonStage (3);
 	}
 
 	void buttonStage4()
 	{
+		stage = 4;
+
+		for(int i=1; i < buttonsMenu.Count; i++)
+		{
+			buttonsMenu[i].SetActive(false);
+		}
+		buttonsMenu [0].SetActive (true);
 		
+
+		for(int i = 0; i < buttonsLevels.Count; i++)
+		{
+			buttonsLevels[i].SetActive(true);
+		}
+		
+		
+		buttonsLevels[0].guiText.text = "Custom Stages";
 	}
 
 	void buttonHammer()
 	{
+		if(pause)
+			return;
+
 		breaking = true;
 		buttonsIngame [0].guiTexture.color = new Color (0.25f, 0.25f, 0.25f, 0.5f);
 		buttonsIngame [1].guiTexture.color = new Color (0.5f, 0.5f, 0.5f, 0.5f);
@@ -482,12 +581,275 @@ public class GameScript : MonoBehaviour {
 
 	void buttonBrush()
 	{
+		if(pause)
+			return;
+
 		breaking = false;
 		buttonsIngame [1].guiTexture.color = new Color (0.25f, 0.25f, 0.25f, 0.5f);
 		buttonsIngame [0].guiTexture.color = new Color (0.5f, 0.5f, 0.5f, 0.5f);
 	}
 
+	void buttonPause()
+	{
+		pause = true;
+		openPauseMenu ();
+	}
+
+	void pauseContinue()
+	{
+		if(solved)
+		{
+			openMainMenu();
+		}
+		else
+		{
+			pause = false;
+
+			foreach(GameObject go in buttonsPause)
+			{
+				go.SetActive(false);
+			}
+
+			/*
+			for(int i=0;i < starsIngame.Count;i++)
+			{
+				starsIngame[i].transform.position = new Vector3(0.68f + i * 0.07f,0.94f,0);
+				starsIngame[i].guiTexture.pixelInset = new Rect (-Screen.height / 20, -Screen.height / 20, Screen.height / 10, Screen.height / 10);
+			}
+			*/
+		}
+
+	}
+
+	void pauseExit()
+	{
+		openMainMenu ();
+	}
+
+	void buttonLevelBack()
+	{
+		buttonsMenu[1].SetActive (false);
+		buttonsMenu[2].SetActive (false);
+		buttonsMenu[3].SetActive (true);
+		buttonsMenu[4].SetActive (true);
+		buttonsMenu[5].SetActive (true);
+		buttonsMenu[6].SetActive (true);
+
+		foreach(GameObject go in buttonsLevels)
+		{
+			go.SetActive(false);
+		}
+	}
+
+	void buttonLevel(uint level)
+	{
+
+		prepareToStart ();
+
+		if(stage == 1)
+		{
+			if(level == 1)
+			{
+				levelArray = new bool[2, 2, 2] { { { false, true }, { true, true } }, { { false, true }, { true, true } } };
+			}
+			if(level == 2)
+			{
+				Camera.main.SendMessage("setBackground",Resources.Load("Textures/bg2", typeof(Texture2D)) as Texture2D);	
+				levelArray = new bool[2, 2, 3] { { { false, true, false }, { true, false, true } }, { { false, true, false }, { true, false, true } } };
+			}
+			if(level == 3)
+			{
+				levelArray = new bool[3, 5, 5] { { { true, false, false, true, true }, { true, true, true, false, false }, { false, false, true, true, true }, { false, false, true, true, false },
+						{ false, false, true, false, false }}, { { false, false, false, false, false }, { true, true, true, false, false }, { false, false, true, true, true }, 
+						{ false, false, true, true, false },{ false, false, false, false, false }},{ { true, false, false, true, true }, { true, true, true, false, false }, 
+						{ false, false, true, true, true }, { false, false, true, true, false },{ false, false, true, false, false }}};
+			}
+			if(level == 4)
+			{
+
+			}
+			if(level == 5)
+			{
+				
+			}
+			if(level == 6)
+			{
+				
+			}
+			if(level == 7)
+			{
+				
+			}
+			if(level == 8)
+			{
+				
+			}
+			if(level == 9)
+			{
+				
+			}
+			if(level == 10)
+			{
+				
+			}
+			if(level == 11)
+			{
+				
+			}
+			if(level == 12)
+			{
+				
+			}
+			if(level == 13)
+			{
+				
+			}
+			if(level == 14)
+			{
+				
+			}
+			if(level == 15)
+			{
+				
+			}
+		}
+		if(stage == 2)
+		{
+			if(level == 1)
+			{
+
+			}
+			if(level == 2)
+			{
+
+			}
+			if(level == 3)
+			{
+
+			}
+			if(level == 4)
+			{
+				
+			}
+			if(level == 5)
+			{
+				
+			}
+			if(level == 6)
+			{
+				
+			}
+			if(level == 7)
+			{
+				
+			}
+			if(level == 8)
+			{
+				
+			}
+			if(level == 9)
+			{
+				
+			}
+			if(level == 10)
+			{
+				
+			}
+			if(level == 11)
+			{
+				
+			}
+			if(level == 12)
+			{
+				
+			}
+			if(level == 13)
+			{
+				
+			}
+			if(level == 14)
+			{
+				
+			}
+			if(level == 15)
+			{
+				
+			}
+		}
+		if(stage == 3)
+		{
+			if(level == 1)
+			{
+
+			}
+			if(level == 2)
+			{
+
+			}
+			if(level == 3)
+			{
+
+			}
+			if(level == 4)
+			{
+				
+			}
+			if(level == 5)
+			{
+				
+			}
+			if(level == 6)
+			{
+				
+			}
+			if(level == 7)
+			{
+				
+			}
+			if(level == 8)
+			{
+				
+			}
+			if(level == 9)
+			{
+				
+			}
+			if(level == 10)
+			{
+				
+			}
+			if(level == 11)
+			{
+				
+			}
+			if(level == 12)
+			{
+				
+			}
+			if(level == 13)
+			{
+				
+			}
+			if(level == 14)
+			{
+				
+			}
+			if(level == 15)
+			{
+				
+			}
+		}
+		if(stage == 4)
+		{
+
+		}
+		
+		SpawnCubes ();
+	}
+
 }
+
+
 
 
 
