@@ -2,6 +2,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 
 public class GameScript : MonoBehaviour {
 
@@ -12,24 +13,31 @@ public class GameScript : MonoBehaviour {
 	public Material[] numMat = new Material[10];
 
 	List<GameObject> fragments = new List<GameObject>();
+	List<Cube> creativeCubes = new List<Cube>();
 
 	public List<GameObject> buttonsMenu = new List<GameObject>();
 	public List<GameObject> buttonsIngame = new List<GameObject>();
 	public List<GameObject> starsIngame = new List<GameObject>();
 	public List<GameObject> buttonsPause = new List<GameObject>();
 	public List<GameObject> buttonsLevels = new List<GameObject>();
+	public List<GameObject> buttonsEdit = new List<GameObject>();
 
 	ushort score;
 	bool solved = false;
 
 	GameObject justTouched;
+	Cube ghostCube;
+	Vector3 editorCenter;
+	float lastH = 2;
 
 	ushort ticks = 0;
 	bool breaking = true;
 	bool pause = true;
 	bool inMenu = true;
+	bool creative = false;
 	public float camSen = 1.0f;
 	uint stage;
+	uint customStageCount = 0;
 
 
 
@@ -46,11 +54,71 @@ public class GameScript : MonoBehaviour {
 
 		Debug.Log (Screen.width);
 		Debug.Log (Screen.height);
+
+		savingTest ();
 	}
 
 	void Update () 
 	{
-		if(!pause)
+
+		//---AndroidBackButton-------------------------------------------------
+		if (Input.GetKeyDown(KeyCode.Escape)) 
+		{
+			if(inMenu)
+			{
+				if(buttonsMenu[1].activeSelf)
+				{
+					Debug.Log ("exit");
+					Application.Quit();
+				}
+
+				if(buttonsMenu[3].activeSelf || buttonsMenu[8].activeSelf)
+				{
+					buttonPicube();
+				}
+
+				if(buttonsLevels[1].activeSelf)
+				{
+					buttonLevelBack();
+				}
+			}
+			else
+			{
+				if(!creative)
+				{
+					if(pause)
+					{
+						if(solved)
+						{
+							pauseExit();
+						}
+						else
+						{
+							pauseContinue();
+						}
+					}
+					else
+					{
+						buttonPause();
+					}
+				}
+				else
+				{
+					if(pause)
+					{
+						pauseContinue();
+					}
+					else
+					{
+						buttonPause();
+					}
+				}
+			}
+		}
+
+		//---TickCount---------------------------------------------------------
+
+		if(!pause && !creative)
 		{
 			ticks++;
 
@@ -93,22 +161,154 @@ public class GameScript : MonoBehaviour {
 						{
 							if(hit.collider.gameObject.Equals(justTouched))
 							{
-								touchCube (hit.collider.gameObject);
+								if(!creative)
+								{
+									touchCube (hit.collider.gameObject);
+								}
+								else
+								{
+									if(breaking)
+									{
+										foreach(Cube cube in creativeCubes)
+										{
+											if(cube.cube.Equals(hit.collider.gameObject))
+											{
+												Destroy(cube.cube);
+												creativeCubes.Remove(cube);
+												break;
+											}
+										}
+
+									}
+								}
 							}
-							justTouched = null;
 						}
 					}
+					justTouched = null;
 				}
-				
-				cam.transform.LookAt (new Vector3(0, 0, 0), Vector3.up);
-				
-				if(!(((cam.transform.position.y > 9.8f) && (Input.GetTouch(0).deltaPosition.y < 0.0f)) || ((cam.transform.position.y < -9.8f) && (Input.GetTouch(0).deltaPosition.y > 0.0f))))
+
+				if(creative)
 				{
-					cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.right, -Input.GetTouch(0).deltaPosition.y * 800.0f * camSen / Screen.height);
-					//cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.right, -Input.GetTouch(0).deltaPosition.y * 300.0f / Screen.height);
+					Vector3 direction;
+					RaycastHit hit = new RaycastHit();
+
+					if((!breaking) && ((Input.GetTouch(0).phase == TouchPhase.Began) || (Input.GetTouch(0).phase == TouchPhase.Moved)))
+					{
+						Ray ray = cam.ScreenPointToRay (Input.GetTouch(0).position);
+						
+						if ((Physics.Raycast (ray, out hit)) && justTouched!= null) 
+						{
+							if(ghostCube != null)
+								Destroy(ghostCube.cube);
+
+							ghostCube = new Cube();
+							Vector3 tempVect = hit.collider.transform.position;
+							Destroy(ghostCube.cube.collider);
+							Material[] mat= new Material[1];
+							mat[0] = ghostCube.cube.renderer.materials[0];
+							mat[0].color = new Color(mat[0].color.r, mat[0].color.g, mat[0].color.b, 0.2f);
+							ghostCube.cube.renderer.materials = mat;
+
+							if(Mathf.Abs(hit.point.x - hit.collider.gameObject.transform.position.x) > 0.499f)
+							{
+								int temp = Mathf.RoundToInt((hit.point.x - hit.collider.gameObject.transform.position.x) * 2);
+								direction = new Vector3(temp,0,0);
+								ghostCube.cube.transform.position = tempVect + direction;
+							}
+							if(Mathf.Abs(hit.point.y - hit.collider.gameObject.transform.position.y) > 0.499f)
+							{
+								int temp = Mathf.RoundToInt((hit.point.y - hit.collider.gameObject.transform.position.y) * 2);
+								direction = new Vector3(0,temp,0);
+								ghostCube.cube.transform.position = tempVect + direction;
+							}
+							if(Mathf.Abs(hit.point.z - hit.collider.gameObject.transform.position.z) > 0.499f)
+							{
+								int temp = Mathf.RoundToInt((hit.point.z - hit.collider.gameObject.transform.position.z) * 2);
+								direction = new Vector3(0,0,temp);
+								ghostCube.cube.transform.position = tempVect + direction;
+							}
+						}
+						else
+						{
+							if(ghostCube != null)
+								Destroy(ghostCube.cube);
+							ghostCube = null;
+						}
+					}
+					if((Input.GetTouch(0).phase == TouchPhase.Ended) && (ghostCube != null) && (!breaking))
+					{
+						ghostCube.cube.AddComponent("BoxCollider");
+						ghostCube.cube.renderer.material.color = new Color(1,1,1,1);
+						creativeCubes.Add(ghostCube);
+
+						ghostCube = null;
+
+						float[] x = new float[creativeCubes.Count + 1];
+						float[] y = new float[creativeCubes.Count + 1];
+						float[] z = new float[creativeCubes.Count + 1];
+
+						for(int i=0; i < creativeCubes.Count;i++)
+						{
+							x[i] = creativeCubes[i].cube.transform.position.x;
+							y[i] = creativeCubes[i].cube.transform.position.y;
+							z[i] = creativeCubes[i].cube.transform.position.z;
+						}
+
+						float maxX = Mathf.Max(x) + 0.5f;
+						float minX = Mathf.Min(x) - 0.5f;
+						float maxY = Mathf.Max(y) + 0.5f;
+						float minY = Mathf.Min(y) - 0.5f;
+						float maxZ = Mathf.Max(z) + 0.5f;
+						float minZ = Mathf.Min(z) - 0.5f;
+
+						float hX = maxX - minX;
+						float hY = maxY - minY;
+						float hZ = maxZ - minZ;
+
+						float h = Mathf.Max(hX, Mathf.Max(hY,hZ));
+
+						editorCenter = new Vector3((maxX + minX)/2.0f,(maxY + minY)/2.0f,(maxZ + minZ)/2.0f);
+
+						if(h > 2)
+						{
+							Camera.main.transform.position = new Vector3(Camera.main.transform.position.x * h/lastH, 
+								Camera.main.transform.position.y * h/lastH, Camera.main.transform.position.z * h/lastH);
+							lastH = h;
+						}
+
+					}
 				}
-				cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.up, Input.GetTouch(0).deltaPosition.x * 600.0f * camSen / Screen.height);
-				//cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.up, Input.GetTouch(0).deltaPosition.x * 230.0f / Screen.height);
+
+				if(!creative)
+				{
+					cam.transform.LookAt (new Vector3(0, 0, 0), Vector3.up);
+					if(justTouched == null)
+					{
+						if(!(((cam.transform.position.y - editorCenter.y > 4.6f * lastH) && (Input.GetTouch(0).deltaPosition.y < 0.0f))
+						     || ((cam.transform.position.y - editorCenter.y < -4.6f * lastH) && (Input.GetTouch(0).deltaPosition.y > 0.0f))))
+						{
+							cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.right, -Input.GetTouch(0).deltaPosition.y * 800.0f * camSen / Screen.height);
+							//cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.right, -Input.GetTouch(0).deltaPosition.y * 300.0f / Screen.height);
+						}
+						cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.up, Input.GetTouch(0).deltaPosition.x * 600.0f * camSen / Screen.height);
+						//cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.up, Input.GetTouch(0).deltaPosition.x * 230.0f / Screen.height);
+					}
+				}
+				else
+				{
+					cam.transform.LookAt(editorCenter, Vector3.up);
+					if(justTouched == null)
+					{
+						if(!(((cam.transform.position.y - editorCenter.y > 4.3f * lastH) && (Input.GetTouch(0).deltaPosition.y < 0.0f))
+						     || ((cam.transform.position.y - editorCenter.y < -4.3f * lastH) && (Input.GetTouch(0).deltaPosition.y > 0.0f))))
+						{
+							cam.transform.RotateAround (editorCenter, cam.transform.right, -Input.GetTouch(0).deltaPosition.y * 800.0f * camSen / Screen.height);
+							//cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.right, -Input.GetTouch(0).deltaPosition.y * 300.0f / Screen.height);
+						}
+						cam.transform.RotateAround (editorCenter, cam.transform.up, Input.GetTouch(0).deltaPosition.x * 600.0f * camSen / Screen.height);
+						//cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.up, Input.GetTouch(0).deltaPosition.x * 230.0f / Screen.height);
+					}
+				}
 			}
 		}
 
@@ -135,16 +335,16 @@ public class GameScript : MonoBehaviour {
 
 	void SpawnCubes () 
 	{
-		//---Nastavenie kamery zo zakladnej pozicie------------------------------
+		//---Nastavenie kamery do zakladnej pozicie------------------------------
 
 		int tempMax = Mathf.Max (levelArray.GetLength (0), Mathf.Max (levelArray.GetLength (1), levelArray.GetLength (2)));
 
 		GameObject camera = GameObject.FindGameObjectWithTag ("MainCamera");
-		camera.transform.position = new Vector3 (0, 0, 10);
+		camera.transform.position = new Vector3 (0, 0, tempMax * 5);
 		camera.transform.LookAt (new Vector3(0, 0, 0), Vector3.up);
-		camera.camera.fieldOfView = tempMax * 10f;
+		camera.camera.fieldOfView = 20.0f;
 
-		//---Vytvorenie kociek--------------------------------------------------
+		//---Vymazanie predoslych kociek--------------------------------------------------
 		if(grid != null)
 		{
 			foreach (Cube cube in grid) 
@@ -154,6 +354,7 @@ public class GameScript : MonoBehaviour {
 			}
 			grid = null;
 		}
+		//---Vytvorenie kociek--------------------------------------------------
 		grid = new Cube[levelArray.GetLength (0), levelArray.GetLength (1), levelArray.GetLength (2)];
 
 		for (int x=0; x<levelArray.GetLength(0); x++)
@@ -200,8 +401,51 @@ public class GameScript : MonoBehaviour {
 		}
 	}
 
+	void spawnEditCubes()
+	{
+		//---Nastavenie kamery do zakladnej pozicie------------------------------
+		
+		GameObject camera = GameObject.FindGameObjectWithTag ("MainCamera");
+		camera.transform.position = new Vector3 (0, 0, 10);
+		camera.transform.LookAt (new Vector3(0, 0, 0), Vector3.up);
+		camera.camera.fieldOfView = 20.0f;
+
+		if(grid != null)
+		{
+			foreach (Cube cube in grid) 
+			{
+				if(cube != null)
+					Destroy(cube.cube);
+			}
+			grid = null;
+		}
+
+		/*grid = new Cube[9, 9, 9];
+		grid [4, 4, 4] = new Cube ();
+
+		Material[] mat= new Material[1];
+		mat[0] = grid [4, 4, 4].cube.renderer.materials[0];
+		grid [4, 4, 4].cube.renderer.materials = mat;*/
+
+		creativeCubes.Clear ();
+		creativeCubes.Add (new Cube ());
+
+		Material[] mat= new Material[1];
+		mat[0] = creativeCubes[0].cube.renderer.materials[0];
+		creativeCubes[0].cube.renderer.materials = mat;
+
+	}
+
 	void touchCube (GameObject cube)
 	{
+		if(creative)
+		{
+
+
+
+			return;
+		}
+
 		if (breaking)
 		{
 			if(cube.renderer.materials[0].color.r == 1)
@@ -340,13 +584,24 @@ public class GameScript : MonoBehaviour {
 
 	void openMainMenu()
 	{
-		foreach (Cube cube in grid) 
+		if(grid != null)
+		{
+			foreach (Cube cube in grid) 
+			{
+				if(cube != null)
+					Destroy(cube.cube);
+			}
+		}
+
+		foreach (Cube cube in creativeCubes) 
 		{
 			if(cube != null)
 				Destroy(cube.cube);
 		}
 
 		grid = null;
+		creativeCubes.Clear ();
+		creative = false;
 		pause = true;
 		inMenu = true;
 		solved = false;
@@ -359,6 +614,11 @@ public class GameScript : MonoBehaviour {
 		foreach(GameObject button in buttonsPause)
 		{
 			button.SetActive(false);
+		}
+
+		foreach(GameObject go in buttonsEdit)
+		{
+			go.SetActive(false);
 		}
 
 		for(int i=0;i < starsIngame.Count;i++)
@@ -420,17 +680,18 @@ public class GameScript : MonoBehaviour {
 		buttonsMenu[4].SetActive (true);
 		buttonsMenu[5].SetActive (true);
 		buttonsMenu[6].SetActive (true);
+		buttonsMenu[7].SetActive (true);
 	}
 
 	void buttonSettings()
 	{
 		buttonsMenu[1].SetActive (false);
 		buttonsMenu[2].SetActive (false);
-		buttonsMenu[7].SetActive (true);
 		buttonsMenu[8].SetActive (true);
 		buttonsMenu[9].SetActive (true);
 		buttonsMenu[10].SetActive (true);
 		buttonsMenu[11].SetActive (true);
+		buttonsMenu[12].SetActive (true);
 	}
 
 	void buttonPicube()
@@ -472,7 +733,7 @@ public class GameScript : MonoBehaviour {
 
 		int sens = 10 * Mathf.RoundToInt (camSen * 10.0f);
 
-		buttonsMenu [7].GetComponentInChildren<GUIText> ().text = "Camera Sensitivity: " + sens + "%";
+		buttonsMenu [8].GetComponentInChildren<GUIText> ().text = "Camera Sensitivity: " + sens + "%";
 	}
 
 	void buttonCamMinus()
@@ -482,7 +743,7 @@ public class GameScript : MonoBehaviour {
 
 		int sens = 10 * Mathf.RoundToInt (camSen * 10.0f);
 		
-		buttonsMenu [7].GetComponentInChildren<GUIText> ().text = "Camera Sensitivity: " + sens + "%";
+		buttonsMenu [8].GetComponentInChildren<GUIText> ().text = "Camera Sensitivity: " + sens + "%";
 	}
 
 	void prepareToStart()
@@ -510,7 +771,11 @@ public class GameScript : MonoBehaviour {
 			go.SetActive(true);
 			go.guiTexture.color = new Color (200/255.0f, 175/255.0f, 50/255.0f, 0.5f);
 		}
-		
+
+		breaking = true;
+		buttonsIngame [0].guiTexture.color = new Color (0.25f, 0.25f, 0.25f, 0.5f);
+		buttonsIngame [1].guiTexture.color = new Color (0.5f, 0.5f, 0.5f, 0.5f);
+
 		pause = false;
 		inMenu = false;
 	}
@@ -529,6 +794,8 @@ public class GameScript : MonoBehaviour {
 		{
 			go.SetActive(true);
 		}
+		buttonsLevels [17].SetActive (false);
+		buttonsLevels [18].SetActive (false);
 
 		
 		buttonsLevels[0].guiText.text = "Stage " + stage;
@@ -558,15 +825,27 @@ public class GameScript : MonoBehaviour {
 			buttonsMenu[i].SetActive(false);
 		}
 		buttonsMenu [0].SetActive (true);
-		
 
-		for(int i = 0; i < buttonsLevels.Count; i++)
+		loadLevelCount ();
+
+		if(customStageCount == 0)
+		{
+			buttonsLevels [18].SetActive (true);
+		}
+
+		for(int i = 0; i <= customStageCount; i++)
 		{
 			buttonsLevels[i].SetActive(true);
 		}
-		
-		
+
+		buttonsLevels [16].SetActive (true);
+		buttonsLevels [17].SetActive (true);
 		buttonsLevels[0].guiText.text = "Custom Stages";
+	}
+
+	void buttonStageBack()
+	{
+		buttonPicube ();
 	}
 
 	void buttonHammer()
@@ -634,11 +913,40 @@ public class GameScript : MonoBehaviour {
 		buttonsMenu[4].SetActive (true);
 		buttonsMenu[5].SetActive (true);
 		buttonsMenu[6].SetActive (true);
+		buttonsMenu[7].SetActive (true);
 
 		foreach(GameObject go in buttonsLevels)
 		{
 			go.SetActive(false);
 		}
+	}
+
+	void buttonLevelCreate()
+	{
+		foreach(GameObject button in buttonsMenu)
+		{
+			button.SetActive(false);
+		}
+		
+		foreach(GameObject go in buttonsLevels)
+		{
+			go.SetActive(false);
+		}
+
+		foreach(GameObject go in buttonsEdit)
+		{
+			go.SetActive(true);
+		}
+		
+		breaking = false;
+		pause = false;
+		inMenu = false;
+
+		creative = true;
+		editorCenter = new Vector3 (0, 0, 0);
+		lastH = 2;
+
+		spawnEditCubes ();
 	}
 
 	void buttonLevel(uint level)
@@ -841,10 +1149,192 @@ public class GameScript : MonoBehaviour {
 		}
 		if(stage == 4)
 		{
+			try
+			{
+				System.IO.StreamReader file = new System.IO.StreamReader(Application.persistentDataPath + "/custom" + level + ".txt");
 
+				uint d1 = uint.Parse(file.ReadLine());
+				uint d2 = uint.Parse(file.ReadLine());
+				uint d3 = uint.Parse(file.ReadLine());
+
+				levelArray = new bool[d1,d2,d3];
+
+				for (int x=0; x < d1; x++)
+				{
+					for (int y=0; y < d2; y++)
+					{
+						for (int z=0; z < d3; z++)
+						{
+							uint temp = uint.Parse(file.ReadLine());
+
+							if(temp == 1)
+							{
+								levelArray[x,y,z] = true;
+							}
+							else
+							{
+								levelArray[x,y,z] = false;
+							}
+
+						}
+					}
+				}
+
+				file.Close();
+			}
+			catch (System.Exception e)
+			{
+				Debug.Log(e);
+			}
 		}
 		
 		SpawnCubes ();
+	}
+
+	void buttonEditPause()
+	{
+		pause = true;
+
+		openPauseMenu ();
+	}
+
+	void buttonEditPlus()
+	{
+		if(pause)
+			return;
+
+		breaking = false;
+
+		Debug.Log (breaking);
+	}
+
+	void buttonEditMinus()
+	{
+		if(pause)
+			return;
+		
+		breaking = true;
+
+		Debug.Log (breaking);
+
+	}
+
+	void buttonEditOK()
+	{
+		convertToGrid ();
+	}
+
+	void convertToGrid()
+	{
+
+	}
+
+	void savingTest()
+	{
+		string fileName = Application.persistentDataPath + "/test.txt";
+		
+		try
+		{
+			
+			if (!File.Exists(fileName))
+			{
+				Debug.Log("Opened file!");
+
+				File.WriteAllText(fileName,"5 0 2 5 0");
+			}
+			
+			else
+			{
+				Debug.Log("File is exist! Loading!");
+				loadFile();
+			}
+		}
+		
+		catch (System.Exception e)
+		{
+			Debug.Log(e);
+		}
+	}
+
+	void loadFile()
+	{
+		Debug.Log("Reading");
+		
+		string fileName = Application.persistentDataPath + "/test.txt";
+		
+		string testText = File.ReadAllText(fileName);
+		
+		
+		Debug.Log (testText);
+	}
+	
+	uint loadLevelCount()
+	{
+		uint levelCount = 0;
+
+		for(int i = 1; i < 15; i++)
+		{
+			string filePath = Application.persistentDataPath + "/custom" + i + ".txt";
+
+			if(File.Exists(filePath))
+			{
+				levelCount++;
+			}
+			else
+			{
+				break;
+			}
+		}
+		customStageCount = levelCount;
+
+		return levelCount;
+	}
+
+	void testSaveLevel()
+	{
+		levelArray = new bool[3, 5, 5] { { { true, false, false, true, true }, { true, true, true, false, false }, { false, false, true, true, true }, { false, false, true, true, false },
+				{ false, false, true, false, false }}, { { false, false, false, false, false }, { true, true, true, false, false }, { false, false, true, true, true }, 
+				{ false, false, true, true, false },{ false, false, false, false, false }},{ { true, false, false, true, true }, { true, true, true, false, false }, 
+				{ false, false, true, true, true }, { false, false, true, true, false },{ false, false, true, false, false }}};
+	
+		saveLevel (1);
+	}
+
+	void saveLevel(uint level)
+	{
+		try
+		{
+			System.IO.StreamWriter file = new System.IO.StreamWriter(Application.persistentDataPath + "/custom1.txt");
+			
+			file.WriteLine (levelArray.GetLength (0).ToString ());
+			file.WriteLine (levelArray.GetLength (1).ToString ());
+			file.WriteLine (levelArray.GetLength (2).ToString ());
+			
+			for (int x=0; x<levelArray.GetLength(0); x++)
+			{
+				for (int y=0; y<levelArray.GetLength(1); y++)
+				{
+					for (int z=0; z<levelArray.GetLength(2); z++)
+					{
+						if(levelArray[x,y,z])
+							file.WriteLine("1");
+						else
+							file.WriteLine("0");
+					}
+				}
+			}
+			
+			file.Close ();
+		}
+		catch (System.Exception e)
+		{
+			Debug.Log(e);
+		}
+	}
+
+	void loadLevel()
+	{
+
 	}
 
 }

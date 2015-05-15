@@ -6,7 +6,7 @@ public class ButtonIngameScript : MonoBehaviour
 	// Use this for initialization
 	void Start () 
 	{
-		if(this.name == "buttonPause")
+		if((this.name == "buttonPause") || (this.name == "buttonEditPause") || (this.name == "buttonEditPlus") || (this.name == "buttonEditMinus") || (this.name == "buttonEditOK"))
 		{
 			this.guiTexture.pixelInset = new Rect ( -Screen.width / 32, -Screen.width / 32 , Screen.width / 16, Screen.width / 16);
 			return;
