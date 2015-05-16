@@ -27,8 +27,10 @@ public class GameScript : MonoBehaviour {
 
 	GameObject justTouched;
 	Cube ghostCube;
-	Vector3 editorCenter;
 	float lastH = 2;
+	float editorX = 1;
+	float editorY = 1;
+	float editorZ = 1;
 
 	ushort ticks = 0;
 	bool breaking = true;
@@ -77,7 +79,7 @@ public class GameScript : MonoBehaviour {
 					buttonPicube();
 				}
 
-				if(buttonsLevels[1].activeSelf)
+				if(buttonsLevels[0].activeSelf)
 				{
 					buttonLevelBack();
 				}
@@ -179,6 +181,84 @@ public class GameScript : MonoBehaviour {
 											}
 										}
 
+										float[] x = new float[creativeCubes.Count + 1];
+										float[] y = new float[creativeCubes.Count + 1];
+										float[] z = new float[creativeCubes.Count + 1];
+										
+										for(int i=0; i < creativeCubes.Count;i++)
+										{
+											x[i] = creativeCubes[i].cube.transform.position.x;
+											y[i] = creativeCubes[i].cube.transform.position.y;
+											z[i] = creativeCubes[i].cube.transform.position.z;
+										}
+										
+										float maxX = Mathf.Max(x) + 0.5f;
+										float minX = Mathf.Min(x) - 0.5f;
+										float maxY = Mathf.Max(y) + 0.5f;
+										float minY = Mathf.Min(y) - 0.5f;
+										float maxZ = Mathf.Max(z) + 0.5f;
+										float minZ = Mathf.Min(z) - 0.5f;
+										
+										float h = Mathf.Max(maxX - minX, Mathf.Max(maxY - minY,maxZ - minZ));
+										
+										if(h <= 9)
+										{
+											
+											//editorCenter = new Vector3((maxX + minX)/2.0f,(maxY + minY)/2.0f,(maxZ + minZ)/2.0f);
+											if((maxX - minX) < editorX)
+											{
+												foreach(Cube cube in creativeCubes)
+												{
+													if(hit.collider.gameObject.transform.position.x > 0)
+													{
+														cube.cube.transform.Translate(0.5f,0,0);
+													}
+													else
+													{
+														cube.cube.transform.Translate(-0.5f,0,0);
+													}
+												}
+											}
+											if((maxY - minY) < editorY)
+											{
+												foreach(Cube cube in creativeCubes)
+												{
+													if(hit.collider.gameObject.transform.position.y > 0)
+													{
+														cube.cube.transform.Translate(0,0.5f,0);
+													}
+													else
+													{
+														cube.cube.transform.Translate(0,-0.5f,0);
+													}
+												}
+											}
+											if((maxZ - minZ) < editorZ)
+											{
+												foreach(Cube cube in creativeCubes)
+												{
+													if(hit.collider.gameObject.transform.position.z > 0)
+													{
+														cube.cube.transform.Translate(0,0,0.5f);
+													}
+													else
+													{
+														cube.cube.transform.Translate(0,0,-0.5f);
+													}
+												}
+											}
+											
+											/*if(h > 2)
+											{
+												Camera.main.transform.position = new Vector3(Camera.main.transform.position.x * lastH/h, Camera.main.transform.position.y * lastH/h, Camera.main.transform.position.z * lastH/h);
+												lastH = h;
+											}*/
+											
+											editorX = maxX - minX;
+											editorY = maxY - minY;
+											editorZ = maxZ - minZ;
+										}
+
 									}
 								}
 							}
@@ -233,6 +313,7 @@ public class GameScript : MonoBehaviour {
 							if(ghostCube != null)
 								Destroy(ghostCube.cube);
 							ghostCube = null;
+
 						}
 					}
 					if((Input.GetTouch(0).phase == TouchPhase.Ended) && (ghostCube != null) && (!breaking))
@@ -240,8 +321,6 @@ public class GameScript : MonoBehaviour {
 						ghostCube.cube.AddComponent("BoxCollider");
 						ghostCube.cube.renderer.material.color = new Color(1,1,1,1);
 						creativeCubes.Add(ghostCube);
-
-						ghostCube = null;
 
 						float[] x = new float[creativeCubes.Count + 1];
 						float[] y = new float[creativeCubes.Count + 1];
@@ -261,53 +340,93 @@ public class GameScript : MonoBehaviour {
 						float maxZ = Mathf.Max(z) + 0.5f;
 						float minZ = Mathf.Min(z) - 0.5f;
 
-						float hX = maxX - minX;
-						float hY = maxY - minY;
-						float hZ = maxZ - minZ;
+						float h = Mathf.Max(maxX - minX, Mathf.Max(maxY - minY,maxZ - minZ));
 
-						float h = Mathf.Max(hX, Mathf.Max(hY,hZ));
+						if(h <= 9)
+							{
 
-						editorCenter = new Vector3((maxX + minX)/2.0f,(maxY + minY)/2.0f,(maxZ + minZ)/2.0f);
+							//Debug.Log("maxX: " + maxX + "  maxY: " + maxY + "  maxZ: " + maxZ);
+							//Debug.Log("minX: " + minX + "  minY: " + minY + "  minZ: " + minZ);
+							//Debug.Log("ediX: " + editorX + "  ediY: " + editorY + "  ediZ: " + editorZ);
 
-						if(h > 2)
-						{
-							Camera.main.transform.position = new Vector3(Camera.main.transform.position.x * h/lastH, 
-								Camera.main.transform.position.y * h/lastH, Camera.main.transform.position.z * h/lastH);
-							lastH = h;
+							//editorCenter = new Vector3((maxX + minX)/2.0f,(maxY + minY)/2.0f,(maxZ + minZ)/2.0f);
+							if((maxX - minX) > editorX)
+							{
+								foreach(Cube cube in creativeCubes)
+								{
+									if(ghostCube.cube.transform.position.x < 0)
+									{
+										cube.cube.transform.Translate(0.5f,0,0);
+									}
+									else
+									{
+										cube.cube.transform.Translate(-0.5f,0,0);
+									}
+								}
+							}
+							if((maxY - minY) > editorY)
+							{
+								foreach(Cube cube in creativeCubes)
+								{
+									if(ghostCube.cube.transform.position.y < 0)
+									{
+										cube.cube.transform.Translate(0,0.5f,0);
+									}
+									else
+									{
+										cube.cube.transform.Translate(0,-0.5f,0);
+									}
+								}
+							}
+							if((maxZ - minZ) > editorZ)
+							{
+								foreach(Cube cube in creativeCubes)
+								{
+									if(ghostCube.cube.transform.position.z < 0)
+									{
+										cube.cube.transform.Translate(0,0,0.5f);
+									}
+									else
+									{
+										cube.cube.transform.Translate(0,0,-0.5f);
+									}
+								}
+							}
+
+							if(h > 2)
+							{
+								Camera.main.transform.position = new Vector3(Camera.main.transform.position.x * h/lastH, 
+									Camera.main.transform.position.y * h/lastH, Camera.main.transform.position.z * h/lastH);
+								lastH = h;
+							}
+
+							editorX = maxX - minX;
+							editorY = maxY - minY;
+							editorZ = maxZ - minZ;
 						}
+						else
+						{
+							creativeCubes.Remove(ghostCube);
+							Destroy(ghostCube.cube);
+						}
+
+						ghostCube = null;
 
 					}
 				}
 
-				if(!creative)
+
+				cam.transform.LookAt (new Vector3(0, 0, 0), Vector3.up);
+				if(justTouched == null)
 				{
-					cam.transform.LookAt (new Vector3(0, 0, 0), Vector3.up);
-					if(justTouched == null)
+					if(!(((cam.transform.position.y > 4.6f * lastH) && (Input.GetTouch(0).deltaPosition.y < 0.0f))
+					     || ((cam.transform.position.y < -4.6f * lastH) && (Input.GetTouch(0).deltaPosition.y > 0.0f))))
 					{
-						if(!(((cam.transform.position.y - editorCenter.y > 4.6f * lastH) && (Input.GetTouch(0).deltaPosition.y < 0.0f))
-						     || ((cam.transform.position.y - editorCenter.y < -4.6f * lastH) && (Input.GetTouch(0).deltaPosition.y > 0.0f))))
-						{
-							cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.right, -Input.GetTouch(0).deltaPosition.y * 800.0f * camSen / Screen.height);
-							//cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.right, -Input.GetTouch(0).deltaPosition.y * 300.0f / Screen.height);
-						}
-						cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.up, Input.GetTouch(0).deltaPosition.x * 600.0f * camSen / Screen.height);
-						//cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.up, Input.GetTouch(0).deltaPosition.x * 230.0f / Screen.height);
+						cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.right, -Input.GetTouch(0).deltaPosition.y * 800.0f * camSen / Screen.height);
+						//cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.right, -Input.GetTouch(0).deltaPosition.y * 300.0f / Screen.height);
 					}
-				}
-				else
-				{
-					cam.transform.LookAt(editorCenter, Vector3.up);
-					if(justTouched == null)
-					{
-						if(!(((cam.transform.position.y - editorCenter.y > 4.3f * lastH) && (Input.GetTouch(0).deltaPosition.y < 0.0f))
-						     || ((cam.transform.position.y - editorCenter.y < -4.3f * lastH) && (Input.GetTouch(0).deltaPosition.y > 0.0f))))
-						{
-							cam.transform.RotateAround (editorCenter, cam.transform.right, -Input.GetTouch(0).deltaPosition.y * 800.0f * camSen / Screen.height);
-							//cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.right, -Input.GetTouch(0).deltaPosition.y * 300.0f / Screen.height);
-						}
-						cam.transform.RotateAround (editorCenter, cam.transform.up, Input.GetTouch(0).deltaPosition.x * 600.0f * camSen / Screen.height);
-						//cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.up, Input.GetTouch(0).deltaPosition.x * 230.0f / Screen.height);
-					}
+					cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.up, Input.GetTouch(0).deltaPosition.x * 600.0f * camSen / Screen.height);
+					//cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.up, Input.GetTouch(0).deltaPosition.x * 230.0f / Screen.height);
 				}
 			}
 		}
@@ -796,6 +915,7 @@ public class GameScript : MonoBehaviour {
 		}
 		buttonsLevels [17].SetActive (false);
 		buttonsLevels [18].SetActive (false);
+		buttonsLevels [19].SetActive (false);
 
 		
 		buttonsLevels[0].guiText.text = "Stage " + stage;
@@ -828,11 +948,6 @@ public class GameScript : MonoBehaviour {
 
 		loadLevelCount ();
 
-		if(customStageCount == 0)
-		{
-			buttonsLevels [18].SetActive (true);
-		}
-
 		for(int i = 0; i <= customStageCount; i++)
 		{
 			buttonsLevels[i].SetActive(true);
@@ -840,6 +955,14 @@ public class GameScript : MonoBehaviour {
 
 		buttonsLevels [16].SetActive (true);
 		buttonsLevels [17].SetActive (true);
+		buttonsLevels [18].SetActive(true);
+
+		if(customStageCount == 0)
+		{
+			buttonsLevels [18].SetActive(false);
+			buttonsLevels [19].SetActive (true);
+		}
+
 		buttonsLevels[0].guiText.text = "Custom Stages";
 	}
 
@@ -907,6 +1030,12 @@ public class GameScript : MonoBehaviour {
 
 	void buttonLevelBack()
 	{
+		if(stage == 5)
+		{
+			buttonStage4();
+			return;
+		}
+
 		buttonsMenu[1].SetActive (false);
 		buttonsMenu[2].SetActive (false);
 		buttonsMenu[3].SetActive (true);
@@ -923,39 +1052,37 @@ public class GameScript : MonoBehaviour {
 
 	void buttonLevelCreate()
 	{
-		foreach(GameObject button in buttonsMenu)
-		{
-			button.SetActive(false);
-		}
-		
-		foreach(GameObject go in buttonsLevels)
-		{
-			go.SetActive(false);
-		}
-
-		foreach(GameObject go in buttonsEdit)
-		{
-			go.SetActive(true);
-		}
-		
-		breaking = false;
-		pause = false;
-		inMenu = false;
-
-		creative = true;
-		editorCenter = new Vector3 (0, 0, 0);
-		lastH = 2;
+		prepareToCreateLevel ();
 
 		spawnEditCubes ();
 	}
 
+	void buttonLevelDelete()
+	{
+		stage = 5;
+		
+		if(customStageCount == 0)
+		{
+			buttonsLevels [19].SetActive (false);
+		}
+		
+		for(int i = 0; i <= customStageCount; i++)
+		{
+			buttonsLevels[i].SetActive(true);
+		}
+		
+		buttonsLevels [16].SetActive (true);
+		buttonsLevels [17].SetActive (false);
+		buttonsLevels [18].SetActive (false);
+		buttonsLevels[0].guiText.text = "Delete Custom Stage";
+	}
+
 	void buttonLevel(uint level)
 	{
-
-		prepareToStart ();
-
 		if(stage == 1)
 		{
+			prepareToStart ();
+
 			if(level == 1)
 			{
 				levelArray = new bool[2, 2, 2] { { { false, true }, { true, true } }, { { false, true }, { true, true } } };
@@ -1023,6 +1150,8 @@ public class GameScript : MonoBehaviour {
 		}
 		if(stage == 2)
 		{
+			prepareToStart ();
+
 			if(level == 1)
 			{
 
@@ -1086,6 +1215,8 @@ public class GameScript : MonoBehaviour {
 		}
 		if(stage == 3)
 		{
+			prepareToStart ();
+
 			if(level == 1)
 			{
 
@@ -1149,6 +1280,8 @@ public class GameScript : MonoBehaviour {
 		}
 		if(stage == 4)
 		{
+			prepareToStart ();
+
 			try
 			{
 				System.IO.StreamReader file = new System.IO.StreamReader(Application.persistentDataPath + "/custom" + level + ".txt");
@@ -1187,6 +1320,24 @@ public class GameScript : MonoBehaviour {
 				Debug.Log(e);
 			}
 		}
+		if(stage == 5)
+		{
+			File.Delete(Application.persistentDataPath + "/custom" + level + ".txt");
+
+			for(uint i = level + 1; i < customStageCount + 1; i++)
+			{
+				File.Move(Application.persistentDataPath + "/custom" + i + ".txt",Application.persistentDataPath + "/custom" + (i - 1) + ".txt");
+			}
+
+			stage = 4;
+
+			customStageCount--;
+
+			buttonLevelBack();
+			buttonStage4();
+
+			return;
+		}
 		
 		SpawnCubes ();
 	}
@@ -1204,8 +1355,6 @@ public class GameScript : MonoBehaviour {
 			return;
 
 		breaking = false;
-
-		Debug.Log (breaking);
 	}
 
 	void buttonEditMinus()
@@ -1214,19 +1363,81 @@ public class GameScript : MonoBehaviour {
 			return;
 		
 		breaking = true;
-
-		Debug.Log (breaking);
-
 	}
 
 	void buttonEditOK()
 	{
-		convertToGrid ();
+		convertEditToLevel ();
+		customStageCount++;
+		saveLevel (customStageCount);
+		pauseExit ();
 	}
 
-	void convertToGrid()
+	void prepareToCreateLevel()
 	{
+		foreach(GameObject button in buttonsMenu)
+		{
+			button.SetActive(false);
+		}
+		
+		foreach(GameObject go in buttonsLevels)
+		{
+			go.SetActive(false);
+		}
+		
+		foreach(GameObject go in buttonsEdit)
+		{
+			go.SetActive(true);
+		}
+		
+		breaking = false;
+		pause = false;
+		inMenu = false;
+		
+		creative = true;
+		lastH = 2;
+		editorX = 1;
+		editorY = 1;
+		editorZ = 1;
+	}
 
+	void convertEditToLevel()
+	{
+		levelArray = new bool[(int)editorX, (int)editorY, (int)editorZ];
+
+		uint lX = 0;
+		uint lY = 0;
+		uint lZ = 0;
+
+		for (float x = -editorX / 2.0f + 0.5f; x < editorX / 2.0f; x++,lX++) 
+		{
+			lY = 0;
+			for (float y = -editorY / 2.0f + 0.5f; y < editorY / 2.0f; y++, lY++) 
+			{
+				lZ = 0;
+				for (float z = -editorZ / 2.0f + 0.5f; z < editorZ / 2.0f; z++, lZ++) 
+				{
+					bool found = false;
+					for(int i = 0; i < creativeCubes.Count; i++)
+					{
+						Vector3 vec = creativeCubes[i].cube.transform.position;
+						if((vec.x == x) && (vec.y == y) && (vec.z ==z))
+						{
+							levelArray[lX,lY,lZ] = true;
+							Destroy(creativeCubes[i].cube);
+							creativeCubes.Remove(creativeCubes[i]);
+							found = true;
+							break;
+
+						}
+					}
+					if(!found)
+					{
+						levelArray[lX,lY,lZ] = false;
+					}
+				}
+			}
+		}
 	}
 
 	void savingTest()
@@ -1304,7 +1515,7 @@ public class GameScript : MonoBehaviour {
 	{
 		try
 		{
-			System.IO.StreamWriter file = new System.IO.StreamWriter(Application.persistentDataPath + "/custom1.txt");
+			System.IO.StreamWriter file = new System.IO.StreamWriter(Application.persistentDataPath + "/custom" + level + ".txt");
 			
 			file.WriteLine (levelArray.GetLength (0).ToString ());
 			file.WriteLine (levelArray.GetLength (1).ToString ());
@@ -1317,9 +1528,13 @@ public class GameScript : MonoBehaviour {
 					for (int z=0; z<levelArray.GetLength(2); z++)
 					{
 						if(levelArray[x,y,z])
+						{
 							file.WriteLine("1");
+						}
 						else
+						{
 							file.WriteLine("0");
+						}
 					}
 				}
 			}

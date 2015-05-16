@@ -1,10 +1,10 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
   <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\GameScript.cs">
     <Files>
-      <File FileName="Assets\Scripts\GameScript.cs" Line="1223" Column="3" />
+      <File FileName="Assets\Scripts\GameScript.cs" Line="339" Column="40" />
       <File FileName="Assets\Scripts\textMenuScript.cs" Line="1" Column="1" />
-      <File FileName="Assets\Scripts\ButtonMenuScript.cs" Line="1" Column="1" />
+      <File FileName="Assets\Scripts\ButtonMenuScript.cs" Line="22" Column="118" />
       <File FileName="Assets\Scripts\ButtonIngameScript.cs" Line="1" Column="1" />
       <File FileName="Assets\Scripts\CameraBackgroundScript.cs" Line="1" Column="1" />
       <File FileName="Assets\Scripts\SpriteScript.cs" Line="1" Column="1" />

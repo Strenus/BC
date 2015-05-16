@@ -19,7 +19,7 @@ public class ButtonMenuScript : MonoBehaviour
 		}
 		
 		if((this.name == "buttonStage1") || (this.name == "buttonStage2") || (this.name == "buttonStage3") || (this.name == "buttonStage4") || (this.name == "buttonLevelBack")
-		   || (this.name == "buttonLevelCreate") || (this.name == "buttonStageBack"))
+		   || (this.name == "buttonLevelCreate") || (this.name == "buttonStageBack") || (this.name == "buttonLevelDelete"))
 		{
 			this.guiTexture.pixelInset = new Rect (-Screen.width / 8, -Screen.height / 12, Screen.width / 4, Screen.height / 6);
 			return;
