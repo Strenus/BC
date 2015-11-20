@@ -253,6 +253,12 @@ public class GameScript : MonoBehaviour {
 												Camera.main.transform.position = new Vector3(Camera.main.transform.position.x * lastH/h, Camera.main.transform.position.y * lastH/h, Camera.main.transform.position.z * lastH/h);
 												lastH = h;
 											}*/
+											if(h > 2)
+											{
+												Camera.main.transform.position = new Vector3(Camera.main.transform.position.x * h/lastH, 
+													Camera.main.transform.position.y * h/lastH, Camera.main.transform.position.z * h/lastH);
+												lastH = h;
+											}
 											
 											editorX = maxX - minX;
 											editorY = maxY - minY;
@@ -1101,7 +1107,9 @@ public class GameScript : MonoBehaviour {
 			}
 			if(level == 4)
 			{
-
+				//levelArray = new bool[3,5,5] { { { true, false, true, true, true}, { true, true, true, false, false}, { false, false, true, true, true}, { false, false, true, true, false}, { false, false, true, false, false}}, { { false, false, false, false, false}, { true, true, true, false, false}, { true, false, true, true, true}, { false, false, true, true, false}, { false, false, false, false, false}}, { { true, false, true, true, true}, { true, true, true, false, false}, { false, false, true, true, true}, { false, false, true, true, false}, { false, false, true, false, false}}};
+				//levelArray = new bool[5,5,3] { { { true, false, true}, { false, false, false}, { true, true, true}, { false, false, false}, { false, false, false}}, { { true, false, true}, { false, false, false}, { true, true, true}, { true, true, true}, { false, false, false}}, { { true, false, true}, { true, true, true}, { true, true, true}, { true, true, true}, { true, false, true}}, { { false, false, false}, { true, true, true}, { false, false, false}, { false, false, false}, { false, false, false}}, { { true, false, true}, { true, true, true}, { false, true, false}, { false, false, false}, { false, false, false}}};
+				levelArray = new bool[3,5,5] { { { true, false, true, true, true}, { true, true, true, false, false}, { false, false, true, true, true}, { false, false, true, true, false}, { false, false, true, false, false}}, { { false, false, false, false, false}, { true, true, true, false, false}, { true, false, true, true, true}, { false, false, true, true, false}, { false, false, false, false, false}}, { { true, false, true, true, true}, { true, true, true, false, false}, { false, false, true, true, true}, { false, false, true, true, false}, { false, false, true, false, false}}};
 			}
 			if(level == 5)
 			{
@@ -1540,6 +1548,57 @@ public class GameScript : MonoBehaviour {
 			}
 			
 			file.Close ();
+
+			//TEST
+			file = new System.IO.StreamWriter(Application.persistentDataPath + "/test" + level + ".txt");
+
+			file.Write("levelArray = new bool[");
+			file.Write(levelArray.GetLength (0).ToString ());
+			file.Write(",");
+			file.Write(levelArray.GetLength (1).ToString ());
+			file.Write(",");
+			file.Write(levelArray.GetLength (2).ToString ());
+			file.Write("] ");
+
+			file.Write("{ ");
+			for (int x=0; x<levelArray.GetLength(0); x++)
+			{
+				file.Write("{ ");
+				for (int y=0; y<levelArray.GetLength(1); y++)
+				{
+					file.Write("{ ");
+					for (int z=0; z<levelArray.GetLength(2); z++)
+					{
+						if(levelArray[x,y,z])
+						{
+							file.Write("true");
+						}
+						else
+						{
+							file.Write("false");
+						}
+						if(z + 1 != levelArray.GetLength(2))
+							file.Write(", ");
+					}
+					file.Write("}");
+					if(y + 1 != levelArray.GetLength(1))
+						file.Write(", ");
+
+				}
+				file.Write("}");
+				if(x + 1 != levelArray.GetLength(0))
+					file.Write(", ");
+			}
+			file.Write("};");
+			
+			file.Close ();
+
+			/*
+			{ { { true, false, false, true, true }, { true, true, true, false, false }, { false, false, true, true, true }, { false, false, true, true, false },
+			{ false, false, true, false, false }}, { { false, false, false, false, false }, { true, true, true, false, false }, { false, false, true, true, true }, 
+			{ false, false, true, true, false },{ false, false, false, false, false }},{ { true, false, false, true, true }, { true, true, true, false, false }, 
+			{ false, false, true, true, true }, { false, false, true, true, false },{ false, false, true, false, false }}}
+			*/
 		}
 		catch (System.Exception e)
 		{
