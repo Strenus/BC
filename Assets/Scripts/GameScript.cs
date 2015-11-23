@@ -27,7 +27,8 @@ public class GameScript : MonoBehaviour {
 
 	GameObject justTouched;
 	Cube ghostCube;
-	float lastH = 2;
+	float touchDistance = 0;
+	bool creativeCameraAdjust = true;
 	float editorX = 1;
 	float editorY = 1;
 	float editorZ = 1;
@@ -139,7 +140,7 @@ public class GameScript : MonoBehaviour {
 
 		if(!pause)
 		{
-			if (Input.touchCount > 0)
+			if (Input.touchCount == 1)
 			{
 				if(Input.GetTouch(0).phase == TouchPhase.Began)
 				{
@@ -169,7 +170,7 @@ public class GameScript : MonoBehaviour {
 								}
 								else
 								{
-									if(breaking)
+									if((breaking) && (creativeCubes.Count > 1))
 									{
 										foreach(Cube cube in creativeCubes)
 										{
@@ -181,9 +182,9 @@ public class GameScript : MonoBehaviour {
 											}
 										}
 
-										float[] x = new float[creativeCubes.Count + 1];
-										float[] y = new float[creativeCubes.Count + 1];
-										float[] z = new float[creativeCubes.Count + 1];
+										float[] x = new float[creativeCubes.Count];
+										float[] y = new float[creativeCubes.Count];
+										float[] z = new float[creativeCubes.Count];
 										
 										for(int i=0; i < creativeCubes.Count;i++)
 										{
@@ -205,17 +206,20 @@ public class GameScript : MonoBehaviour {
 										{
 											
 											//editorCenter = new Vector3((maxX + minX)/2.0f,(maxY + minY)/2.0f,(maxZ + minZ)/2.0f);
+
+											//centering objects
+
 											if((maxX - minX) < editorX)
 											{
 												foreach(Cube cube in creativeCubes)
 												{
 													if(hit.collider.gameObject.transform.position.x > 0)
 													{
-														cube.cube.transform.Translate(0.5f,0,0);
+														cube.cube.transform.Translate((editorX - maxX + minX) * 0.5f,0,0);
 													}
 													else
 													{
-														cube.cube.transform.Translate(-0.5f,0,0);
+														cube.cube.transform.Translate(-(editorX - maxX + minX) * 0.5f,0,0);
 													}
 												}
 											}
@@ -225,11 +229,11 @@ public class GameScript : MonoBehaviour {
 												{
 													if(hit.collider.gameObject.transform.position.y > 0)
 													{
-														cube.cube.transform.Translate(0,0.5f,0);
+														cube.cube.transform.Translate(0,(editorY - maxY + minY) * 0.5f,0);
 													}
 													else
 													{
-														cube.cube.transform.Translate(0,-0.5f,0);
+														cube.cube.transform.Translate(0,-(editorY - maxY + minY) * 0.5f,0);
 													}
 												}
 											}
@@ -239,25 +243,20 @@ public class GameScript : MonoBehaviour {
 												{
 													if(hit.collider.gameObject.transform.position.z > 0)
 													{
-														cube.cube.transform.Translate(0,0,0.5f);
+														cube.cube.transform.Translate(0,0,(editorZ - maxZ + minZ) * 0.5f);
 													}
 													else
 													{
-														cube.cube.transform.Translate(0,0,-0.5f);
+														cube.cube.transform.Translate(0,0,-(editorZ - maxZ + minZ) * 0.5f);
 													}
 												}
 											}
-											
-											/*if(h > 2)
+
+
+											//Camera adjustment
+											if((creativeCameraAdjust) && (h > 2))
 											{
-												Camera.main.transform.position = new Vector3(Camera.main.transform.position.x * lastH/h, Camera.main.transform.position.y * lastH/h, Camera.main.transform.position.z * lastH/h);
-												lastH = h;
-											}*/
-											if(h > 2)
-											{
-												Camera.main.transform.position = new Vector3(Camera.main.transform.position.x * h/lastH, 
-													Camera.main.transform.position.y * h/lastH, Camera.main.transform.position.z * h/lastH);
-												lastH = h;
+												Camera.main.fieldOfView = 5 * h;
 											}
 											
 											editorX = maxX - minX;
@@ -351,11 +350,14 @@ public class GameScript : MonoBehaviour {
 						if(h <= 9)
 							{
 
+
 							//Debug.Log("maxX: " + maxX + "  maxY: " + maxY + "  maxZ: " + maxZ);
 							//Debug.Log("minX: " + minX + "  minY: " + minY + "  minZ: " + minZ);
 							//Debug.Log("ediX: " + editorX + "  ediY: " + editorY + "  ediZ: " + editorZ);
 
 							//editorCenter = new Vector3((maxX + minX)/2.0f,(maxY + minY)/2.0f,(maxZ + minZ)/2.0f);
+
+							//centering object
 							if((maxX - minX) > editorX)
 							{
 								foreach(Cube cube in creativeCubes)
@@ -399,11 +401,10 @@ public class GameScript : MonoBehaviour {
 								}
 							}
 
-							if(h > 2)
+							//Camera Adjustment
+							if((creativeCameraAdjust) && (h > 2))
 							{
-								Camera.main.transform.position = new Vector3(Camera.main.transform.position.x * h/lastH, 
-									Camera.main.transform.position.y * h/lastH, Camera.main.transform.position.z * h/lastH);
-								lastH = h;
+								Camera.main.fieldOfView = 5 * h;
 							}
 
 							editorX = maxX - minX;
@@ -423,18 +424,58 @@ public class GameScript : MonoBehaviour {
 
 
 				cam.transform.LookAt (new Vector3(0, 0, 0), Vector3.up);
-				if(justTouched == null)
+				if((Input.GetTouch (0).phase == TouchPhase.Moved) && (justTouched == null))
 				{
-					if(!(((cam.transform.position.y > 4.6f * lastH) && (Input.GetTouch(0).deltaPosition.y < 0.0f))
-					     || ((cam.transform.position.y < -4.6f * lastH) && (Input.GetTouch(0).deltaPosition.y > 0.0f))))
+					float angle;
+					if(!(((cam.transform.position.y > 19.8f ) && (Input.GetTouch(0).deltaPosition.y < 0.0f))
+					     || ((cam.transform.position.y < -19.8f ) && (Input.GetTouch(0).deltaPosition.y > 0.0f))))
 					{
-						cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.right, -Input.GetTouch(0).deltaPosition.y * 800.0f * camSen / Screen.height);
+						angle = -Input.GetTouch(0).deltaPosition.y * 800.0f * camSen / Screen.height;
+						cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.right, angle);
 						//cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.right, -Input.GetTouch(0).deltaPosition.y * 300.0f / Screen.height);
 					}
-					cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.up, Input.GetTouch(0).deltaPosition.x * 600.0f * camSen / Screen.height);
+					angle = Input.GetTouch(0).deltaPosition.x * 600.0f * camSen / Screen.height;
+					float modifier = -0.04f* Mathf.Abs(cam.transform.position.y) + 1;
+					cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.up, angle * modifier);
 					//cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.up, Input.GetTouch(0).deltaPosition.x * 230.0f / Screen.height);
 				}
+
+				touchDistance = 0;
 			}
+
+			if (Input.touchCount == 2)
+			{
+				if((Input.GetTouch(0).phase == TouchPhase.Moved) && (Input.GetTouch(1).phase == TouchPhase.Moved))
+				{
+					Vector2 touch0, touch1;
+					touch0 = Input.GetTouch(0).position;
+					touch1 = Input.GetTouch(1).position;
+					
+					if(touchDistance == 0)
+						touchDistance = Vector2.Distance(touch0, touch1);
+					
+					if(touchDistance - Vector2.Distance(touch0, touch1) > 2.0f)
+					{
+						Camera.main.fieldOfView++;
+					}
+					if(touchDistance - Vector2.Distance(touch0, touch1) < -2.0f)
+					{
+						Camera.main.fieldOfView--;
+					}
+					
+					
+					touchDistance = Vector2.Distance(touch0, touch1);
+					creativeCameraAdjust = false;
+				}
+				
+				if((Input.GetTouch(0).phase == TouchPhase.Ended) || (Input.GetTouch(1).phase == TouchPhase.Ended)
+				   || (Input.GetTouch(0).phase == TouchPhase.Canceled) || (Input.GetTouch(1).phase == TouchPhase.Canceled))
+				{
+					touchDistance = 0;
+				}
+			}
+
+			//Debug.Log(touchDistance);
 		}
 
 		//---MainMenuAnimation-------------------------------------------------
@@ -465,9 +506,9 @@ public class GameScript : MonoBehaviour {
 		int tempMax = Mathf.Max (levelArray.GetLength (0), Mathf.Max (levelArray.GetLength (1), levelArray.GetLength (2)));
 
 		GameObject camera = GameObject.FindGameObjectWithTag ("MainCamera");
-		camera.transform.position = new Vector3 (0, 0, tempMax * 5);
+		camera.transform.position = new Vector3 (0, 0, 20);
 		camera.transform.LookAt (new Vector3(0, 0, 0), Vector3.up);
-		camera.camera.fieldOfView = 20.0f;
+		camera.camera.fieldOfView = 5 * tempMax;
 
 		//---Vymazanie predoslych kociek--------------------------------------------------
 		if(grid != null)
@@ -531,9 +572,9 @@ public class GameScript : MonoBehaviour {
 		//---Nastavenie kamery do zakladnej pozicie------------------------------
 		
 		GameObject camera = GameObject.FindGameObjectWithTag ("MainCamera");
-		camera.transform.position = new Vector3 (0, 0, 10);
+		camera.transform.position = new Vector3 (0, 0, 20);
 		camera.transform.LookAt (new Vector3(0, 0, 0), Vector3.up);
-		camera.camera.fieldOfView = 20.0f;
+		camera.camera.fieldOfView = 10.0f;
 
 		if(grid != null)
 		{
@@ -1091,7 +1132,7 @@ public class GameScript : MonoBehaviour {
 
 			if(level == 1)
 			{
-				levelArray = new bool[2, 2, 2] { { { false, true }, { true, true } }, { { false, true }, { true, true } } };
+				levelArray = new bool[4,1,4] {{{false, true, true, true}}, {{true, false, false, false}}, {{true, false, false, false}}, {{false, true, true, true}}};
 			}
 			if(level == 2)
 			{
@@ -1401,9 +1442,9 @@ public class GameScript : MonoBehaviour {
 		breaking = false;
 		pause = false;
 		inMenu = false;
+		creativeCameraAdjust = true;
 		
 		creative = true;
-		lastH = 2;
 		editorX = 1;
 		editorY = 1;
 		editorZ = 1;
@@ -1560,13 +1601,13 @@ public class GameScript : MonoBehaviour {
 			file.Write(levelArray.GetLength (2).ToString ());
 			file.Write("] ");
 
-			file.Write("{ ");
+			file.Write("{");
 			for (int x=0; x<levelArray.GetLength(0); x++)
 			{
-				file.Write("{ ");
+				file.Write("{");
 				for (int y=0; y<levelArray.GetLength(1); y++)
 				{
-					file.Write("{ ");
+					file.Write("{");
 					for (int z=0; z<levelArray.GetLength(2); z++)
 					{
 						if(levelArray[x,y,z])
