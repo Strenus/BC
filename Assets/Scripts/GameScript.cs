@@ -15,6 +15,10 @@ public class GameScript : MonoBehaviour {
 	List<GameObject> fragments = new List<GameObject>();
 	List<Cube> creativeCubes = new List<Cube>();
 
+	public GameObject[] ClipArrow = new GameObject[3];
+	public short movingArrow = -1;
+	public float arrowOffset;
+
 	public List<GameObject> buttonsMenu = new List<GameObject>();
 	public List<GameObject> buttonsIngame = new List<GameObject>();
 	public List<GameObject> starsIngame = new List<GameObject>();
@@ -150,11 +154,23 @@ public class GameScript : MonoBehaviour {
 					if (Physics.Raycast (ray, out hit)) 
 					{
 						justTouched = hit.collider.gameObject;
+
+						if((justTouched.name == "Arrow X") || (justTouched.name == "Arrow Y") || (justTouched.name == "Arrow Z"))
+						{
+							touchArrow(justTouched.name);
+						}
 					}
+				}
+
+				if((movingArrow >=0) && (Input.GetTouch(0).phase == TouchPhase.Moved))
+				{
+					moveArrow();
 				}
 				
 				if(Input.GetTouch(0).phase == TouchPhase.Ended)
 				{
+					movingArrow = -1;
+
 					Ray ray = cam.ScreenPointToRay (Input.GetTouch(0).position);
 					RaycastHit hit = new RaycastHit();
 					
@@ -166,7 +182,7 @@ public class GameScript : MonoBehaviour {
 							{
 								if(!creative)
 								{
-									touchCube (hit.collider.gameObject);
+										touchCube (hit.collider.gameObject);
 								}
 								else
 								{
@@ -256,7 +272,7 @@ public class GameScript : MonoBehaviour {
 											//Camera adjustment
 											if((creativeCameraAdjust) && (h > 2))
 											{
-												Camera.main.fieldOfView = 5 * h;
+												Camera.main.fieldOfView = 4 * h;
 											}
 											
 											editorX = maxX - minX;
@@ -404,7 +420,7 @@ public class GameScript : MonoBehaviour {
 							//Camera Adjustment
 							if((creativeCameraAdjust) && (h > 2))
 							{
-								Camera.main.fieldOfView = 5 * h;
+								Camera.main.fieldOfView = 4 * h;
 							}
 
 							editorX = maxX - minX;
@@ -501,16 +517,16 @@ public class GameScript : MonoBehaviour {
 
 	void SpawnCubes () 
 	{
-		//---Nastavenie kamery do zakladnej pozicie------------------------------
+		//---Placing Camera To Default Position------------------------------
 
 		int tempMax = Mathf.Max (levelArray.GetLength (0), Mathf.Max (levelArray.GetLength (1), levelArray.GetLength (2)));
 
 		GameObject camera = GameObject.FindGameObjectWithTag ("MainCamera");
 		camera.transform.position = new Vector3 (0, 0, 20);
 		camera.transform.LookAt (new Vector3(0, 0, 0), Vector3.up);
-		camera.camera.fieldOfView = 5 * tempMax;
+		camera.camera.fieldOfView = 4 * tempMax;
 
-		//---Vymazanie predoslych kociek--------------------------------------------------
+		//---Deleting previous cubes--------------------------------------------------
 		if(grid != null)
 		{
 			foreach (Cube cube in grid) 
@@ -520,7 +536,7 @@ public class GameScript : MonoBehaviour {
 			}
 			grid = null;
 		}
-		//---Vytvorenie kociek--------------------------------------------------
+		//---Spawning Cubes--------------------------------------------------
 		grid = new Cube[levelArray.GetLength (0), levelArray.GetLength (1), levelArray.GetLength (2)];
 
 		for (int x=0; x<levelArray.GetLength(0); x++)
@@ -532,7 +548,9 @@ public class GameScript : MonoBehaviour {
 					
 					grid[x,y,z] = new Cube();
 					grid[x,y,z].cube.transform.position = new Vector3(x - levelArray.GetLength(0)/2.0f + 0.5f,y - levelArray.GetLength(1)/2.0f + 0.5f,z - levelArray.GetLength(2)/2.0f + 0.5f);
-					
+
+					grid[x,y,z].cube.gameObject.name = "Cube " + x + " " + y + " " + z;
+
 					sbyte tempCount = 0;			
 					
 					for(int i=0;i<levelArray.GetLength(2);i++)
@@ -565,11 +583,38 @@ public class GameScript : MonoBehaviour {
 				}
 			}
 		}
+		//---Clipping Planes------------------------------------------------------
+
+		Vector3 temp;
+
+		temp = grid [0, grid.GetLength (1) - 1, 0].cube.transform.position;
+		ClipArrow[0] = GameObject.Instantiate(Resources.Load("Arrow")) as GameObject;
+		ClipArrow[0].name = "Arrow X";
+		//mats[side + 1] = new Material(Shader.Find ("Diffuse"));
+		ClipArrow[0].renderer.material.color = new Color (0.75f, 0.25f, 0.25f, 1.0f);
+		ClipArrow[0].transform.position = new Vector3 (temp.x - 0.6f, temp.y + 0.5f, temp.z - 0.5f);
+		ClipArrow[0].transform.Rotate (0.0f, 0.0f, 270.0f);
+
+		temp = grid [grid.GetLength (0) - 1, grid.GetLength (1) - 1, 0].cube.transform.position;
+		ClipArrow[1] = GameObject.Instantiate(Resources.Load("Arrow")) as GameObject;
+		ClipArrow[1].name = "Arrow Y";
+		ClipArrow[1].renderer.material.color = new Color (0.25f, 0.75f, 0.25f, 1.0f);
+		ClipArrow[1].transform.position = new Vector3 (temp.x + 0.5f, temp.y + 0.6f, temp.z - 0.5f);
+		ClipArrow[1].transform.Rotate (180.0f, 0.0f, 0.0f);
+
+		temp = grid [grid.GetLength (0) - 1, grid.GetLength (1) - 1, grid.GetLength (2) - 1].cube.transform.position;
+
+		ClipArrow[2] = GameObject.Instantiate(Resources.Load("Arrow")) as GameObject;
+		ClipArrow[2].name = "Arrow Z";
+		ClipArrow[2].renderer.material.color = new Color (0.25f, 0.25f, 0.75f, 1.0f);
+		ClipArrow[2].transform.position = new Vector3 (temp.x + 0.5f, temp.y + 0.5f, temp.z + 0.6f);
+		ClipArrow[2].transform.Rotate (270.0f, 0.0f, 0.0f);
+
 	}
 
 	void spawnEditCubes()
 	{
-		//---Nastavenie kamery do zakladnej pozicie------------------------------
+		//---Placing Camera To Default Position------------------------------
 		
 		GameObject camera = GameObject.FindGameObjectWithTag ("MainCamera");
 		camera.transform.position = new Vector3 (0, 0, 20);
@@ -606,9 +651,6 @@ public class GameScript : MonoBehaviour {
 	{
 		if(creative)
 		{
-
-
-
 			return;
 		}
 
@@ -644,6 +686,139 @@ public class GameScript : MonoBehaviour {
 		{
 			brushCube(cube);
 		}
+	}
+
+	void touchArrow(string name)
+	{
+		if(name == "Arrow X")
+		{
+			movingArrow = 0;
+
+			Vector3 touchPos = Camera.main.ScreenToWorldPoint(new Vector3 (Input.GetTouch(0).position.x , Input.GetTouch(0).position.y, 20.0f ));
+			arrowOffset = touchPos.x - ClipArrow[0].transform.position.x;
+		}
+		
+		if(name == "Arrow Y")
+		{
+			movingArrow = 1;
+
+			Vector3 touchPos = Camera.main.ScreenToWorldPoint(new Vector3 (Input.GetTouch(0).position.x , Input.GetTouch(0).position.y, 20.0f ));
+			arrowOffset = touchPos.y - ClipArrow[1].transform.position.y;
+		
+		}
+		
+		if(name == "Arrow Z")
+		{
+			movingArrow = 2;
+
+			Vector3 touchPos = Camera.main.ScreenToWorldPoint(new Vector3 (Input.GetTouch(0).position.x , Input.GetTouch(0).position.y, 20.0f ));
+			arrowOffset = touchPos.z - ClipArrow[2].transform.position.z;
+
+		}
+	}
+
+	void moveArrow()
+	{
+		if(movingArrow == 0)
+		{
+			Vector3 wantedPos = Camera.main.ScreenToWorldPoint(new Vector3 (Input.GetTouch(0).position.x , Input.GetTouch(0).position.y, 20.0f ));
+
+			ClipArrow[0].transform.position = new Vector3 (wantedPos.x - arrowOffset, ClipArrow[0].transform.position.y, ClipArrow[0].transform.position.z);
+
+			if(wantedPos.x - arrowOffset > levelArray.GetLength(0)/2.0f - 1.1f) 
+				ClipArrow[0].transform.position = new Vector3 (levelArray.GetLength(0)/2.0f - 1.1f, ClipArrow[0].transform.position.y, ClipArrow[0].transform.position.z);
+
+
+			if(wantedPos.x - arrowOffset < - levelArray.GetLength(0)/2.0f - 0.1f)
+				ClipArrow[0].transform.position = new Vector3 (- levelArray.GetLength(0)/2.0f - 0.1f, ClipArrow[0].transform.position.y, ClipArrow[0].transform.position.z);
+		}
+
+		if(movingArrow == 1)
+		{
+			Vector3 wantedPos = Camera.main.ScreenToWorldPoint(new Vector3 (Input.GetTouch(0).position.x , Input.GetTouch(0).position.y, 20.0f ));
+
+												
+			ClipArrow[1].transform.position = new Vector3 (ClipArrow[1].transform.position.x, wantedPos.y - arrowOffset, ClipArrow[1].transform.position.z);
+
+			if(wantedPos.y - arrowOffset > levelArray.GetLength(1)/2.0f + 0.1f) 
+			{
+				ClipArrow[1].transform.position = new Vector3 (ClipArrow[1].transform.position.x, levelArray.GetLength(1)/2.0f + 0.1f, ClipArrow[1].transform.position.z);
+			}
+			if(wantedPos.y - arrowOffset < - levelArray.GetLength(1)/2.0f + 1.1f)
+			{
+				ClipArrow[1].transform.position = new Vector3 (ClipArrow[1].transform.position.x, - levelArray.GetLength(1)/2.0f + 1.1f, ClipArrow[1].transform.position.z);
+			}
+		}
+
+		if(movingArrow == 2)
+		{
+			Vector3 wantedPos = Camera.main.ScreenToWorldPoint(new Vector3 (Input.GetTouch(0).position.x , Input.GetTouch(0).position.y, 20.0f ));
+
+			ClipArrow[2].transform.position = new Vector3 (ClipArrow[2].transform.position.x, ClipArrow[2].transform.position.y, wantedPos.z - arrowOffset);
+
+			if(wantedPos.z - arrowOffset > levelArray.GetLength(2)/2.0f + 0.1f)
+			{
+				ClipArrow[2].transform.position = new Vector3 (ClipArrow[2].transform.position.x, ClipArrow[2].transform.position.y, levelArray.GetLength(2)/2.0f + 0.1f);
+			}
+			if(wantedPos.z - arrowOffset < - levelArray.GetLength(2)/2.0f + 1.1f)
+			{
+				ClipArrow[2].transform.position = new Vector3 (ClipArrow[2].transform.position.x, ClipArrow[2].transform.position.y, - levelArray.GetLength(2)/2.0f + 1.1f);
+			}
+		}
+
+		foreach(Cube cube in grid)
+		{
+			if(cube.cube == null)
+				continue;
+
+			if((cube.cube.transform.position.x - 0.5f < ClipArrow[0].transform.position.x) || (cube.cube.transform.position.y + 0.5f > ClipArrow[1].transform.position.y)
+			   || (cube.cube.transform.position.z + 0.5f > ClipArrow[2].transform.position.z))
+			{
+				cube.cube.collider.enabled = false;
+				
+				foreach(Material mat in cube.cube.renderer.materials)
+				{
+					int tempMax = Mathf.Max (levelArray.GetLength (0), Mathf.Max (levelArray.GetLength (1), levelArray.GetLength (2)));
+					
+					mat.color = new Color(mat.color.r, mat.color.g, mat.color.b, 0.4f / tempMax);
+				}
+				//cube.cube.SetActive(false);
+			}
+			else
+			{
+				cube.cube.collider.enabled = true;
+				
+				foreach(Material mat in cube.cube.renderer.materials)
+				{
+					mat.color = new Color(mat.color.r, mat.color.g, mat.color.b, 1.0f);
+				}
+				
+				//cube.cube.SetActive(true);
+			}
+		}
+
+		//(x - levelArray.GetLength(0)/2.0f + 0.5f,y - levelArray.GetLength(1)/2.0f + 0.5f,z - levelArray.GetLength(2)/2.0f + 0.5f);
+
+			/*
+			temp = grid [0, grid.GetLength (1) - 1, 0].cube.transform.position;
+			ClipArrow[0] = GameObject.Instantiate(Resources.Load("Arrow")) as GameObject;
+			ClipArrow[0].name = "Arrow X";
+			ClipArrow[0].transform.position = new Vector3 (temp.x - 0.6f, temp.y + 0.5f, temp.z - 0.5f);
+			ClipArrow[0].transform.Rotate (0.0f, 0.0f, 270.0f);
+
+			temp = grid [grid.GetLength (0) - 1, grid.GetLength (1) - 1, 0].cube.transform.position;
+			ClipArrow[1] = GameObject.Instantiate(Resources.Load("Arrow")) as GameObject;
+			ClipArrow[1].name = "Arrow Y";
+			ClipArrow[1].transform.position = new Vector3 (temp.x + 0.5f, temp.y + 0.6f, temp.z - 0.5f);
+			ClipArrow[1].transform.Rotate (180.0f, 0.0f, 0.0f);
+
+			temp = grid [grid.GetLength (0) - 1, grid.GetLength (1) - 1, grid.GetLength (2) - 1].cube.transform.position;
+
+			ClipArrow[2] = GameObject.Instantiate(Resources.Load("Arrow")) as GameObject;
+			ClipArrow[2].name = "Arrow Z";
+			ClipArrow[2].transform.position = new Vector3 (temp.x + 0.5f, temp.y + 0.5f, temp.z + 0.6f);
+			ClipArrow[2].transform.Rotate (270.0f, 0.0f, 0.0f);
+			*/
 	}
 
 	void breakCube (GameObject cube)
@@ -759,6 +934,14 @@ public class GameScript : MonoBehaviour {
 			}
 		}
 
+		for (int i=0; i<3; i++) 
+		{
+			if(ClipArrow[i] == null)
+				break;
+
+			Destroy(ClipArrow[i]);
+		}
+
 		foreach (Cube cube in creativeCubes) 
 		{
 			if(cube != null)
@@ -825,7 +1008,12 @@ public class GameScript : MonoBehaviour {
 		levelArray = new bool[2, 2, 2] { { { false, true }, { true, true } }, { { false, true }, { true, true } } };
 		
 		SpawnCubes ();
-		
+
+		for (int i=0; i<3; i++) 
+		{
+			Destroy(ClipArrow[i]);
+		}
+
 		foreach (Cube cube in grid) 
 		{
 			cube.cube.transform.position = new Vector3(cube.cube.transform.position.x, cube.cube.transform.position.y + 1.8f, cube.cube.transform.position.z);
