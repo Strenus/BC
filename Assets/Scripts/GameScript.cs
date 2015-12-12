@@ -44,6 +44,7 @@ public class GameScript : MonoBehaviour {
 	bool creative = false;
 	public float camSen = 1.0f;
 	uint stage;
+	uint level;
 	uint customStageCount = 0;
 
 
@@ -133,8 +134,18 @@ public class GameScript : MonoBehaviour {
 			{
 				if(checkCompletion())
 				{
-					solved = true;
-					openPauseMenu();
+					//pause = true;
+					//solved = true;
+					//openPauseMenu();
+
+					//completedLevel();
+
+					if(solved == false)
+					{
+						Debug.Log("yaaaaaas");
+						solved = true;
+					}
+
 				}
 			}
 		}
@@ -684,7 +695,8 @@ public class GameScript : MonoBehaviour {
 		}
 		else
 		{
-			brushCube(cube);
+			if(cube.tag == "cube")
+				brushCube(cube);
 		}
 	}
 
@@ -1024,6 +1036,227 @@ public class GameScript : MonoBehaviour {
 		cam.fieldOfView = 40;
 		cam.transform.position = new Vector3 (-5.22f, 5.29f, 6.69f);
 		cam.transform.LookAt (new Vector3(0, 0, 0), Vector3.up);
+	}
+
+	void completedLevel()
+	{
+		try
+		{
+			//System.IO.StreamReader file = new System.IO.StreamReader(Application.persistentDataPath + "/custom" + level + ".txt");
+
+			System.IO.StreamReader file = new System.IO.StreamReader(Application.dataPath + "/Resources/Levels/color" + level + ".txt");
+
+
+
+			foreach(Cube cube in grid)
+			{
+				if(cube.cube == null)
+					continue;
+
+				cube.cube.renderer.materials = new Material[1];
+				cube.cube.renderer.material = new Material(Shader.Find ("Diffuse"));
+
+				cube.cube.renderer.material.color = new Color(float.Parse(file.ReadLine()), float.Parse(file.ReadLine()), float.Parse(file.ReadLine()), 1);
+			}
+			
+			file.Close();
+		}
+		catch (System.Exception e)
+		{
+			Debug.Log(e);
+		}
+		
+		/*
+		if(stage == 1)
+		{
+			if(level == 1)
+			{
+				//magnet
+			}
+			if(level == 2)
+			{
+				//dolphin
+			}
+			if(level == 3)
+			{
+				//table
+			}
+			if(level == 4)
+			{
+				//chair
+			}
+			if(level == 5)
+			{
+				//ball
+			}
+			if(level == 6)
+			{
+				//plane
+			}
+			if(level == 7)
+			{
+				//computer
+			}
+			if(level == 8)
+			{
+				//piano
+			}
+			if(level == 9)
+			{
+				//house
+			}
+			if(level == 10)
+			{
+				//phone
+			}
+			if(level == 11)
+			{
+				//shopping bag
+			}
+			if(level == 12)
+			{
+				//kitchen sink
+			}
+			if(level == 13)
+			{
+				//scales
+			}
+			if(level == 14)
+			{
+				//space shuttle
+			}
+			if(level == 15)
+			{
+				//trophy
+			}
+		}
+		if(stage == 2)
+		{
+			if(level == 1)
+			{
+				//hippo
+			}
+			if(level == 2)
+			{
+				//motorbike
+			}
+			if(level == 3)
+			{
+				//helicopter
+			}
+			if(level == 4)
+			{
+				//steam engine		
+			}
+			if(level == 5)
+			{
+				//fisherman
+			}
+			if(level == 6)
+			{
+				//vulture
+			}
+			if(level == 7)
+			{
+				//bulldog
+			}
+			if(level == 8)
+			{
+				//swallow
+			}
+			if(level == 9)
+			{
+				//rhino
+			}
+			if(level == 10)
+			{
+				//baseball
+			}
+			if(level == 11)
+			{
+				//water wheel
+			}
+			if(level == 12)
+			{
+				//toilet
+			}
+			if(level == 13)
+			{
+				//biplane
+			}
+			if(level == 14)
+			{
+				//bumblebee
+			}
+			if(level == 15)
+			{
+				//helmet
+			}
+		}
+		if(stage == 3)
+		{
+			if(level == 1)
+			{
+				//whale
+			}
+			if(level == 2)
+			{
+				//tank
+			}
+			if(level == 3)
+			{
+				//farmer
+			}
+			if(level == 4)
+			{
+				//bonsai tree
+			}
+			if(level == 5)
+			{
+				//truck
+			}
+			if(level == 6)
+			{
+				//excavator
+			}
+			if(level == 7)
+			{
+				//umbrella
+			}
+			if(level == 8)
+			{
+				//bear
+			}
+			if(level == 9)
+			{
+				//frog
+			}
+			if(level == 10)
+			{
+				//elephant
+			}
+			if(level == 11)
+			{
+				//chicken
+			}
+			if(level == 12)
+			{
+				//owl
+			}
+			if(level == 13)
+			{
+				//phonograph
+			}
+			if(level == 14)
+			{
+				//oasis
+			}
+			if(level == 15)
+			{
+				//gorilla
+			}
+		}
+		*/
 	}
 
 	void buttonStart()
@@ -1367,7 +1600,8 @@ public class GameScript : MonoBehaviour {
 			if(level == 9)
 			{
 				//house
-				levelArray = new bool[5,5,5] {{{false, false, false, false, false}, {false, false, false, false, false}, {true, true, true, true, true}, {false, false, false, false, false}, {false, false, false, false, false}}, {{true, true, true, true, true}, {true, false, true, false, true}, {true, true, true, true, true}, {true, true, true, true, true}, {false, false, false, false, false}}, {{true, true, true, true, true}, {false, true, true, true, false}, {true, true, true, true, true}, {true, true, true, true, true}, {true, true, true, true, true}}, {{true, false, true, true, true}, {true, false, true, false, true}, {true, true, true, true, true}, {true, true, true, true, true}, {false, false, false, false, false}}, {{false, false, false, false, false}, {false, false, false, false, false}, {true, true, true, true, true}, {false, false, false, false, false}, {false, false, false, false, false}}};
+				//levelArray = new bool[5,5,5] {{{false, false, false, false, false}, {false, false, false, false, false}, {true, true, true, true, true}, {false, false, false, false, false}, {false, false, false, false, false}}, {{true, true, true, true, true}, {true, false, true, false, true}, {true, true, true, true, true}, {true, true, true, true, true}, {false, false, false, false, false}}, {{true, true, true, true, true}, {false, true, true, true, false}, {true, true, true, true, true}, {true, true, true, true, true}, {true, true, true, true, true}}, {{true, false, true, true, true}, {true, false, true, false, true}, {true, true, true, true, true}, {true, true, true, true, true}, {false, false, false, false, false}}, {{false, false, false, false, false}, {false, false, false, false, false}, {true, true, true, true, true}, {false, false, false, false, false}, {false, false, false, false, false}}};
+				levelArray = new bool[5,5,5] {{{false, false, false, false, false}, {false, false, false, false, false}, {true, true, true, true, true}, {false, false, false, false, false}, {false, false, false, false, false}}, {{true, true, true, true, true}, {true, false, true, false, true}, {true, true, true, true, true}, {true, true, true, true, true}, {false, false, false, false, false}}, {{true, true, true, true, true}, {false, true, true, true, false}, {true, true, true, true, true}, {true, true, true, true, true}, {true, true, true, true, true}}, {{true, true, true, true, true}, {true, true, true, false, true}, {true, true, true, true, true}, {true, true, true, true, true}, {false, false, false, false, false}}, {{false, false, false, false, false}, {false, false, false, false, false}, {true, true, true, true, true}, {false, false, false, false, false}, {false, false, false, false, false}}};
 
 			}
 			if(level == 10)
@@ -1657,6 +1891,8 @@ public class GameScript : MonoBehaviour {
 
 			return;
 		}
+
+		this.level = level;
 		
 		SpawnCubes ();
 	}
@@ -1692,6 +1928,32 @@ public class GameScript : MonoBehaviour {
 		pauseExit ();
 	}
 
+	void testButton()
+	{
+		try
+		{
+			uint temp = (stage - 1) * 15 + level;
+
+			System.IO.StreamWriter file = new System.IO.StreamWriter(Application.persistentDataPath + "/color" + temp + ".txt");
+
+			foreach(Cube cube in grid)
+			{
+				if(cube.cube == null)
+					continue;
+
+				file.WriteLine(cube.cube.renderer.material.color.r);
+				file.WriteLine(cube.cube.renderer.material.color.g);
+				file.WriteLine(cube.cube.renderer.material.color.b);
+			}
+			
+			file.Close ();			
+		}
+		catch (System.Exception e)
+		{
+			Debug.Log(e);
+		}
+	}
+
 	void prepareToCreateLevel()
 	{
 		foreach(GameObject button in buttonsMenu)
@@ -1718,6 +1980,31 @@ public class GameScript : MonoBehaviour {
 		editorX = 1;
 		editorY = 1;
 		editorZ = 1;
+	}
+
+	void testButton2()
+	{
+		for (int x=0; x<levelArray.GetLength(0); x++)
+		{
+			for (int y=0; y<levelArray.GetLength(1); y++)
+			{
+				for (int z=0; z<levelArray.GetLength(2); z++)
+				{
+					if(grid[x,y,z].cube == null)
+						continue;
+
+					if(levelArray[x,y,z] == false)
+					{
+						GameObject.Destroy(grid[x,y,z].cube);
+						continue;
+					}
+					
+					grid[x,y,z].cube.renderer.materials = new Material[1];
+					grid[x,y,z].cube.renderer.material = new Material(Shader.Find ("Diffuse"));
+					grid[x,y,z].cube.renderer.material.color = new Color(0.8f, 0.8f, 0.8f, 1);
+				}
+			}
+		}
 	}
 
 	void convertEditToLevel()
@@ -1904,12 +2191,6 @@ public class GameScript : MonoBehaviour {
 			
 			file.Close ();
 
-			/*
-			{ { { true, false, false, true, true }, { true, true, true, false, false }, { false, false, true, true, true }, { false, false, true, true, false },
-			{ false, false, true, false, false }}, { { false, false, false, false, false }, { true, true, true, false, false }, { false, false, true, true, true }, 
-			{ false, false, true, true, false },{ false, false, false, false, false }},{ { true, false, false, true, true }, { true, true, true, false, false }, 
-			{ false, false, true, true, true }, { false, false, true, true, false },{ false, false, true, false, false }}}
-			*/
 		}
 		catch (System.Exception e)
 		{

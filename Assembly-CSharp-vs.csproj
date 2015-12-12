@@ -54,6 +54,22 @@
      <Compile Include="Assets\Scripts\SliderScript.cs" />
      <Compile Include="Assets\Scripts\SpriteScript.cs" />
      <Compile Include="Assets\Scripts\textMenuScript.cs" />
+     <None Include="Assets\Resources\Levels\color4.txt" />
+     <None Include="Assets\Resources\Levels\color12.txt" />
+     <None Include="Assets\Resources\Levels\color2.txt" />
+     <None Include="Assets\Resources\Levels\color0.txt" />
+     <None Include="Assets\Resources\Levels\color11.txt" />
+     <None Include="Assets\Resources\Levels\color14.txt" />
+     <None Include="Assets\Resources\Levels\color1.txt" />
+     <None Include="Assets\Resources\Levels\color10.txt" />
+     <None Include="Assets\Resources\Levels\color8.txt" />
+     <None Include="Assets\Resources\Levels\color13.txt" />
+     <None Include="Assets\Resources\Levels\color9.txt" />
+     <None Include="Assets\Resources\Levels\color15.txt" />
+     <None Include="Assets\Resources\Levels\color6.txt" />
+     <None Include="Assets\Resources\Levels\color3.txt" />
+     <None Include="Assets\Resources\Levels\color7.txt" />
+     <None Include="Assets\Resources\Levels\color5.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
