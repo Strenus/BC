@@ -10,6 +10,8 @@ public class GameScript : MonoBehaviour {
 
 	public bool[, ,] levelArray;
 
+	public GameObject cubesParent;
+
 	public Material[] numMat = new Material[10];
 
 	List<GameObject> fragments = new List<GameObject>();
@@ -38,12 +40,13 @@ public class GameScript : MonoBehaviour {
 	float editorZ = 1;
 
 	ushort ticks = 0;
+	ushort finishTimer = 360;
 	bool breaking = true;
 	bool pause = true;
 	bool inMenu = true;
 	bool creative = false;
 	public float camSen = 1.0f;
-	uint stage;
+	uint stage = 1;
 	uint level;
 	uint customStageCount = 0;
 
@@ -138,14 +141,49 @@ public class GameScript : MonoBehaviour {
 					//solved = true;
 					//openPauseMenu();
 
-					//completedLevel();
+
 
 					if(solved == false)
 					{
 						Debug.Log("yaaaaaas");
+
+						completedLevel();
 						solved = true;
+						finishTimer = 360;
+					}
+				}
+			}
+
+			if(solved)
+			{
+				foreach(Cube cube in grid)
+				{
+					if(cube.cube == null)
+						continue;
+					
+					for(int i= 1; i< cube.cube.renderer.materials.Length; i++)
+					{
+						Color tempColor = cube.cube.renderer.materials[i].color;
+						tempColor.a -= 0.01f;
+						cube.cube.renderer.materials[i].color = tempColor;
+
+						if(cube.cube.renderer.materials[i].color.a < 0.01f)
+						{
+							Material tempMat = cube.cube.renderer.materials[0];
+							cube.cube.renderer.materials = new Material[1];
+							cube.cube.renderer.material = tempMat;
+						}
 					}
 
+					cubesParent.transform.Rotate(Vector3.up, 0.01f);
+				}
+
+				finishTimer--;
+
+				if(finishTimer == 0)
+				{
+					pause = true;
+					openPauseMenu();
 				}
 			}
 		}
@@ -589,11 +627,45 @@ public class GameScript : MonoBehaviour {
 					}
 					grid[x,y,z].setSide (4, tempCount, numMat[tempCount]);
 					grid[x,y,z].setSide (5, tempCount, numMat[tempCount]);
+
+					grid[x,y,z].cube.transform.parent = cubesParent.transform;
 					
 					
 				}
 			}
 		}
+
+		//---Setting color to cubes-----------------------------------------------
+
+		try
+		{
+			//System.IO.StreamReader file = new System.IO.StreamReader(Application.persistentDataPath + "/custom" + level + ".txt");
+			
+			uint tempLevel = (stage - 1) * 15 + level;
+			
+			System.IO.StreamReader file = new System.IO.StreamReader(Application.dataPath + "/Resources/Levels/color" + tempLevel + ".txt");
+			
+			for (int x=0; x<levelArray.GetLength(0); x++)
+			{
+				for (int y=0; y<levelArray.GetLength(1); y++)
+				{
+					for (int z=0; z<levelArray.GetLength(2); z++)
+					{
+						if(levelArray[x,y,z] == false)
+							continue;
+
+						grid[x,y,z].color = new Color(float.Parse(file.ReadLine()), float.Parse(file.ReadLine()), float.Parse(file.ReadLine()), 1);
+					}
+				}
+			}
+			
+			file.Close();
+		}
+		catch (System.Exception e)
+		{
+			Debug.Log(e);
+		}
+
 		//---Clipping Planes------------------------------------------------------
 
 		Vector3 temp;
@@ -1040,223 +1112,19 @@ public class GameScript : MonoBehaviour {
 
 	void completedLevel()
 	{
-		try
+		foreach(Cube cube in grid)
 		{
-			//System.IO.StreamReader file = new System.IO.StreamReader(Application.persistentDataPath + "/custom" + level + ".txt");
+			if(cube.cube == null)
+				continue;
 
-			System.IO.StreamReader file = new System.IO.StreamReader(Application.dataPath + "/Resources/Levels/color" + level + ".txt");
+			Material[] temp = new Material[cube.cube.renderer.materials.Length + 1];
 
+			cube.cube.renderer.materials.CopyTo(temp, 1);
+			temp[0] = new Material(Shader.Find ("Diffuse"));
+			temp[0].color = cube.color;
 
-
-			foreach(Cube cube in grid)
-			{
-				if(cube.cube == null)
-					continue;
-
-				cube.cube.renderer.materials = new Material[1];
-				cube.cube.renderer.material = new Material(Shader.Find ("Diffuse"));
-
-				cube.cube.renderer.material.color = new Color(float.Parse(file.ReadLine()), float.Parse(file.ReadLine()), float.Parse(file.ReadLine()), 1);
-			}
-			
-			file.Close();
+			cube.cube.renderer.materials = temp;
 		}
-		catch (System.Exception e)
-		{
-			Debug.Log(e);
-		}
-		
-		/*
-		if(stage == 1)
-		{
-			if(level == 1)
-			{
-				//magnet
-			}
-			if(level == 2)
-			{
-				//dolphin
-			}
-			if(level == 3)
-			{
-				//table
-			}
-			if(level == 4)
-			{
-				//chair
-			}
-			if(level == 5)
-			{
-				//ball
-			}
-			if(level == 6)
-			{
-				//plane
-			}
-			if(level == 7)
-			{
-				//computer
-			}
-			if(level == 8)
-			{
-				//piano
-			}
-			if(level == 9)
-			{
-				//house
-			}
-			if(level == 10)
-			{
-				//phone
-			}
-			if(level == 11)
-			{
-				//shopping bag
-			}
-			if(level == 12)
-			{
-				//kitchen sink
-			}
-			if(level == 13)
-			{
-				//scales
-			}
-			if(level == 14)
-			{
-				//space shuttle
-			}
-			if(level == 15)
-			{
-				//trophy
-			}
-		}
-		if(stage == 2)
-		{
-			if(level == 1)
-			{
-				//hippo
-			}
-			if(level == 2)
-			{
-				//motorbike
-			}
-			if(level == 3)
-			{
-				//helicopter
-			}
-			if(level == 4)
-			{
-				//steam engine		
-			}
-			if(level == 5)
-			{
-				//fisherman
-			}
-			if(level == 6)
-			{
-				//vulture
-			}
-			if(level == 7)
-			{
-				//bulldog
-			}
-			if(level == 8)
-			{
-				//swallow
-			}
-			if(level == 9)
-			{
-				//rhino
-			}
-			if(level == 10)
-			{
-				//baseball
-			}
-			if(level == 11)
-			{
-				//water wheel
-			}
-			if(level == 12)
-			{
-				//toilet
-			}
-			if(level == 13)
-			{
-				//biplane
-			}
-			if(level == 14)
-			{
-				//bumblebee
-			}
-			if(level == 15)
-			{
-				//helmet
-			}
-		}
-		if(stage == 3)
-		{
-			if(level == 1)
-			{
-				//whale
-			}
-			if(level == 2)
-			{
-				//tank
-			}
-			if(level == 3)
-			{
-				//farmer
-			}
-			if(level == 4)
-			{
-				//bonsai tree
-			}
-			if(level == 5)
-			{
-				//truck
-			}
-			if(level == 6)
-			{
-				//excavator
-			}
-			if(level == 7)
-			{
-				//umbrella
-			}
-			if(level == 8)
-			{
-				//bear
-			}
-			if(level == 9)
-			{
-				//frog
-			}
-			if(level == 10)
-			{
-				//elephant
-			}
-			if(level == 11)
-			{
-				//chicken
-			}
-			if(level == 12)
-			{
-				//owl
-			}
-			if(level == 13)
-			{
-				//phonograph
-			}
-			if(level == 14)
-			{
-				//oasis
-			}
-			if(level == 15)
-			{
-				//gorilla
-			}
-		}
-		*/
 	}
 
 	void buttonStart()
@@ -1714,7 +1582,8 @@ public class GameScript : MonoBehaviour {
 			if(level == 12)
 			{
 				//toilet
-				levelArray = new bool[5,8,7] {{{false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, true, true, true, true, true, true}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}}, {{false, false, false, false, false, false, false}, {false, false, true, true, true, false, false}, {false, false, true, true, true, true, true}, {true, true, false, false, false, false, true}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}}, {{false, false, true, true, true, false, false}, {false, false, true, false, false, true, false}, {false, true, false, false, false, true, true}, {true, true, false, false, false, false, true}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}}, {{false, false, false, false, false, false, false}, {false, false, true, true, true, false, false}, {false, false, true, true, true, true, true}, {true, true, false, false, false, false, true}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}}, {{false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, true, true, true, true, true, true}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}}};
+				//levelArray = new bool[5,8,7] {{{false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, true, true, true, true, true, true}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}}, {{false, false, false, false, false, false, false}, {false, false, true, true, true, false, false}, {false, false, true, true, true, true, true}, {true, true, false, false, false, false, true}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}}, {{false, false, true, true, true, false, false}, {false, false, true, false, false, true, false}, {false, true, false, false, false, true, true}, {true, true, false, false, false, false, true}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}}, {{false, false, false, false, false, false, false}, {false, false, true, true, true, false, false}, {false, false, true, true, true, true, true}, {true, true, false, false, false, false, true}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}}, {{false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, true, true, true, true, true, true}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}}};
+				levelArray = new bool[5,8,7] {{{false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, true, true, true, true, true, true}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}}, {{false, false, false, false, false, false, false}, {false, false, true, true, true, false, false}, {false, false, true, true, true, true, true}, {true, true, false, false, false, false, true}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}}, {{false, false, true, true, true, false, false}, {false, false, true, true, true, true, false}, {false, true, false, false, false, true, true}, {true, true, false, false, false, false, true}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}}, {{false, false, false, false, false, false, false}, {false, false, true, true, true, false, false}, {false, false, true, true, true, true, true}, {true, true, false, false, false, false, true}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}}, {{false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, true, true, true, true, true, true}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}, {true, false, false, false, false, false, false}}};
 
 			}
 			if(level == 13)
@@ -1755,7 +1624,8 @@ public class GameScript : MonoBehaviour {
 			if(level == 3)
 			{
 				//farmer
-				levelArray = new bool[5,7,8] {{{false, false, true, false, false, false, false, false}, {false, false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false}, {false, false, false, false, false, true, true, false}, {false, false, false, false, false, false, false, false}}, {{false, false, false, false, false, false, true, false}, {false, false, false, false, false, true, true, false}, {false, false, false, false, false, true, false, false}, {false, false, false, false, false, true, true, false}, {false, false, false, false, false, true, true, false}, {false, false, false, false, true, true, true, true}, {false, false, false, false, false, false, false, false}}, {{false, false, false, false, true, false, false, false}, {false, false, false, false, false, true, false, false}, {false, false, false, false, false, true, false, false}, {false, false, false, false, true, true, true, false}, {false, true, false, false, false, true, true, false}, {false, true, false, false, true, true, true, true}, {false, true, false, false, false, false, false, false}}, {{false, false, false, true, false, false, false, false}, {false, false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false}, {false, false, false, false, true, false, false, false}, {true, true, true, true, true, true, true, true}, {false, true, false, false, false, true, true, false}, {false, true, false, false, false, false, false, false}}, {{true, false, false, false, false, false, false, true}, {false, false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false}, {false, true, false, false, false, false, false, false}, {false, true, false, false, false, false, false, false}, {false, true, false, false, false, false, false, false}}};
+				//levelArray = new bool[5,7,8] {{{false, false, true, false, false, false, false, false}, {false, false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false}, {false, false, false, false, false, true, true, false}, {false, false, false, false, false, false, false, false}}, {{false, false, false, false, false, false, true, false}, {false, false, false, false, false, true, true, false}, {false, false, false, false, false, true, false, false}, {false, false, false, false, false, true, true, false}, {false, false, false, false, false, true, true, false}, {false, false, false, false, true, true, true, true}, {false, false, false, false, false, false, false, false}}, {{false, false, false, false, true, false, false, false}, {false, false, false, false, false, true, false, false}, {false, false, false, false, false, true, false, false}, {false, false, false, false, true, true, true, false}, {false, true, false, false, false, true, true, false}, {false, true, false, false, true, true, true, true}, {false, true, false, false, false, false, false, false}}, {{false, false, false, true, false, false, false, false}, {false, false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false}, {false, false, false, false, true, false, false, false}, {true, true, true, true, true, true, true, true}, {false, true, false, false, false, true, true, false}, {false, true, false, false, false, false, false, false}}, {{true, false, false, false, false, false, false, true}, {false, false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false}, {false, true, false, false, false, false, false, false}, {false, true, false, false, false, false, false, false}, {false, true, false, false, false, false, false, false}}};
+				levelArray = new bool[5,7,8] {{{false, false, true, false, false, false, false, false}, {false, false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false}, {false, false, false, false, false, true, true, false}, {false, false, false, false, false, false, false, false}}, {{false, false, false, false, false, false, true, false}, {false, false, false, false, false, true, true, false}, {false, false, false, false, false, true, false, false}, {false, false, false, false, false, true, true, false}, {false, false, false, false, false, true, true, false}, {false, false, false, false, true, true, true, true}, {false, false, false, false, false, true, true, false}}, {{false, false, false, false, true, false, false, false}, {false, false, false, false, false, true, false, false}, {false, false, false, false, false, true, false, false}, {false, false, false, false, true, true, true, false}, {false, true, false, false, false, true, true, false}, {false, true, false, false, true, true, true, true}, {false, true, false, false, false, true, true, false}}, {{false, false, false, true, false, false, false, false}, {false, false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false}, {false, false, false, false, true, false, false, false}, {true, true, true, true, true, true, true, true}, {false, true, false, false, false, true, true, false}, {false, true, false, false, false, false, false, false}}, {{true, false, false, false, false, false, false, true}, {false, false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false}, {false, true, false, false, false, false, false, false}, {false, true, false, false, false, false, false, false}, {false, true, false, false, false, false, false, false}}};
 
 			}
 			if(level == 4)
@@ -1784,7 +1654,7 @@ public class GameScript : MonoBehaviour {
 			}
 			if(level == 8)
 			{
-				//bear
+				//polar bear
 				levelArray = new bool[5,7,9] {{{true, true, false, true, true, false, false, false, false}, {true, true, false, true, true, false, false, false, false}, {true, true, true, true, true, false, false, false, false}, {true, true, true, true, true, false, false, false, false}, {true, true, true, true, true, false, false, false, false}, {false, true, true, true, true, false, false, false, false}, {false, false, false, false, false, true, false, false, false}}, {{true, true, false, true, true, false, false, false, false}, {true, true, false, true, true, false, false, false, false}, {true, true, true, true, true, true, false, false, false}, {true, true, true, true, true, true, true, true, false}, {true, true, true, true, true, true, true, true, false}, {false, true, true, true, true, true, true, false, false}, {false, false, false, false, false, false, false, false, false}}, {{false, false, false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false, false}, {true, true, true, true, true, true, false, false, false}, {true, true, true, true, true, true, true, true, false}, {true, true, true, true, true, true, true, true, true}, {true, true, true, true, true, true, true, false, false}, {false, false, false, false, false, false, false, false, false}}, {{false, true, true, false, false, true, true, false, false}, {false, true, true, false, false, true, true, false, false}, {true, true, true, true, true, true, true, false, false}, {true, true, true, true, true, true, true, true, false}, {true, true, true, true, true, true, true, true, false}, {false, true, true, true, true, true, true, false, false}, {false, false, false, false, false, false, false, false, false}}, {{false, true, true, false, false, true, true, false, false}, {false, true, true, false, false, true, true, false, false}, {true, true, true, true, true, true, true, false, false}, {true, true, true, true, true, true, false, false, false}, {true, true, true, true, true, true, false, false, false}, {false, true, true, true, true, false, false, false, false}, {false, false, false, false, false, true, false, false, false}}};
 
 			}
@@ -1809,7 +1679,9 @@ public class GameScript : MonoBehaviour {
 			if(level == 12)
 			{
 				//owl
-				levelArray = new bool[9,8,7] {{{false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, true, false, false, false, false, false}, {false, true, false, false, false, false, false}, {false, false, true, true, false, false, false}, {false, false, false, true, false, false, false}, {false, false, false, false, false, false, false}}, {{false, false, false, false, true, false, false}, {false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, false, true, false, false, false, false}, {false, false, true, true, false, false, false}, {false, false, false, true, false, false, false}, {false, false, false, true, true, false, false}, {false, false, false, false, false, false, false}}, {{false, false, false, true, true, true, false}, {false, false, false, true, false, false, false}, {false, false, true, false, false, false, false}, {false, true, true, true, false, false, false}, {false, false, true, true, true, true, false}, {false, false, false, true, true, true, false}, {false, false, false, false, false, false, false}, {false, false, false, false, false, true, false}}, {{false, false, false, false, true, false, false}, {false, true, true, true, false, false, false}, {true, true, true, true, true, false, false}, {true, true, true, true, true, true, false}, {true, true, true, true, true, true, false}, {false, true, true, true, true, true, false}, {false, false, false, true, true, true, false}, {false, false, false, false, false, false, false}}, {{false, false, false, false, false, false, false}, {true, false, false, false, false, false, false}, {true, true, true, true, true, false, false}, {true, true, true, true, true, true, false}, {true, true, true, true, true, true, true}, {false, true, true, true, true, true, true}, {false, false, true, true, true, true, false}, {false, false, false, false, false, false, false}}, {{false, false, false, false, true, false, false}, {false, true, true, true, false, false, false}, {true, true, true, true, true, false, false}, {true, true, true, true, true, true, false}, {true, true, true, true, true, true, false}, {false, true, true, true, true, true, false}, {false, false, false, true, true, true, false}, {false, false, false, false, false, false, false}}, {{false, false, false, true, true, true, false}, {false, false, false, true, false, false, false}, {false, false, true, false, false, false, false}, {false, true, true, true, false, false, false}, {false, false, true, true, true, true, false}, {false, false, false, true, true, true, false}, {false, false, false, false, false, false, false}, {false, false, false, false, false, true, false}}, {{false, false, false, false, true, false, false}, {false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, false, true, false, false, false, false}, {false, false, true, true, false, false, false}, {false, false, false, true, false, false, false}, {false, false, false, true, true, false, false}, {false, false, false, false, false, false, false}}, {{false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, true, false, false, false, false, false}, {false, true, false, false, false, false, false}, {false, false, true, true, false, false, false}, {false, false, false, true, false, false, false}, {false, false, false, false, false, false, false}}};
+				//levelArray = new bool[9,8,7] {{{false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, true, false, false, false, false, false}, {false, true, false, false, false, false, false}, {false, false, true, true, false, false, false}, {false, false, false, true, false, false, false}, {false, false, false, false, false, false, false}}, {{false, false, false, false, true, false, false}, {false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, false, true, false, false, false, false}, {false, false, true, true, false, false, false}, {false, false, false, true, false, false, false}, {false, false, false, true, true, false, false}, {false, false, false, false, false, false, false}}, {{false, false, false, true, true, true, false}, {false, false, false, true, false, false, false}, {false, false, true, false, false, false, false}, {false, true, true, true, false, false, false}, {false, false, true, true, true, true, false}, {false, false, false, true, true, true, false}, {false, false, false, false, false, false, false}, {false, false, false, false, false, true, false}}, {{false, false, false, false, true, false, false}, {false, true, true, true, false, false, false}, {true, true, true, true, true, false, false}, {true, true, true, true, true, true, false}, {true, true, true, true, true, true, false}, {false, true, true, true, true, true, false}, {false, false, false, true, true, true, false}, {false, false, false, false, false, false, false}}, {{false, false, false, false, false, false, false}, {true, false, false, false, false, false, false}, {true, true, true, true, true, false, false}, {true, true, true, true, true, true, false}, {true, true, true, true, true, true, true}, {false, true, true, true, true, true, true}, {false, false, true, true, true, true, false}, {false, false, false, false, false, false, false}}, {{false, false, false, false, true, false, false}, {false, true, true, true, false, false, false}, {true, true, true, true, true, false, false}, {true, true, true, true, true, true, false}, {true, true, true, true, true, true, false}, {false, true, true, true, true, true, false}, {false, false, false, true, true, true, false}, {false, false, false, false, false, false, false}}, {{false, false, false, true, true, true, false}, {false, false, false, true, false, false, false}, {false, false, true, false, false, false, false}, {false, true, true, true, false, false, false}, {false, false, true, true, true, true, false}, {false, false, false, true, true, true, false}, {false, false, false, false, false, false, false}, {false, false, false, false, false, true, false}}, {{false, false, false, false, true, false, false}, {false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, false, true, false, false, false, false}, {false, false, true, true, false, false, false}, {false, false, false, true, false, false, false}, {false, false, false, true, true, false, false}, {false, false, false, false, false, false, false}}, {{false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, true, false, false, false, false, false}, {false, true, false, false, false, false, false}, {false, false, true, true, false, false, false}, {false, false, false, true, false, false, false}, {false, false, false, false, false, false, false}}};
+				levelArray = new bool[9,8,7] {{{false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, true, false, false, false, false, false}, {false, true, false, false, false, false, false}, {false, false, true, true, false, false, false}, {false, false, false, true, false, false, false}, {false, false, false, false, false, false, false}}, {{false, false, false, false, true, false, false}, {false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, false, true, false, false, false, false}, {false, false, true, true, false, false, false}, {false, false, false, true, false, false, false}, {false, false, false, true, true, false, false}, {false, false, false, false, false, false, false}}, {{false, false, false, true, true, true, false}, {false, false, false, true, false, false, false}, {false, false, true, false, false, false, false}, {false, true, true, true, false, false, false}, {false, false, true, true, true, true, false}, {false, false, false, true, true, true, false}, {false, false, false, false, false, false, false}, {false, false, false, false, false, true, false}}, {{false, false, false, false, true, false, false}, {false, true, true, true, false, false, false}, {true, true, true, true, true, false, false}, {true, true, true, true, true, true, false}, {true, true, true, true, true, true, false}, {false, true, true, true, true, true, false}, {false, false, false, true, true, true, false}, {false, false, false, false, false, false, false}}, {{true, false, false, false, false, false, false}, {true, true, true, false, false, false, false}, {true, true, true, true, true, false, false}, {true, true, true, true, true, true, false}, {true, true, true, true, true, true, true}, {false, true, true, true, true, true, true}, {false, false, true, true, true, true, false}, {false, false, false, false, false, false, false}}, {{false, false, false, false, true, false, false}, {false, true, true, true, false, false, false}, {true, true, true, true, true, false, false}, {true, true, true, true, true, true, false}, {true, true, true, true, true, true, false}, {false, true, true, true, true, true, false}, {false, false, false, true, true, true, false}, {false, false, false, false, false, false, false}}, {{false, false, false, true, true, true, false}, {false, false, false, true, false, false, false}, {false, false, true, false, false, false, false}, {false, true, true, true, false, false, false}, {false, false, true, true, true, true, false}, {false, false, false, true, true, true, false}, {false, false, false, false, false, false, false}, {false, false, false, false, false, true, false}}, {{false, false, false, false, true, false, false}, {false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, false, true, false, false, false, false}, {false, false, true, true, false, false, false}, {false, false, false, true, false, false, false}, {false, false, false, true, true, false, false}, {false, false, false, false, false, false, false}}, {{false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, false, false, false, false, false, false}, {false, true, false, false, false, false, false}, {false, true, false, false, false, false, false}, {false, false, true, true, false, false, false}, {false, false, false, true, false, false, false}, {false, false, false, false, false, false, false}}};
+
 
 			}
 			if(level == 13)
@@ -1999,9 +1871,9 @@ public class GameScript : MonoBehaviour {
 						continue;
 					}
 					
-					grid[x,y,z].cube.renderer.materials = new Material[1];
-					grid[x,y,z].cube.renderer.material = new Material(Shader.Find ("Diffuse"));
-					grid[x,y,z].cube.renderer.material.color = new Color(0.8f, 0.8f, 0.8f, 1);
+					//grid[x,y,z].cube.renderer.materials = new Material[1];
+					//grid[x,y,z].cube.renderer.material = new Material(Shader.Find ("Diffuse"));
+					//grid[x,y,z].cube.renderer.material.color = new Color(1, 1, 1, 1);
 				}
 			}
 		}
@@ -2216,6 +2088,7 @@ public class Cube
 {
 	public GameObject cube;
 	public sbyte[] sides = new sbyte[6];
+	public Color color;
 
 	public Cube()
 	{
