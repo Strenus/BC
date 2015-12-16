@@ -12,7 +12,9 @@ public class CameraBackgroundScript : MonoBehaviour {
 
 	void Start ()
 	{
+		Debug.Log ("innit");
 		background = Resources.Load("Textures/bg", typeof(Texture2D)) as Texture2D;
+		Debug.Log (background);
 	}
 
 	void setBackground(Texture2D background)

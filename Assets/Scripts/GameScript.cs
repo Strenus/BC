@@ -71,47 +71,22 @@ public class GameScript : MonoBehaviour {
 
 
 		//--Configure Color Palette----------------------------------------------------------------
-		byte[] fileData;		
-		fileData = File.ReadAllBytes(Application.dataPath + "/Resources/Textures/colors.png");
+		//byte[] fileData;		
+		//fileData = File.ReadAllBytes(Application.dataPath + "/Resources/Textures/colors.png");
+		/*fileData = Resources.Load ("/Textures/colors.png") as byte[];
 		colorPaletteTexture = new Texture2D(Screen.width * 2 / 3, Screen.height * 2 / 3);
 		colorPaletteTexture.LoadImage(fileData);		
 		colorPalette.guiTexture.texture = colorPaletteTexture;
+		colorPalette.guiTexture.pixelInset = new Rect(- Screen.width / 3, - Screen.height / 3, Screen.width * 2 / 3, Screen.height * 2 / 3);*/
+
+		colorPaletteTexture = colorPalette.guiTexture.texture as Texture2D;
 		colorPalette.guiTexture.pixelInset = new Rect(- Screen.width / 3, - Screen.height / 3, Screen.width * 2 / 3, Screen.height * 2 / 3);
+
+		//Context.getCacheDir() or (which is way easier) the Environment.getExternalStorageDirectory().
 
 
 
 		savingTest ();
-	}
-
-	void colorPaletteUpdate()
-	{
-
-
-		StartCoroutine(readingPalette());
-
-
-	}
-
-	IEnumerator readingPalette()
-	{
-		yield return new WaitForEndOfFrame();
-
-		if((Input.GetTouch(0).position.x > Screen.width / 6) && (Input.GetTouch(0).position.x < Screen.width * 5 / 6)
-		   && (Input.GetTouch(0).position.y > Screen.height / 6) && (Input.GetTouch(0).position.y < Screen.height * 5 / 6))
-		{
-			try
-			{
-				colorPaletteTexture.ReadPixels( new Rect(0, 0,Screen.width, Screen.height), 0, 0);
-			}
-			catch
-			{
-
-			}		
-			
-			creativeColor = colorPaletteTexture.GetPixel((int) (Input.GetTouch(0).position.x), (int) (Input.GetTouch(0).position.y));
-
-			buttonsEdit[2].guiTexture.color = creativeColor;
-		}
 	}
 
 	void Update () 
@@ -213,12 +188,14 @@ public class GameScript : MonoBehaviour {
 						tempColor.a -= 0.01f;
 						cube.cube.renderer.materials[i].color = tempColor;
 
-						if(cube.cube.renderer.materials[i].color.a < 0.01f)
-						{
-							Material tempMat = cube.cube.renderer.materials[0];
-							cube.cube.renderer.materials = new Material[1];
-							cube.cube.renderer.material = tempMat;
-						}
+
+					}
+
+					if(cube.cube.renderer.materials[0].color.a < 0.01f)
+					{
+						Material tempMat = cube.cube.renderer.materials[0];
+						cube.cube.renderer.materials = new Material[1];
+						cube.cube.renderer.material = tempMat;
 					}
 
 					int tempMin = Mathf.Min (levelArray.GetLength (0), Mathf.Max (levelArray.GetLength (1), levelArray.GetLength (2)));
@@ -403,7 +380,7 @@ public class GameScript : MonoBehaviour {
 				{
 					if(colorPalette.activeSelf == true)
 					{
-						colorPaletteUpdate();
+						readingPalette();
 
 						if((Input.GetTouch(0).position.x < Screen.width / 6) || (Input.GetTouch(0).position.x > Screen.width * 5 / 6)
 						   || (Input.GetTouch(0).position.y < Screen.height / 6) || (Input.GetTouch(0).position.y > Screen.height * 5 / 6))
@@ -722,16 +699,20 @@ public class GameScript : MonoBehaviour {
 				//System.IO.StreamReader file = new System.IO.StreamReader(Application.persistentDataPath + "/custom" + level + ".txt");
 				
 				uint tempLevel = (stage - 1) * 15 + level;
-
-				System.IO.StreamReader file;
+				
+				System.IO.StringReader file;
 				
 				if(stage <= 3)
 				{
-					file = new System.IO.StreamReader(Application.dataPath + "/Resources/Levels/color" + tempLevel + ".txt");
+					//file = new System.IO.Strea
+					//file = new System.IO.StreamReader(Application.dataPath + "/Resources/Levels/color" + tempLevel + ".txt");
+					TextAsset bindata= Resources.Load("Levels/color" + tempLevel) as TextAsset;	
+					file = new System.IO.StringReader(bindata.text);
 				}
 				else
 				{
-					file = new System.IO.StreamReader(Application.persistentDataPath + "/custom" + level + "color.txt");
+					System.IO.StreamReader tempFile = new System.IO.StreamReader(Application.persistentDataPath + "/custom" + level + "color.txt");
+					file = new System.IO.StringReader(tempFile.ReadToEnd());
 				}
 				
 				for (int x=0; x<levelArray.GetLength(0); x++)
@@ -742,7 +723,7 @@ public class GameScript : MonoBehaviour {
 						{
 							if(levelArray[x,y,z] == false)
 								continue;
-
+							
 							grid[x,y,z].color = new Color(float.Parse(file.ReadLine()), float.Parse(file.ReadLine()), float.Parse(file.ReadLine()), 1);
 						}
 					}
@@ -1098,6 +1079,19 @@ public class GameScript : MonoBehaviour {
 		return true;
 	}
 
+	void readingPalette()
+	{
+		if((Input.GetTouch(0).position.x > Screen.width / 6) && (Input.GetTouch(0).position.x < Screen.width * 5 / 6)
+		   && (Input.GetTouch(0).position.y > Screen.height / 6) && (Input.GetTouch(0).position.y < Screen.height * 5 / 6))
+		{
+			int tempX = (int) ((Input.GetTouch(0).position.x - Screen.width / 6) * (512.0f / (Screen.width * 2 / 3)));
+			int tempY = (int) ((Input.GetTouch(0).position.y - Screen.height / 6) * (512.0f / (Screen.height * 2 / 3)));
+
+			creativeColor = colorPaletteTexture.GetPixel(tempX, tempY);
+			buttonsEdit[2].guiTexture.color = creativeColor;
+		}
+	}
+
 	void openMainMenu()
 	{
 		if(grid != null)
@@ -1152,7 +1146,7 @@ public class GameScript : MonoBehaviour {
 			starsIngame[i].SetActive(false);
 		}
 
-		Camera.main.SendMessage("setBackground",Resources.Load("Textures/bg", typeof(Texture2D)) as Texture2D);
+		//Camera.main.SendMessage("setBackground",Resources.Load("Textures/bg", typeof(Texture2D)) as Texture2D);
 
 		spawnMenuCubes ();
 
