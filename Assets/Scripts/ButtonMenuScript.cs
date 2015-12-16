@@ -43,17 +43,17 @@ public class ButtonMenuScript : MonoBehaviour
 
 			if(!guiTexture.HitTest(touch.position))
 			{
-				this.guiTexture.color = new Color (0.5f, 0.5f, 0.5f, 0.5f);
+				//this.guiTexture.color = new Color (0.5f, 0.5f, 0.5f, 0.5f);
 			}
 			else
 			{
 				if(touch.phase != TouchPhase.Ended)
 				{
-					this.guiTexture.color = new Color (0.25f, 0.5f, 0.5f, 0.5f);
+					//this.guiTexture.color = new Color (0.25f, 0.5f, 0.5f, 0.5f);
 				}
 				else
 				{
-					this.guiTexture.color = new Color (0.5f, 0.5f, 0.5f, 0.5f);
+					//this.guiTexture.color = new Color (0.5f, 0.5f, 0.5f, 0.5f);
 					GameObject.FindGameObjectWithTag("GameController").SendMessage(this.name);
 				}
 			}

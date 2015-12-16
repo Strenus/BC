@@ -7,12 +7,11 @@ using System.IO;
 public class GameScript : MonoBehaviour {
 
 	public Cube[, ,] grid;
-
 	public bool[, ,] levelArray;
 
-	public GameObject cubesParent;
-
 	public Material[] numMat = new Material[10];
+
+	public GameObject cubesParent;
 
 	List<GameObject> fragments = new List<GameObject>();
 	List<Cube> creativeCubes = new List<Cube>();
@@ -50,6 +49,10 @@ public class GameScript : MonoBehaviour {
 	uint level;
 	uint customStageCount = 0;
 
+	Texture2D colorPaletteTexture;
+	public GameObject colorPalette;
+	Color creativeColor = new Color (0.8f, 0.8f, 0.8f, 1);
+	bool creativeColoring = false;
 
 
 	void Start () 
@@ -66,12 +69,53 @@ public class GameScript : MonoBehaviour {
 		Debug.Log (Screen.width);
 		Debug.Log (Screen.height);
 
+
+		//--Configure Color Palette----------------------------------------------------------------
+		byte[] fileData;		
+		fileData = File.ReadAllBytes(Application.dataPath + "/Resources/Textures/colors.png");
+		colorPaletteTexture = new Texture2D(Screen.width * 2 / 3, Screen.height * 2 / 3);
+		colorPaletteTexture.LoadImage(fileData);		
+		colorPalette.guiTexture.texture = colorPaletteTexture;
+		colorPalette.guiTexture.pixelInset = new Rect(- Screen.width / 3, - Screen.height / 3, Screen.width * 2 / 3, Screen.height * 2 / 3);
+
+
+
 		savingTest ();
+	}
+
+	void colorPaletteUpdate()
+	{
+
+
+		StartCoroutine(readingPalette());
+
+
+	}
+
+	IEnumerator readingPalette()
+	{
+		yield return new WaitForEndOfFrame();
+
+		if((Input.GetTouch(0).position.x > Screen.width / 6) && (Input.GetTouch(0).position.x < Screen.width * 5 / 6)
+		   && (Input.GetTouch(0).position.y > Screen.height / 6) && (Input.GetTouch(0).position.y < Screen.height * 5 / 6))
+		{
+			try
+			{
+				colorPaletteTexture.ReadPixels( new Rect(0, 0,Screen.width, Screen.height), 0, 0);
+			}
+			catch
+			{
+
+			}		
+			
+			creativeColor = colorPaletteTexture.GetPixel((int) (Input.GetTouch(0).position.x), (int) (Input.GetTouch(0).position.y));
+
+			buttonsEdit[2].guiTexture.color = creativeColor;
+		}
 	}
 
 	void Update () 
 	{
-
 		//---AndroidBackButton-------------------------------------------------
 		if (Input.GetKeyDown(KeyCode.Escape)) 
 		{
@@ -127,6 +171,8 @@ public class GameScript : MonoBehaviour {
 			}
 		}
 
+
+
 		//---TickCount---------------------------------------------------------
 
 		if(!pause && !creative)
@@ -175,7 +221,9 @@ public class GameScript : MonoBehaviour {
 						}
 					}
 
-					cubesParent.transform.Rotate(Vector3.up, 0.01f);
+					int tempMin = Mathf.Min (levelArray.GetLength (0), Mathf.Max (levelArray.GetLength (1), levelArray.GetLength (2)));
+
+					cubesParent.transform.Rotate(Vector3.up, 0.08f / tempMin);
 				}
 
 				finishTimer--;
@@ -231,10 +279,24 @@ public class GameScript : MonoBehaviour {
 							{
 								if(!creative)
 								{
-										touchCube (hit.collider.gameObject);
+									touchCube (hit.collider.gameObject);
+
 								}
 								else
 								{
+									if(colorPalette.activeSelf)
+									{
+										justTouched = null;
+										return;
+									}
+
+									if(creativeColoring)
+									{
+										hit.collider.renderer.materials[0].color = creativeColor;
+										justTouched = null;
+										return;
+									}
+
 									if((breaking) && (creativeCubes.Count > 1))
 									{
 										foreach(Cube cube in creativeCubes)
@@ -339,6 +401,23 @@ public class GameScript : MonoBehaviour {
 
 				if(creative)
 				{
+					if(colorPalette.activeSelf == true)
+					{
+						colorPaletteUpdate();
+
+						if((Input.GetTouch(0).position.x < Screen.width / 6) || (Input.GetTouch(0).position.x > Screen.width * 5 / 6)
+						   || (Input.GetTouch(0).position.y < Screen.height / 6) || (Input.GetTouch(0).position.y > Screen.height * 5 / 6))
+						{
+							if(Input.GetTouch(0).phase == TouchPhase.Began)
+							{
+								colorPalette.SetActive(false);
+							}
+						}
+
+						justTouched = null;
+						return;
+					}
+
 					Vector3 direction;
 					RaycastHit hit = new RaycastHit();
 
@@ -389,7 +468,7 @@ public class GameScript : MonoBehaviour {
 					if((Input.GetTouch(0).phase == TouchPhase.Ended) && (ghostCube != null) && (!breaking))
 					{
 						ghostCube.cube.AddComponent("BoxCollider");
-						ghostCube.cube.renderer.material.color = new Color(1,1,1,1);
+						ghostCube.cube.renderer.material.color = creativeColor;
 						creativeCubes.Add(ghostCube);
 
 						float[] x = new float[creativeCubes.Count + 1];
@@ -636,34 +715,45 @@ public class GameScript : MonoBehaviour {
 		}
 
 		//---Setting color to cubes-----------------------------------------------
-
-		try
+		if(level != 0)
 		{
-			//System.IO.StreamReader file = new System.IO.StreamReader(Application.persistentDataPath + "/custom" + level + ".txt");
-			
-			uint tempLevel = (stage - 1) * 15 + level;
-			
-			System.IO.StreamReader file = new System.IO.StreamReader(Application.dataPath + "/Resources/Levels/color" + tempLevel + ".txt");
-			
-			for (int x=0; x<levelArray.GetLength(0); x++)
+			try
 			{
-				for (int y=0; y<levelArray.GetLength(1); y++)
-				{
-					for (int z=0; z<levelArray.GetLength(2); z++)
-					{
-						if(levelArray[x,y,z] == false)
-							continue;
+				//System.IO.StreamReader file = new System.IO.StreamReader(Application.persistentDataPath + "/custom" + level + ".txt");
+				
+				uint tempLevel = (stage - 1) * 15 + level;
 
-						grid[x,y,z].color = new Color(float.Parse(file.ReadLine()), float.Parse(file.ReadLine()), float.Parse(file.ReadLine()), 1);
+				System.IO.StreamReader file;
+				
+				if(stage <= 3)
+				{
+					file = new System.IO.StreamReader(Application.dataPath + "/Resources/Levels/color" + tempLevel + ".txt");
+				}
+				else
+				{
+					file = new System.IO.StreamReader(Application.persistentDataPath + "/custom" + level + "color.txt");
+				}
+				
+				for (int x=0; x<levelArray.GetLength(0); x++)
+				{
+					for (int y=0; y<levelArray.GetLength(1); y++)
+					{
+						for (int z=0; z<levelArray.GetLength(2); z++)
+						{
+							if(levelArray[x,y,z] == false)
+								continue;
+
+							grid[x,y,z].color = new Color(float.Parse(file.ReadLine()), float.Parse(file.ReadLine()), float.Parse(file.ReadLine()), 1);
+						}
 					}
 				}
+				
+				file.Close();
 			}
-			
-			file.Close();
-		}
-		catch (System.Exception e)
-		{
-			Debug.Log(e);
+			catch (System.Exception e)
+			{
+				Debug.Log(e);
+			}
 		}
 
 		//---Clipping Planes------------------------------------------------------
@@ -739,7 +829,7 @@ public class GameScript : MonoBehaviour {
 
 		if (breaking)
 		{
-			if(cube.renderer.materials[0].color.r == 1)
+			if(cube.renderer.materials[0].color.r == 0.8f)
 			{
 				for (int x=0; x<levelArray.GetLength(0); x++)
 				{
@@ -961,6 +1051,7 @@ public class GameScript : MonoBehaviour {
 	void breakWrongCube (GameObject cube)
 	{
 		cube.renderer.material = Resources.Load ("Materials/cubeCracks") as Material;
+		cube.renderer.material.color = new Color(0.5f,0.8f,0.8f,1);
 
 		score--;
 
@@ -976,13 +1067,13 @@ public class GameScript : MonoBehaviour {
 
 	void brushCube (GameObject cube)
 	{
-		if(cube.renderer.materials[0].color.r == 1)
+		if(cube.renderer.materials[0].color.r == 0.8f)
 		{
-			cube.renderer.materials[0].color = new Color(0.5f,1,1,1);
+			cube.renderer.materials[0].color = new Color(0.5f,0.8f,0.8f,1);
 		}
 		else
 		{
-			cube.renderer.materials[0].color = new Color(1,1,1,1);
+			cube.renderer.materials[0].color = new Color(0.8f,0.8f,0.8f,1);
 		}
 	}
 
@@ -1124,6 +1215,14 @@ public class GameScript : MonoBehaviour {
 			temp[0].color = cube.color;
 
 			cube.cube.renderer.materials = temp;
+		}
+
+		for (int i=0; i<3; i++) 
+		{
+			if(ClipArrow[i] == null)
+				break;
+			
+			Destroy(ClipArrow[i]);
 		}
 	}
 
@@ -1782,6 +1881,10 @@ public class GameScript : MonoBehaviour {
 			return;
 
 		breaking = false;
+		creativeColoring = false;
+
+		buttonsEdit [0].guiTexture.color = creativeColor;
+		buttonsEdit [1].guiTexture.color = new Color (0, 0, 0, 1);
 	}
 
 	void buttonEditMinus()
@@ -1790,6 +1893,10 @@ public class GameScript : MonoBehaviour {
 			return;
 		
 		breaking = true;
+		creativeColoring = false;
+
+		buttonsEdit [0].guiTexture.color = new Color (0, 0, 0, 1);
+		buttonsEdit [1].guiTexture.color = creativeColor;
 	}
 
 	void buttonEditOK()
@@ -1798,6 +1905,29 @@ public class GameScript : MonoBehaviour {
 		customStageCount++;
 		saveLevel (customStageCount);
 		pauseExit ();
+	}
+
+	void buttonEditColor()
+	{
+		if(pause)
+		{
+			return;
+		}
+
+		creativeColoring = true;
+		breaking = true;
+
+		if(colorPalette.activeSelf)
+		{
+			colorPalette.SetActive(false);
+		}
+		else
+		{
+			colorPalette.SetActive(true);
+		}
+
+		buttonsEdit [0].guiTexture.color = new Color (0, 0, 0, 1);
+		buttonsEdit [1].guiTexture.color = new Color (0, 0, 0, 1);
 	}
 
 	void testButton()
@@ -1882,6 +2012,7 @@ public class GameScript : MonoBehaviour {
 	void convertEditToLevel()
 	{
 		levelArray = new bool[(int)editorX, (int)editorY, (int)editorZ];
+		grid = new Cube[(int)editorX,(int)editorY,(int)editorZ];
 
 		uint lX = 0;
 		uint lY = 0;
@@ -1902,6 +2033,9 @@ public class GameScript : MonoBehaviour {
 						if((vec.x == x) && (vec.y == y) && (vec.z ==z))
 						{
 							levelArray[lX,lY,lZ] = true;
+
+							creativeCubes[i].color = creativeCubes[i].cube.renderer.material.color;
+							grid[lX,lY,lZ] = creativeCubes[i];
 							Destroy(creativeCubes[i].cube);
 							creativeCubes.Remove(creativeCubes[i]);
 							found = true;
@@ -2018,6 +2152,22 @@ public class GameScript : MonoBehaviour {
 			}
 			
 			file.Close ();
+
+			//--Save color information-------------------------------------------------
+
+			file = new System.IO.StreamWriter(Application.persistentDataPath + "/custom" + level + "color.txt");
+
+			foreach(Cube cube in grid)
+			{
+				if((cube == null) || (cube.cube == null))
+					continue;
+					
+				file.WriteLine(cube.cube.renderer.material.color.r);
+				file.WriteLine(cube.cube.renderer.material.color.g);
+				file.WriteLine(cube.cube.renderer.material.color.b);
+			}
+				
+			file.Close ();			
 
 			//TEST
 			file = new System.IO.StreamWriter(Application.persistentDataPath + "/test" + level + ".txt");
