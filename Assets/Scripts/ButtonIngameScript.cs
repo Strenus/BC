@@ -36,9 +36,9 @@ public class ButtonIngameScript : MonoBehaviour
 		}	
 
 	}
-
+	/*
 	void OnMouseDown()
 	{
 		GameObject.FindGameObjectWithTag("GameController").SendMessage(this.name);
-	}
+	}*/
 }

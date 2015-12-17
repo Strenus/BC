@@ -49,7 +49,6 @@
      <Compile Include="Assets\Scripts\ButtonIngameScript.cs" />
      <Compile Include="Assets\Scripts\ButtonLevelScript.cs" />
      <Compile Include="Assets\Scripts\ButtonMenuScript.cs" />
-     <Compile Include="Assets\Scripts\CameraBackgroundScript.cs" />
      <Compile Include="Assets\Scripts\GameScript.cs" />
      <Compile Include="Assets\Scripts\SliderScript.cs" />
      <Compile Include="Assets\Scripts\SpriteScript.cs" />
