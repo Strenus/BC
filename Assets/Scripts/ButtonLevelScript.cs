@@ -16,21 +16,26 @@ public class ButtonLevelScript : MonoBehaviour
 		{
 			Touch touch = Input.GetTouch(0);
 			
-			if(!guiTexture.HitTest(touch.position))
+
+			
+			if(guiTexture.HitTest(touch.position))
 			{
-				this.guiTexture.color = new Color (0.5f, 0.5f, 0.5f, 0.5f);
-			}
-			else
-			{
-				if(touch.phase != TouchPhase.Ended)
+				if(touch.phase == TouchPhase.Began)
 				{
 					this.guiTexture.color = new Color (0.25f, 0.5f, 0.5f, 0.5f);
 				}
-				else
+				if(touch.phase == TouchPhase.Ended)
 				{
-					this.guiTexture.color = new Color (0.5f, 0.5f, 0.5f, 0.5f);
-					GameObject.FindGameObjectWithTag("GameController").SendMessage("buttonLevel",uint.Parse(this.name));
+					if(this.guiTexture.color.r == 0.25f)
+					{
+						this.guiTexture.color = new Color (0.5f, 0.5f, 0.5f, 0.5f);
+						GameObject.FindGameObjectWithTag("GameController").SendMessage("buttonLevel",uint.Parse(this.name));
+					}
 				}
+			}
+			else
+			{
+				this.guiTexture.color = new Color (0.5f, 0.5f, 0.5f, 0.5f);
 			}
 		}	
 	}

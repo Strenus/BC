@@ -27,6 +27,8 @@ public class GameScript : MonoBehaviour {
 	public List<GameObject> buttonsLevels = new List<GameObject>();
 	public List<GameObject> buttonsEdit = new List<GameObject>();
 
+	uint progress = 0;
+
 	ushort score;
 	bool solved = false;
 
@@ -59,6 +61,15 @@ public class GameScript : MonoBehaviour {
 	void Start () 
 	{
 		DontDestroyOnLoad(this.gameObject);
+
+		//--Load Progress---------------------------------------------------------------------
+		loadProgress();
+		//--Unlock all------------------------------------------------------------------------
+		//progress = 45;
+		//saveProgress ();
+
+
+		Debug.Log (progress);
 
 		foreach(GameObject go in starsIngame)
 		{
@@ -172,6 +183,13 @@ public class GameScript : MonoBehaviour {
 						completedLevel();
 						solved = true;
 						finishTimer = 360;
+
+						uint tempLevel = (stage - 1) * 15 + level;
+						if((progress < tempLevel) && (stage < 4))
+						{
+							progress = tempLevel;
+							saveProgress();
+						}
 					}
 				}
 			}
@@ -199,9 +217,8 @@ public class GameScript : MonoBehaviour {
 						cube.cube.renderer.material = tempMat;
 					}
 
-					int tempMin = Mathf.Min (levelArray.GetLength (0), Mathf.Max (levelArray.GetLength (1), levelArray.GetLength (2)));
-
-					cubesParent.transform.Rotate(Vector3.up, 0.08f / tempMin);
+					//cubesParent.transform.Rotate(Vector3.up, 0.08f / tempMin);
+					cubesParent.transform.rotation = Quaternion.AngleAxis(finishTimer, Vector3.down);
 				}
 
 				finishTimer--;
@@ -632,6 +649,8 @@ public class GameScript : MonoBehaviour {
 		camera.transform.LookAt (new Vector3(0, 0, 0), Vector3.up);
 		camera.camera.fieldOfView = 4 * tempMax;
 
+		cubesParent.transform.rotation = Quaternion.AngleAxis(360, Vector3.down);
+
 		//---Deleting previous cubes--------------------------------------------------
 		if(grid != null)
 		{
@@ -775,6 +794,8 @@ public class GameScript : MonoBehaviour {
 		camera.transform.position = new Vector3 (0, 0, 20);
 		camera.transform.LookAt (new Vector3(0, 0, 0), Vector3.up);
 		camera.camera.fieldOfView = 10.0f;
+
+		cubesParent.transform.rotation = Quaternion.AngleAxis(360, Vector3.down);
 
 		if(grid != null)
 		{
@@ -1196,8 +1217,42 @@ public class GameScript : MonoBehaviour {
 		buttonsMenu[1].SetActive (false);
 		buttonsMenu[2].SetActive (false);
 		buttonsMenu[3].SetActive (true);
+
 		buttonsMenu[4].SetActive (true);
+		if (progress < 15)
+		{
+			buttonsMenu[4].SendMessage("Start");
+			buttonsMenu[4].guiTexture.color = new Color(0.2f, 0.2f, 0.2f, 0.5f);
+
+			ButtonMenuScript tempScript = buttonsMenu [4].GetComponent("ButtonMenuScript") as ButtonMenuScript;
+			tempScript.enabled = false;
+		}
+		else
+		{
+			buttonsMenu[4].guiTexture.color = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+			
+			ButtonMenuScript tempScript = buttonsMenu [4].GetComponent("ButtonMenuScript") as ButtonMenuScript;
+			tempScript.enabled = true;
+		}
+
 		buttonsMenu[5].SetActive (true);
+		if (progress < 30)
+		{
+			buttonsMenu[5].SendMessage("Start");
+			buttonsMenu[5].guiTexture.color = new Color(0.2f, 0.2f, 0.2f, 0.5f);
+			
+			ButtonMenuScript tempScript = buttonsMenu [5].GetComponent("ButtonMenuScript") as ButtonMenuScript;
+			tempScript.enabled = false;
+		}
+		else
+		{
+			buttonsMenu[5].guiTexture.color = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+			
+			ButtonMenuScript tempScript = buttonsMenu [5].GetComponent("ButtonMenuScript") as ButtonMenuScript;
+			tempScript.enabled = true;
+		}
+
+
 		buttonsMenu[6].SetActive (true);
 		buttonsMenu[7].SetActive (true);
 	}
@@ -1211,6 +1266,11 @@ public class GameScript : MonoBehaviour {
 		buttonsMenu[10].SetActive (true);
 		buttonsMenu[11].SetActive (true);
 		buttonsMenu[12].SetActive (true);
+	}
+
+	void buttonCamera()
+	{
+
 	}
 
 	void buttonPicube()
@@ -1237,7 +1297,44 @@ public class GameScript : MonoBehaviour {
 
 	void buttonReset()
 	{
+		buttonsMenu[8].SetActive (false);
+		buttonsMenu[9].SetActive (false);
+		buttonsMenu[10].SetActive (false);
+		buttonsMenu[11].SetActive (false);
+		buttonsMenu[12].SetActive (false);
 
+		buttonsMenu[13].SetActive (true);
+		buttonsMenu[14].SetActive (true);
+		buttonsMenu[15].SetActive (true);
+	}
+
+	void buttonSetYes()
+	{
+		progress = 0;
+		saveProgress ();
+
+		buttonsMenu[8].SetActive (true);
+		buttonsMenu[9].SetActive (true);
+		buttonsMenu[10].SetActive (true);
+		buttonsMenu[11].SetActive (true);
+		buttonsMenu[12].SetActive (true);
+
+		buttonsMenu[13].SetActive (false);
+		buttonsMenu[14].SetActive (false);
+		buttonsMenu[15].SetActive (false);
+	}
+
+	void buttonSetNo()
+	{
+		buttonsMenu[8].SetActive (true);
+		buttonsMenu[9].SetActive (true);
+		buttonsMenu[10].SetActive (true);
+		buttonsMenu[11].SetActive (true);
+		buttonsMenu[12].SetActive (true);
+
+		buttonsMenu[13].SetActive (false);
+		buttonsMenu[14].SetActive (false);
+		buttonsMenu[15].SetActive (false);
 	}
 
 	void buttonBack()
@@ -1309,13 +1406,55 @@ public class GameScript : MonoBehaviour {
 		}
 		buttonsMenu [0].SetActive (true);
 		
-		foreach(GameObject go in buttonsLevels)
+		/*foreach(GameObject go in buttonsLevels)
 		{
 			go.SetActive(true);
+		}*/
+
+		buttonsLevels[0].SetActive(true);
+
+		for(int i = 1; i < 16; i++)
+		{
+			//uint tempLevel = (stage - 1) * 15 + level;
+			if(progress - (stage - 1) * 15 >= i - 1)
+			{
+				buttonsLevels[i].SetActive(true);
+				buttonsLevels[i].guiTexture.color = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+				ButtonLevelScript tempScript = buttonsLevels[i].GetComponent("ButtonLevelScript") as ButtonLevelScript;
+				tempScript.enabled = true;
+
+				
+				/*{
+					buttonsMenu[4].SendMessage("Start");
+					buttonsMenu[4].guiTexture.color = new Color(0.2f, 0.2f, 0.2f, 0.5f);
+					
+					ButtonMenuScript tempScript = buttonsMenu [4].GetComponent("ButtonMenuScript") as ButtonMenuScript;
+					tempScript.enabled = false;
+				}
+				else
+				{
+					buttonsMenu[4].guiTexture.color = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+					
+					ButtonMenuScript tempScript = buttonsMenu [4].GetComponent("ButtonMenuScript") as ButtonMenuScript;
+					tempScript.enabled = true;
+				}*/
+			}
+			else
+			{
+				buttonsLevels[i].SetActive(true);
+				buttonsLevels[i].guiTexture.color = new Color(0.2f, 0.2f, 0.2f, 0.5f);
+
+				buttonsLevels[i].SendMessage("Start");
+				ButtonLevelScript tempScript = buttonsLevels[i].GetComponent("ButtonLevelScript") as ButtonLevelScript;
+				tempScript.enabled = false;
+			}
 		}
-		buttonsLevels [17].SetActive (false);
-		buttonsLevels [18].SetActive (false);
-		buttonsLevels [19].SetActive (false);
+
+		buttonsLevels[16].SetActive(true);
+
+		//buttonsLevels [17].SetActive (false);
+		//buttonsLevels [18].SetActive (false);
+		//buttonsLevels [19].SetActive (false);
 
 		
 		buttonsLevels[0].guiText.text = "Stage " + stage;
@@ -1348,11 +1487,16 @@ public class GameScript : MonoBehaviour {
 
 		loadLevelCount ();
 
-		for(int i = 0; i <= customStageCount; i++)
+		for(int i = 1; i <= customStageCount; i++)
 		{
 			buttonsLevels[i].SetActive(true);
+
+			buttonsLevels[i].guiTexture.color = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+			ButtonLevelScript tempScript = buttonsLevels[i].GetComponent("ButtonLevelScript") as ButtonLevelScript;
+			tempScript.enabled = true;
 		}
 
+		buttonsLevels [0].SetActive(true);
 		buttonsLevels [16].SetActive (true);
 		buttonsLevels [17].SetActive (true);
 		buttonsLevels [18].SetActive(true);
@@ -1402,6 +1546,27 @@ public class GameScript : MonoBehaviour {
 		if(solved)
 		{
 			openMainMenu();
+
+			if(stage == 4)
+			{
+				if(level >= customStageCount)
+				{
+					openMainMenu();
+					buttonStart();
+					buttonStage4();
+					return;
+				}
+			}
+
+			if(level < 15)
+			{
+				buttonLevel(level + 1);
+			}
+			else
+			{
+				stage++;
+				buttonLevel(1);
+			}
 		}
 		else
 		{
@@ -1487,7 +1652,7 @@ public class GameScript : MonoBehaviour {
 			{
 				//magnet
 				levelArray = new bool[4,1,4] {{{false, true, true, true}}, {{true, false, false, false}}, {{true, false, false, false}}, {{false, true, true, true}}};
-				backgroundImage.texture = Resources.Load("Textures/bg2", typeof(Texture2D)) as Texture2D;
+				backgroundImage.texture = Resources.Load("Textures/bg4", typeof(Texture2D)) as Texture2D;
 			}
 			if(level == 2)
 			{
@@ -1607,7 +1772,7 @@ public class GameScript : MonoBehaviour {
 			{
 				//fisherman
 				levelArray = new bool[4,9,8] {{{true, true, true, true, true, true, true, true}, {false, false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false}, {false, true, true, true, false, false, false, false}, {false, true, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false}}, {{true, true, true, true, true, true, true, true}, {false, false, true, false, false, false, true, false}, {false, false, true, false, false, false, true, false}, {false, true, false, false, false, false, false, false}, {false, true, false, true, false, false, false, false}, {false, true, false, false, false, false, false, false}, {true, true, true, false, false, false, false, false}, {false, true, true, false, false, false, false, false}, {false, false, false, false, false, false, false, false}}, {{true, true, true, true, true, true, true, true}, {false, true, false, false, false, false, false, false}, {false, true, false, false, false, false, false, false}, {false, true, false, true, false, false, false, false}, {false, true, false, true, false, false, false, false}, {false, true, false, false, true, false, false, false}, {true, true, true, false, true, false, false, false}, {false, true, true, false, false, true, false, false}, {false, false, false, false, false, false, true, false}}, {{true, true, true, true, true, true, true, true}, {false, false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false}, {false, true, true, true, false, false, false, false}, {false, true, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false}}};
-				backgroundImage.texture = Resources.Load("Textures/bg11", typeof(Texture2D)) as Texture2D;
+				backgroundImage.texture = Resources.Load("Textures/bg2", typeof(Texture2D)) as Texture2D;
 			}
 			if(level == 6)
 			{
@@ -1643,7 +1808,7 @@ public class GameScript : MonoBehaviour {
 			{
 				//water wheel
 				levelArray = new bool[5,8,9] {{{true, true, true, true, true, true, true, true, false}, {true, true, true, true, true, true, true, true, false}, {false, false, false, true, false, false, false, false, false}, {false, false, false, true, false, false, false, false, false}, {false, false, false, true, false, false, false, false, false}, {false, false, false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false, false}}, {{true, true, true, true, true, true, true, true, true}, {false, false, true, true, true, false, false, false, false}, {false, true, false, true, false, true, false, false, false}, {true, false, false, true, false, false, true, false, false}, {true, true, true, true, true, true, true, false, false}, {true, false, false, true, false, false, true, false, false}, {false, true, false, true, false, true, false, false, false}, {false, false, true, true, true, false, false, false, false}}, {{true, true, true, true, true, true, true, true, true}, {false, false, false, true, false, false, false, false, false}, {false, true, false, false, false, true, false, false, false}, {false, false, false, false, false, false, false, false, false}, {true, false, false, true, false, false, true, false, false}, {false, false, false, false, false, false, false, false, false}, {false, true, false, false, false, true, false, false, false}, {false, false, false, true, false, false, false, false, false}}, {{true, true, true, true, true, true, true, true, true}, {false, false, true, true, true, false, false, false, false}, {false, true, false, true, false, true, false, false, false}, {true, false, false, true, false, false, true, false, false}, {true, true, true, true, true, true, true, false, false}, {true, false, false, true, false, false, true, false, false}, {false, true, false, true, false, true, false, false, false}, {false, false, true, true, true, false, false, false, false}}, {{true, true, true, true, true, true, true, true, false}, {true, true, true, true, true, true, true, true, false}, {false, false, false, true, false, false, false, false, false}, {false, false, false, true, false, false, false, false, false}, {false, false, false, true, false, false, false, false, false}, {false, false, false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false, false}, {false, false, false, false, false, false, false, false, false}}};
-				backgroundImage.texture = Resources.Load("Textures/bg5", typeof(Texture2D)) as Texture2D;
+				backgroundImage.texture = Resources.Load("Textures/bg2", typeof(Texture2D)) as Texture2D;
 			}
 			if(level == 12)
 			{
@@ -1728,7 +1893,7 @@ public class GameScript : MonoBehaviour {
 			{
 				//frog
 				levelArray = new bool[6,5,8] {{{true, true, true, true, false, false, true, true}, {true, true, false, false, false, true, false, false}, {false, false, true, true, true, true, false, false}, {false, false, false, true, false, false, false, false}, {false, false, false, false, false, false, false, false}}, {{true, true, false, false, false, false, true, false}, {false, true, false, false, false, false, false, false}, {false, true, true, true, true, true, true, false}, {false, false, true, true, true, true, true, true}, {false, false, false, false, false, false, true, false}}, {{false, false, false, false, false, false, false, false}, {false, true, true, true, true, true, false, false}, {true, true, true, true, true, true, true, true}, {false, true, true, true, true, true, true, true}, {false, false, false, false, false, false, false, false}}, {{false, false, false, false, false, false, false, false}, {false, true, true, true, true, true, false, false}, {true, true, true, true, true, true, true, true}, {false, true, true, true, true, true, true, true}, {false, false, false, false, false, false, false, false}}, {{true, true, false, false, false, false, true, false}, {false, true, false, false, false, false, false, false}, {false, true, true, true, true, true, true, false}, {false, false, true, true, true, true, true, true}, {false, false, false, false, false, false, true, false}}, {{true, true, true, true, false, false, true, true}, {true, true, false, false, false, true, false, false}, {false, false, true, true, true, true, false, false}, {false, false, false, true, false, false, false, false}, {false, false, false, false, false, false, false, false}}};
-				backgroundImage.texture = Resources.Load("Textures/bg12", typeof(Texture2D)) as Texture2D;
+				backgroundImage.texture = Resources.Load("Textures/bg2", typeof(Texture2D)) as Texture2D;
 			}
 			if(level == 10)
 			{
@@ -1812,11 +1977,19 @@ public class GameScript : MonoBehaviour {
 		}
 		if(stage == 5)
 		{
-			File.Delete(Application.persistentDataPath + "/custom" + level + ".txt");
-
-			for(uint i = level + 1; i < customStageCount + 1; i++)
+			try
 			{
-				File.Move(Application.persistentDataPath + "/custom" + i + ".txt",Application.persistentDataPath + "/custom" + (i - 1) + ".txt");
+				File.Delete(Application.persistentDataPath + "/custom" + level + ".txt");
+				File.Delete(Application.persistentDataPath + "/custom" + level + "color.txt");
+
+				for(uint i = level + 1; i < customStageCount + 1; i++)
+				{
+					File.Move(Application.persistentDataPath + "/custom" + i + ".txt",Application.persistentDataPath + "/custom" + (i - 1) + ".txt");
+				}
+			}
+			catch
+			{
+
 			}
 
 			stage = 4;
@@ -2186,8 +2359,42 @@ public class GameScript : MonoBehaviour {
 		}
 	}
 
-	void loadLevel()
+	void saveProgress()
 	{
+		try
+		{
+			System.IO.StreamWriter file = new System.IO.StreamWriter(Application.persistentDataPath + "/progress.txt");
+
+			file.Write (progress);
+
+			file.Close();
+		}
+		catch
+		{
+
+		}
+	}
+
+	void loadProgress()
+	{
+		try
+		{
+			System.IO.StreamReader file = new System.IO.StreamReader (Application.persistentDataPath + "/progress.txt");
+
+			if (file == null)
+			{
+				saveProgress ();
+				return;
+			}
+
+			progress = ushort.Parse (file.ReadToEnd ());
+
+			file.Close ();
+		}
+		catch
+		{
+
+		}
 
 	}
 

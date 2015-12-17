@@ -19,7 +19,8 @@ public class ButtonMenuScript : MonoBehaviour
 		}
 		
 		if((this.name == "buttonStage1") || (this.name == "buttonStage2") || (this.name == "buttonStage3") || (this.name == "buttonStage4") || (this.name == "buttonLevelBack")
-		   || (this.name == "buttonLevelCreate") || (this.name == "buttonStageBack") || (this.name == "buttonLevelDelete"))
+		   || (this.name == "buttonLevelCreate") || (this.name == "buttonStageBack") || (this.name == "buttonLevelDelete")  || (this.name == "buttonSetYes")
+		   || (this.name == "buttonSetNo"))
 		{
 			this.guiTexture.pixelInset = new Rect (-Screen.width / 8, -Screen.height / 12, Screen.width / 4, Screen.height / 6);
 			return;
@@ -28,6 +29,12 @@ public class ButtonMenuScript : MonoBehaviour
 		if(this.name == "buttonReset")
 		{
 			this.guiTexture.pixelInset = new Rect (-Screen.width / 4, -Screen.height / 12, Screen.width / 2, Screen.height / 6);
+			return;
+		}
+
+		if(this.name == "buttonCamera")
+		{
+			this.guiTexture.pixelInset = new Rect (-Screen.width / 3, -Screen.height / 12, Screen.width * 2 / 3, Screen.height / 6);
 			return;
 		}
 
@@ -40,24 +47,29 @@ public class ButtonMenuScript : MonoBehaviour
 		if(Input.touchCount > 0)
 		{
 			Touch touch = Input.GetTouch(0);
-
-			if(!guiTexture.HitTest(touch.position))
+			
+			
+			
+			if(guiTexture.HitTest(touch.position))
 			{
-				//this.guiTexture.color = new Color (0.5f, 0.5f, 0.5f, 0.5f);
+				if(touch.phase == TouchPhase.Began)
+				{
+					this.guiTexture.color = new Color (0.25f, 0.5f, 0.5f, 0.5f);
+				}
+				if(touch.phase == TouchPhase.Ended)
+				{
+					if(this.guiTexture.color.r == 0.25f)
+					{
+						this.guiTexture.color = new Color (0.5f, 0.5f, 0.5f, 0.5f);
+						GameObject.FindGameObjectWithTag("GameController").SendMessage(this.name);
+					}
+				}
 			}
 			else
 			{
-				if(touch.phase != TouchPhase.Ended)
-				{
-					//this.guiTexture.color = new Color (0.25f, 0.5f, 0.5f, 0.5f);
-				}
-				else
-				{
-					//this.guiTexture.color = new Color (0.5f, 0.5f, 0.5f, 0.5f);
-					GameObject.FindGameObjectWithTag("GameController").SendMessage(this.name);
-				}
+				this.guiTexture.color = new Color (0.5f, 0.5f, 0.5f, 0.5f);
 			}
-		}	
+		}
 	}
 	/*
 	void OnMouseDown()

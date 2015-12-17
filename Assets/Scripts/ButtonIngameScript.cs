@@ -3,6 +3,8 @@ using System.Collections;
 
 public class ButtonIngameScript : MonoBehaviour 
 {	
+	bool touched = false;
+
 	// Use this for initialization
 	void Start () 
 	{
@@ -29,11 +31,23 @@ public class ButtonIngameScript : MonoBehaviour
 		{
 			Touch touch = Input.GetTouch(0);
 
-			if((touch.phase == TouchPhase.Began) && (guiTexture.HitTest(touch.position)))
+			if((touch.phase == TouchPhase.Began) && (this.guiTexture.HitTest(touch.position)))
 			{
-				GameObject.FindGameObjectWithTag("GameController").SendMessage(this.name);
+				touched = true;
 			}
-		}	
+			if((touch.phase == TouchPhase.Ended) && (this.guiTexture.HitTest(touch.position)))
+			{
+				if (touched == true)
+				{
+					touched = false;
+					GameObject.FindGameObjectWithTag("GameController").SendMessage(this.name);
+				}
+			}
+			if(!this.guiTexture.HitTest(touch.position))
+			{
+				touched = false;
+			}
+		}
 
 	}
 	/*

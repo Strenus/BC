@@ -50,8 +50,6 @@
      <Compile Include="Assets\Scripts\ButtonLevelScript.cs" />
      <Compile Include="Assets\Scripts\ButtonMenuScript.cs" />
      <Compile Include="Assets\Scripts\GameScript.cs" />
-     <Compile Include="Assets\Scripts\SliderScript.cs" />
-     <Compile Include="Assets\Scripts\SpriteScript.cs" />
      <Compile Include="Assets\Scripts\textMenuScript.cs" />
      <None Include="Assets\Resources\Levels\color34.txt" />
      <None Include="Assets\Resources\Levels\color36.txt" />
