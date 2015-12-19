@@ -12,6 +12,7 @@ public class GameScript : MonoBehaviour {
 	public Material[] numMat = new Material[10];
 
 	public GameObject cubesParent;
+	public GameObject endAnimationParent;
 
 	List<GameObject> fragments = new List<GameObject>();
 	List<Cube> creativeCubes = new List<Cube>();
@@ -28,6 +29,7 @@ public class GameScript : MonoBehaviour {
 	public List<GameObject> buttonsEdit = new List<GameObject>();
 
 	uint progress = 0;
+	ushort[] scores = new ushort[45];
 
 	ushort score;
 	bool solved = false;
@@ -170,58 +172,33 @@ public class GameScript : MonoBehaviour {
 			{
 				if(checkCompletion())
 				{
-					//pause = true;
-					//solved = true;
-					//openPauseMenu();
-
-
-
 					if(solved == false)
 					{
-						Debug.Log("yaaaaaas");
+						//Debug.Log("yaaaaaas");
 
 						completedLevel();
 						solved = true;
 						finishTimer = 360;
 
-						uint tempLevel = (stage - 1) * 15 + level;
+						/*uint tempLevel = (stage - 1) * 15 + level;
 						if((progress < tempLevel) && (stage < 4))
 						{
 							progress = tempLevel;
+							scores[tempLevel - 1] = score;
 							saveProgress();
-						}
+						}*/
 					}
 				}
 			}
 
 			if(solved)
 			{
-				foreach(Cube cube in grid)
-				{
-					if(cube.cube == null)
-						continue;
-					
-					for(int i= 1; i< cube.cube.renderer.materials.Length; i++)
-					{
-						Color tempColor = cube.cube.renderer.materials[i].color;
-						tempColor.a -= 0.01f;
-						cube.cube.renderer.materials[i].color = tempColor;
+				endAnimationUpdate();
 
 
-					}
-
-					if(cube.cube.renderer.materials[0].color.a < 0.01f)
-					{
-						Material tempMat = cube.cube.renderer.materials[0];
-						cube.cube.renderer.materials = new Material[1];
-						cube.cube.renderer.material = tempMat;
-					}
-
-					//cubesParent.transform.Rotate(Vector3.up, 0.08f / tempMin);
-					cubesParent.transform.rotation = Quaternion.AngleAxis(finishTimer, Vector3.down);
-				}
 
 				finishTimer--;
+
 
 				if(finishTimer == 0)
 				{
@@ -1034,7 +1011,8 @@ public class GameScript : MonoBehaviour {
 
 		if(score == 0)
 		{
-			openMainMenu();
+			pause = true;
+			openPauseMenu()
 		}
 
 
@@ -1109,6 +1087,11 @@ public class GameScript : MonoBehaviour {
 		{
 			if(cube != null)
 				Destroy(cube.cube);
+		}
+
+		for (int i =0; i < endAnimationParent.transform.childCount; i++)
+		{
+			Destroy(endAnimationParent.transform.GetChild(i));
 		}
 
 		grid = null;
@@ -1189,6 +1172,8 @@ public class GameScript : MonoBehaviour {
 
 	void completedLevel()
 	{
+		startEndAnimation();
+
 		foreach(Cube cube in grid)
 		{
 			if(cube.cube == null)
@@ -1419,7 +1404,15 @@ public class GameScript : MonoBehaviour {
 			if(progress - (stage - 1) * 15 >= i - 1)
 			{
 				buttonsLevels[i].SetActive(true);
-				buttonsLevels[i].guiTexture.color = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+				if(scores[i + (stage - 1) * 15 - 1] == 5)
+				{
+					buttonsLevels[i].guiTexture.color = new Color(0.5f, 0.5f, 0f, 0.5f);
+				}
+				else
+				{
+					buttonsLevels[i].guiTexture.color = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+				}
+
 				ButtonLevelScript tempScript = buttonsLevels[i].GetComponent("ButtonLevelScript") as ButtonLevelScript;
 				tempScript.enabled = true;
 
@@ -1551,7 +1544,6 @@ public class GameScript : MonoBehaviour {
 			{
 				if(level >= customStageCount)
 				{
-					openMainMenu();
 					buttonStart();
 					buttonStage4();
 					return;
@@ -1570,6 +1562,12 @@ public class GameScript : MonoBehaviour {
 		}
 		else
 		{
+			if(score == 0)
+			{
+				openMainMenu();
+				buttonLevel(level);
+			}
+
 			pause = false;
 
 			foreach(GameObject go in buttonsPause)
@@ -2007,6 +2005,762 @@ public class GameScript : MonoBehaviour {
 		SpawnCubes ();
 	}
 
+	void startEndAnimation()
+	{
+
+		uint tempLevel = (stage - 1) * 15 + level;
+
+		if(tempLevel == 1)
+		{
+			GameObject[] cubes = new GameObject[5];
+
+			for(int i = 0; i < 5; i++)
+			{
+				cubes[i] = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+				cubes[i].transform.parent = endAnimationParent.transform;
+				cubes[i].transform.localScale = new Vector3(0.3f, 0.3f, 0.3f);
+
+				cubes[i].renderer.materials = new Material[1];
+				cubes[i].renderer.material = new Material(Shader.Find ("Diffuse"));
+				cubes[i].renderer.material.color = new Color(0.2f, 0.2f, 0.2f);
+
+			}
+
+			cubes[0].transform.position = new Vector3(-1.2f, 0.2f, 20);
+
+			cubes[1].transform.position = new Vector3(1.7f, -0.22f, 20);
+			cubes[1].transform.rotation = Quaternion.AngleAxis(340, Vector3.forward);
+
+			cubes[2].transform.position = new Vector3(-1.7f, 0.16f, 20);
+			cubes[2].transform.rotation = Quaternion.AngleAxis(25, Vector3.forward);
+
+			cubes[3].transform.position = new Vector3(-1.5f, -0.2f, 20);
+			cubes[1].transform.rotation = Quaternion.AngleAxis(325, Vector3.forward);
+
+			cubes[4].transform.localScale = new Vector3(0.6f, 0.3f, 0.3f);
+			cubes[4].transform.position = new Vector3(1.5f, 0.1f, 20);
+			cubes[1].transform.rotation = Quaternion.AngleAxis(28, Vector3.forward);
+
+			
+			return;
+		}
+		
+		if(tempLevel == 2)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 3)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 4)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 5)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 6)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 7)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 8)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 9)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 10)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 11)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 12)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 13)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 14)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 15)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 16)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 17)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 18)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 19)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 20)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 21)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 22)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 23)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 24)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 25)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 26)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 27)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 28)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 29)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 30)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 31)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 32)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 33)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 34)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 35)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 36)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 37)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 38)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 39)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 40)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 41)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 42)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 43)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 44)
+		{
+			
+			
+			return;
+		}
+		
+		if(tempLevel == 45)
+		{
+			
+			
+			return;
+		}
+	}
+	
+	void endAnimationUpdate()
+	{
+		foreach(Cube cube in grid)
+		{
+			
+			
+			if(cube.cube == null)
+				continue;
+			
+			for(int i= 1; i< cube.cube.renderer.materials.Length; i++)
+			{
+				Color tempColor = cube.cube.renderer.materials[i].color;
+				tempColor.a -= 0.01f;
+				cube.cube.renderer.materials[i].color = tempColor;
+				
+				
+			}
+			
+			if((cube.cube.renderer.materials.Length > 1) && (cube.cube.renderer.materials[1].color.a < 0.01f))
+			{
+				Material tempMat = cube.cube.renderer.materials[0];
+				cube.cube.renderer.materials = new Material[1];
+				cube.cube.renderer.material = tempMat;
+			}
+			
+			
+			//cubesParent.transform.rotation = Quaternion.AngleAxis(finishTimer, Vector3.down);
+		}
+		
+		uint tempLevel = (stage - 1) * 15 + level;
+
+		GameObject[] cubes = new GameObject[endAnimationParent.transform.childCount];
+
+		for(int i = 0; i < cubes.Length; i++)
+		{
+			cubes[i] = endAnimationParent.transform.GetChild(i).gameObject;
+		}
+
+		if(tempLevel == 1)
+		{
+			if(cubes[0].transform.position.z > 2.15f)
+			{
+				cubes[0].transform.Translate(0,0,-0.6f);
+			}
+
+			if(finishTimer < 320)
+			{
+				if(cubes[1].transform.position.z > 2.15f)
+				{
+					cubes[1].transform.Translate(0,0,-0.5f);
+				}
+			}
+
+			if(finishTimer < 270)
+			{
+				if(cubes[2].transform.position.z > 2.15f)
+				{
+					cubes[2].transform.Translate(0,0,-0.5f);
+				}
+			}
+
+			if(finishTimer < 180)
+			{
+				if(cubes[3].transform.position.z > 2.15f)
+				{
+					cubes[3].transform.Translate(0,0,-0.6f);
+				}
+			}
+
+			if(finishTimer < 260)
+			{
+				if(cubes[4].transform.position.z > 2.15f)
+				{
+					cubes[4].transform.Translate(0,0,-0.6f);
+				}
+			}
+
+			/*
+			if(finishTimer <)
+			finishTimer
+			2.15f*/
+			
+			return;
+		}
+
+		if(tempLevel == 2)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 3)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 4)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 5)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 6)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 7)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 8)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 9)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 10)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 11)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 12)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 13)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 14)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 15)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 16)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 17)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 18)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 19)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 20)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 21)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 22)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 23)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 24)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 25)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 26)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 27)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 28)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 29)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 30)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 31)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 32)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 33)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 34)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 35)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 36)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 37)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 38)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 39)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 40)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 41)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 42)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 43)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 44)
+		{
+			
+			
+			return;
+		}
+
+		if(tempLevel == 45)
+		{
+			
+			
+			return;
+		}
+
+
+
+
+
+
+
+
+
+
+
+
+
+	}
+
 	void buttonEditPause()
 	{
 		pause = true;
@@ -2365,13 +3119,17 @@ public class GameScript : MonoBehaviour {
 		{
 			System.IO.StreamWriter file = new System.IO.StreamWriter(Application.persistentDataPath + "/progress.txt");
 
-			file.Write (progress);
+			//file.Write (progress);
+			for(int i = 0; i < 45; i++)
+			{
+				file.WriteLine(scores[i].ToString());
+			}
 
 			file.Close();
 		}
-		catch
+		catch (System.Exception e)
 		{
-
+			Debug.Log(e);
 		}
 	}
 
@@ -2387,13 +3145,25 @@ public class GameScript : MonoBehaviour {
 				return;
 			}
 
-			progress = ushort.Parse (file.ReadToEnd ());
+			//progress = ushort.Parse (file.ReadToEnd ());
+			progress = 0;
+
+			for(int i = 0; i < 45; i++)
+			{
+				scores[i] = ushort.Parse(file.ReadLine());
+
+				if(scores[i] > 0)
+				{
+					progress++;
+				}
+			}
 
 			file.Close ();
 		}
-		catch
+		catch (System.Exception e)
 		{
-
+			Debug.Log(e);
+			saveProgress();
 		}
 
 	}
