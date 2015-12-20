@@ -13,6 +13,7 @@ public class GameScript : MonoBehaviour {
 
 	public GameObject cubesParent;
 	public GameObject endAnimationParent;
+	int[] endRandom;
 
 	List<GameObject> fragments = new List<GameObject>();
 	List<Cube> creativeCubes = new List<Cube>();
@@ -44,7 +45,7 @@ public class GameScript : MonoBehaviour {
 	public GUITexture backgroundImage;
 
 	ushort ticks = 0;
-	ushort finishTimer = 360;
+	ushort finishTimer = 0;
 	bool breaking = true;
 	bool pause = true;
 	bool inMenu = true;
@@ -178,7 +179,7 @@ public class GameScript : MonoBehaviour {
 
 						completedLevel();
 						solved = true;
-						finishTimer = 360;
+						finishTimer = 0;
 
 						/*uint tempLevel = (stage - 1) * 15 + level;
 						if((progress < tempLevel) && (stage < 4))
@@ -197,14 +198,15 @@ public class GameScript : MonoBehaviour {
 
 
 
-				finishTimer--;
+				finishTimer++;
 
-
-				if(finishTimer == 0)
+				/*
+				if(finishTimer > 360)
 				{
 					pause = true;
 					openPauseMenu();
 				}
+				*/
 			}
 		}
 
@@ -1012,7 +1014,7 @@ public class GameScript : MonoBehaviour {
 		if(score == 0)
 		{
 			pause = true;
-			openPauseMenu()
+			openPauseMenu();
 		}
 
 
@@ -1091,7 +1093,7 @@ public class GameScript : MonoBehaviour {
 
 		for (int i =0; i < endAnimationParent.transform.childCount; i++)
 		{
-			Destroy(endAnimationParent.transform.GetChild(i));
+			Destroy(endAnimationParent.transform.GetChild(i).gameObject);
 		}
 
 		grid = null;
@@ -1122,6 +1124,9 @@ public class GameScript : MonoBehaviour {
 			starsIngame[i].guiTexture.pixelInset = new Rect (-Screen.height / 20, -Screen.height / 20, Screen.height / 10, Screen.height / 10);
 			starsIngame[i].SetActive(false);
 		}
+
+		Camera.main.transform.GetChild(0).light.intensity = 0.3f;
+		backgroundImage.color = new Color (0.5f, 0.5f, 0.5f);
 
 		spawnMenuCubes ();
 
@@ -1173,20 +1178,6 @@ public class GameScript : MonoBehaviour {
 	void completedLevel()
 	{
 		startEndAnimation();
-
-		foreach(Cube cube in grid)
-		{
-			if(cube.cube == null)
-				continue;
-
-			Material[] temp = new Material[cube.cube.renderer.materials.Length + 1];
-
-			cube.cube.renderer.materials.CopyTo(temp, 1);
-			temp[0] = new Material(Shader.Find ("Diffuse"));
-			temp[0].color = cube.color;
-
-			cube.cube.renderer.materials = temp;
-		}
 
 		for (int i=0; i<3; i++) 
 		{
@@ -1296,6 +1287,8 @@ public class GameScript : MonoBehaviour {
 	void buttonSetYes()
 	{
 		progress = 0;
+		scores = new ushort[45];
+
 		saveProgress ();
 
 		buttonsMenu[8].SetActive (true);
@@ -2007,14 +2000,27 @@ public class GameScript : MonoBehaviour {
 
 	void startEndAnimation()
 	{
+		foreach(Cube cube in grid)
+		{
+			if(cube.cube == null)
+				continue;
+			
+			Material[] temp = new Material[cube.cube.renderer.materials.Length + 1];
+			
+			cube.cube.renderer.materials.CopyTo(temp, 1);
+			temp[0] = new Material(Shader.Find ("Diffuse"));
+			temp[0].color = cube.color;
+			
+			cube.cube.renderer.materials = temp;
+		}
 
 		uint tempLevel = (stage - 1) * 15 + level;
 
 		if(tempLevel == 1)
 		{
-			GameObject[] cubes = new GameObject[5];
+			GameObject[] cubes = new GameObject[6];
 
-			for(int i = 0; i < 5; i++)
+			for(int i = 0; i < 6; i++)
 			{
 				cubes[i] = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
 				cubes[i].transform.parent = endAnimationParent.transform;
@@ -2026,7 +2032,8 @@ public class GameScript : MonoBehaviour {
 
 			}
 
-			cubes[0].transform.position = new Vector3(-1.2f, 0.2f, 20);
+			cubes[0].transform.localScale = new Vector3(0.3f, 0.2f, 0.3f);
+			cubes[0].transform.position = new Vector3(-1.3f, 0.1f, 20);
 
 			cubes[1].transform.position = new Vector3(1.7f, -0.22f, 20);
 			cubes[1].transform.rotation = Quaternion.AngleAxis(340, Vector3.forward);
@@ -2035,11 +2042,15 @@ public class GameScript : MonoBehaviour {
 			cubes[2].transform.rotation = Quaternion.AngleAxis(25, Vector3.forward);
 
 			cubes[3].transform.position = new Vector3(-1.5f, -0.2f, 20);
-			cubes[1].transform.rotation = Quaternion.AngleAxis(325, Vector3.forward);
+			cubes[3].transform.rotation = Quaternion.AngleAxis(325, Vector3.forward);
 
 			cubes[4].transform.localScale = new Vector3(0.6f, 0.3f, 0.3f);
 			cubes[4].transform.position = new Vector3(1.5f, 0.1f, 20);
-			cubes[1].transform.rotation = Quaternion.AngleAxis(28, Vector3.forward);
+			cubes[4].transform.rotation = Quaternion.AngleAxis(28, Vector3.forward);
+
+			cubes[5].transform.localScale = new Vector3(0.3f, 0.3f, 0.15f);
+			cubes[5].transform.position = new Vector3(1.6f, 0, 20);
+			cubes[5].transform.rotation = Quaternion.AngleAxis(325, Vector3.forward);
 
 			
 			return;
@@ -2089,7 +2100,7 @@ public class GameScript : MonoBehaviour {
 		
 		if(tempLevel == 8)
 		{
-			
+			endRandom = new int[10];
 			
 			return;
 		}
@@ -2110,20 +2121,58 @@ public class GameScript : MonoBehaviour {
 		
 		if(tempLevel == 11)
 		{
+			GameObject[] cubes = new GameObject[6];
 			
+			for(int i = 0; i < 6; i++)
+			{
+				cubes[i] = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+				cubes[i].transform.parent = endAnimationParent.transform;				
+				cubes[i].renderer.materials = new Material[1];
+				cubes[i].renderer.material = new Material(Shader.Find ("Diffuse"));
+				cubes[i].renderer.material.color = new Color(0.2f, 0.2f, 0.2f);
+				
+			}
+
+			cubes[0].transform.position = new Vector3(0, 20, -1.5f);
+
+			cubes[1].transform.position = new Vector3(0, 20, -0.5f);
+
+			cubes[2].transform.localScale = new Vector3(1,2,2);
+			cubes[2].transform.position = new Vector3(0, 20, 1f);
+			
+			cubes[3].transform.position = new Vector3(0, 20, -0.5f);
+
+			cubes[4].transform.position = new Vector3(0, 20, -1.5f);
+
+			cubes[5].transform.position = new Vector3(0, 20, -0.5f);
+
 			
 			return;
 		}
 		
 		if(tempLevel == 12)
 		{
-			
+			for(int x = 1; x < 4; x++)
+			{
+				for(int z = 1; z < 6; z++)
+				{
+					grid[x,1,z].cube.renderer.material = new Material(Shader.Find ("Transparent/Diffuse"));
+					grid[x,1,z].cube.renderer.material.color = new Color(grid[1,1,1].color.r, grid[1,1,1].color.g, grid[1,1,1].color.b, 0.4f);
+				}
+			}
 			
 			return;
 		}
 		
 		if(tempLevel == 13)
 		{
+			GameObject cube = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+			cube.transform.parent = endAnimationParent.transform;	
+			cube.transform.position = new Vector3(-2,20,1);
+			cube.transform.localScale = new Vector3(0.6f, 1, 0.6f);
+			cube.renderer.materials = new Material[1];
+			cube.renderer.material = new Material(Shader.Find ("Diffuse"));
+			cube.renderer.material.color = new Color(0.4f, 0.4f, 0.4f);
 			
 			
 			return;
@@ -2356,6 +2405,8 @@ public class GameScript : MonoBehaviour {
 	
 	void endAnimationUpdate()
 	{
+		int finishTimer = this.finishTimer % 360;
+
 		foreach(Cube cube in grid)
 		{
 			
@@ -2399,7 +2450,7 @@ public class GameScript : MonoBehaviour {
 				cubes[0].transform.Translate(0,0,-0.6f);
 			}
 
-			if(finishTimer < 320)
+			if(finishTimer > 40)
 			{
 				if(cubes[1].transform.position.z > 2.15f)
 				{
@@ -2407,7 +2458,7 @@ public class GameScript : MonoBehaviour {
 				}
 			}
 
-			if(finishTimer < 270)
+			if(finishTimer > 90)
 			{
 				if(cubes[2].transform.position.z > 2.15f)
 				{
@@ -2415,7 +2466,7 @@ public class GameScript : MonoBehaviour {
 				}
 			}
 
-			if(finishTimer < 180)
+			if(finishTimer > 180)
 			{
 				if(cubes[3].transform.position.z > 2.15f)
 				{
@@ -2423,7 +2474,7 @@ public class GameScript : MonoBehaviour {
 				}
 			}
 
-			if(finishTimer < 260)
+			if(finishTimer > 100)
 			{
 				if(cubes[4].transform.position.z > 2.15f)
 				{
@@ -2431,17 +2482,63 @@ public class GameScript : MonoBehaviour {
 				}
 			}
 
-			/*
-			if(finishTimer <)
-			finishTimer
-			2.15f*/
+			if(finishTimer > 280)
+			{
+				if(cubes[5].transform.position.z > 2.22f)
+				{
+					cubes[5].transform.Translate(0,0,-0.6f);
+				}
+				else
+				{
+					cubes[5].transform.position = new Vector3(cubes[5].transform.position.x, cubes[5].transform.position.y, 2.22f);
+				}
+			}
 			
 			return;
 		}
 
 		if(tempLevel == 2)
 		{
-			
+			Vector3 tempPoint = new Vector3(0, -0.5f, 0.5f);
+
+			float tempAngle = 0.8f * Mathf.Sin(finishTimer / 20.0f - Mathf.PI/2);
+
+			grid[0,2,4].cube.transform.RotateAround(tempPoint,Vector3.forward, tempAngle);
+			grid[0,2,5].cube.transform.RotateAround(tempPoint,Vector3.forward, tempAngle);
+
+			grid[2,2,4].cube.transform.RotateAround(tempPoint,Vector3.back, tempAngle);
+			grid[2,2,5].cube.transform.RotateAround(tempPoint,Vector3.back, tempAngle);
+
+
+			tempPoint = new Vector3(0, 0, -0.5f);
+			tempAngle = 0.4f * Mathf.Sin(finishTimer / 15.0f - Mathf.PI/2);
+
+			grid[1,3,3].cube.transform.RotateAround(tempPoint, Vector3.up, tempAngle);
+			grid[1,2,3].cube.transform.RotateAround(tempPoint, Vector3.up, tempAngle);
+			grid[1,2,2].cube.transform.RotateAround(tempPoint, Vector3.up, tempAngle);
+			grid[1,1,2].cube.transform.RotateAround(tempPoint, Vector3.up, tempAngle);
+			grid[1,1,1].cube.transform.RotateAround(tempPoint, Vector3.up, tempAngle);
+			grid[1,1,0].cube.transform.RotateAround(tempPoint, Vector3.up, tempAngle);
+			grid[1,0,0].cube.transform.RotateAround(tempPoint, Vector3.up, tempAngle);
+
+			tempPoint = new Vector3(0, 0, -1.5f);
+
+			grid[1,2,2].cube.transform.RotateAround(tempPoint, Vector3.up, tempAngle);
+			grid[1,1,2].cube.transform.RotateAround(tempPoint, Vector3.up, tempAngle);
+			grid[1,1,1].cube.transform.RotateAround(tempPoint, Vector3.up, tempAngle);
+			grid[1,1,0].cube.transform.RotateAround(tempPoint, Vector3.up, tempAngle);
+			grid[1,0,0].cube.transform.RotateAround(tempPoint, Vector3.up, tempAngle);
+
+			tempPoint = new Vector3(0, 0, -2.5f);
+
+			grid[1,1,1].cube.transform.RotateAround(tempPoint, Vector3.up, tempAngle);
+			grid[1,1,0].cube.transform.RotateAround(tempPoint, Vector3.up, tempAngle);
+			grid[1,0,0].cube.transform.RotateAround(tempPoint, Vector3.up, tempAngle);
+
+			tempPoint = new Vector3(0, 0, -3.5f);
+
+			grid[1,1,0].cube.transform.RotateAround(tempPoint, Vector3.up, tempAngle);
+			grid[1,0,0].cube.transform.RotateAround(tempPoint, Vector3.up, tempAngle);
 			
 			return;
 		}
@@ -2462,13 +2559,48 @@ public class GameScript : MonoBehaviour {
 
 		if(tempLevel == 5)
 		{
-			
-			
+			cubesParent.transform.Rotate((360 - finishTimer) / 50.0f,0,0);
+			cubesParent.transform.position = new Vector3(0, ((360 - finishTimer)*(360 - finishTimer) / 21600.0f) * Mathf.Abs(Mathf.Sin(finishTimer / 20.0f)), 0);
+
 			return;
 		}
 
 		if(tempLevel == 6)
 		{
+			cubesParent.transform.rotation = Quaternion.AngleAxis(4 * Mathf.Sin(finishTimer / 15.0f), Vector3.forward);
+
+			if(finishTimer % 30 == 10)
+			{
+				GameObject cube = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+				cube.transform.parent = endAnimationParent.transform;
+				cube.transform.localScale = new Vector3(0.6f, 0.6f, 0.6f);
+				cube.transform.position = grid[2,0,4].cube.transform.position;
+				cube.renderer.materials = new Material[1];
+				cube.renderer.material = new Material(Shader.Find ("Transparent/Diffuse"));
+				cube.renderer.material.color = new Color(1, 1, 1, 0.7f);
+
+				GameObject cube2 = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+				cube2.transform.parent = endAnimationParent.transform;
+				cube2.transform.localScale = new Vector3(0.6f, 0.6f, 0.6f);
+				cube2.transform.position = grid[5,0,4].cube.transform.position;	
+				cube2.renderer.materials = new Material[1];
+				cube2.renderer.material = new Material(Shader.Find ("Transparent/Diffuse"));
+				cube2.renderer.material.color = new Color(1, 1, 1, 0.7f);
+			}
+
+			for(int i=0; i < endAnimationParent.transform.childCount; i++)
+			{
+				Transform cube = endAnimationParent.transform.GetChild(i);
+
+				cube.Translate(0,0,-0.5f);
+
+				cube.gameObject.renderer.material.color = new Color(1,1,1, cube.gameObject.renderer.material.color.a - 0.002f);
+
+				if(cube.gameObject.renderer.material.color.a < 0.01f)
+				{
+					Destroy(cube.gameObject);
+				}
+			}
 			
 			
 			return;
@@ -2476,13 +2608,72 @@ public class GameScript : MonoBehaviour {
 
 		if(tempLevel == 7)
 		{
-			
+			if(finishTimer % 20 == 5)
+			{
+
+				grid[1,2,1].cube.renderer.material.color = new Color(Random.Range(0.0f,1.0f),Random.Range(0.0f,1.0f),Random.Range(0.0f,1.0f));
+				grid[1,3,1].cube.renderer.material.color = new Color(Random.Range(0.0f,1.0f),Random.Range(0.0f,1.0f),Random.Range(0.0f,1.0f));
+				grid[2,2,1].cube.renderer.material.color = new Color(Random.Range(0.0f,1.0f),Random.Range(0.0f,1.0f),Random.Range(0.0f,1.0f));
+				grid[2,3,1].cube.renderer.material.color = new Color(Random.Range(0.0f,1.0f),Random.Range(0.0f,1.0f),Random.Range(0.0f,1.0f));
+				grid[3,2,1].cube.renderer.material.color = new Color(Random.Range(0.0f,1.0f),Random.Range(0.0f,1.0f),Random.Range(0.0f,1.0f));
+				grid[3,3,1].cube.renderer.material.color = new Color(Random.Range(0.0f,1.0f),Random.Range(0.0f,1.0f),Random.Range(0.0f,1.0f));
+			}
 			
 			return;
 		}
 
 		if(tempLevel == 8)
 		{
+
+			if(finishTimer % 50 == 1)
+			{
+				int randRange = Random.Range(0,10);
+
+				while(endRandom[randRange] != 0)
+				{
+					randRange = Random.Range(0,10);
+
+				}
+				endRandom[randRange] = 1;
+			}
+
+			for(int i = 0; i < endRandom.Length; i++)
+			{
+				if(endRandom[i] == 0)
+					continue;
+
+				Vector3 tempPoint = new Vector3(-3 + i, -0.5f, -1);
+
+				if(i < 7)
+				{
+					float tempAngle = 0.3f * Mathf.Sin((endRandom[i] - 1)*Mathf.Deg2Rad);
+
+					grid[i,0,1].cube.transform.RotateAround(tempPoint,Vector3.right,tempAngle);
+					grid[i,0,2].cube.transform.RotateAround(tempPoint,Vector3.right,tempAngle);
+					grid[i,0,3].cube.transform.RotateAround(tempPoint,Vector3.right,tempAngle);
+				}
+				else
+				{
+					float tempAngle = 0.4f * Mathf.Sin((endRandom[i] - 1)*Mathf.Deg2Rad);
+
+					grid[1 + 2*(i - 7),1,1].cube.transform.RotateAround(tempPoint,Vector3.right,tempAngle);
+					grid[1 + 2*(i - 7),1,2].cube.transform.RotateAround(tempPoint,Vector3.right,tempAngle);
+				}
+
+				endRandom[i] += 3;
+				
+				if(endRandom[i] >= 360)
+				{
+					endRandom[i] = 0;
+				}
+			}
+
+
+			//grid[0,0,1]
+			//grid[0,0,2]
+			//grid[0,0,3]
+
+
 			
 			
 			return;
@@ -2490,27 +2681,134 @@ public class GameScript : MonoBehaviour {
 
 		if(tempLevel == 9)
 		{
-			
+			backgroundImage.color = new Color(0.5f - finishTimer*0.0011f, 0.5f - finishTimer*0.0011f, 0.5f - finishTimer*0.0011f);
+
+			if(finishTimer < 350)
+				Camera.main.transform.GetChild(0).light.intensity = 0.3f - (finishTimer*0.0009f);
+
+			if(finishTimer == 200)
+			{
+				grid[2,1,1].cube.renderer.material = new Material(Shader.Find ("Self-Illumin/Diffuse"));
+				grid[2,1,1].cube.renderer.material.color = new Color(0.5f, 0.5f, 0);
+
+				grid[2,1,3].cube.renderer.material = new Material(Shader.Find ("Self-Illumin/Diffuse"));
+				grid[2,1,3].cube.renderer.material.color = new Color(0.5f, 0.5f, 0);
+			}
+
+			if(finishTimer > 359)
+			{
+				Camera.main.transform.GetChild(0).light.intensity = 0.3f;
+			}
 			
 			return;
 		}
 
 		if(tempLevel == 10)
 		{
-			
+			if(finishTimer % 120 < 80)
+				cubesParent.transform.rotation = Quaternion.AngleAxis(2 * Mathf.Sin(finishTimer), new Vector3(1,1,1));
+			//cubesParent.transform.rotation = Quaternion.AngleAxis(Mathf.Sin(finishTimer), Vector3.left);
+			//cubesParent.transform.rotation = Quaternion.AngleAxis(Mathf.Sin(finishTimer), Vector3.up);
 			
 			return;
 		}
 
 		if(tempLevel == 11)
 		{
+			if(cubes[0].transform.position.y > -1.5f)
+			{
+				cubes[0].transform.Translate(0,-0.5f,0);
+			}
 			
+			if(finishTimer > 40)
+			{
+				if(cubes[1].transform.position.y > -1.5f)
+				{
+					cubes[1].transform.Translate(0,-0.5f,0);
+				}
+			}
+			
+			if(finishTimer > 90)
+			{
+				if(cubes[2].transform.position.y > -1f)
+				{
+					cubes[2].transform.Translate(0,-1,0);
+				}
+			}
+			
+			if(finishTimer > 150)
+			{
+				if(cubes[3].transform.position.y > -0.5f)
+				{
+					cubes[3].transform.Translate(0,-0.5f,0);
+				}
+			}
+			
+			if(finishTimer > 180)
+			{
+				if(cubes[4].transform.position.y > -0.5f)
+				{
+					cubes[4].transform.Translate(0,-0.5f,0);
+				}
+			}
+			
+			if(finishTimer > 240)
+			{
+				if(cubes[5].transform.position.y > 0.5f)
+				{
+					cubes[5].transform.Translate(0,-0.5f,0);
+				}
+			}
 			
 			return;
 		}
 
 		if(tempLevel == 12)
 		{
+			if(finishTimer == 100)
+			{
+
+				for(int x = 1; x < 4; x++)
+				{
+					for(int z = 1; z < 6; z++)
+					{
+						Destroy(grid[x,1,z].cube);
+					}
+				}
+
+				Color tempColor = grid[1,1,1].color;
+				tempColor.a = 0.5f;
+
+				GameObject cube = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+				cube.transform.parent = endAnimationParent.transform;
+				cube.transform.position = new Vector3(0,-1,0);
+				cube.transform.localScale = new Vector3(3,1,5);
+				cube.renderer.materials = new Material[1];
+				cube.renderer.material = new Material(Shader.Find ("Transparent/Diffuse"));
+				cube.renderer.material.color = tempColor;
+
+				GameObject cube1 = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+				cube1.transform.parent = endAnimationParent.transform;
+				cube1.transform.position = new Vector3(0,2,0);
+				cube1.transform.localScale = new Vector3(0.8f, 0.8f, 0.8f);
+				cube1.renderer.materials = new Material[1];
+				cube1.renderer.material = new Material(Shader.Find ("Transparent/Diffuse"));
+				cube1.renderer.material.color = tempColor;
+			}
+
+			if((finishTimer > 140) && (finishTimer < 160))
+			{
+				Transform water = endAnimationParent.transform.GetChild(1);
+
+				water.Translate(0,-0.08f,0);
+				water.localScale = new Vector3(0.8f, water.localScale.y + 0.08f, 0.8f);
+
+			}
+
+			if((finishTimer > 130) && (finishTimer < 150))
+			{
+				grid[4,3,2].cube.transform.Rotate(0,0,3);
+			}
 			
 			
 			return;
@@ -2518,13 +2816,162 @@ public class GameScript : MonoBehaviour {
 
 		if(tempLevel == 13)
 		{
+
+			Vector3 tempPoint = new Vector3(0, 2, 0);
 			
-			
+			float tempAngle;
+
+			if(finishTimer < 124)
+			{
+				tempAngle = 0.1f * Mathf.Sin(finishTimer / 20.0f - Mathf.PI/2);
+			}
+			else
+			{
+				float tempNum = (280 - finishTimer) / 500.0f;
+				if(tempNum < 0)
+					tempNum = 0;
+
+				tempAngle = tempNum * Mathf.Sin(finishTimer / 20.0f - Mathf.PI * 3 / 2);
+			}
+
+			for (int x= 0; x< 3; x++)
+			{
+				for (int y= 0; y< levelArray.GetLength(1); y++)
+				{
+					for (int z= 0; z< levelArray.GetLength(2); z++)
+					{
+						if(grid[x,y,z].cube == null)
+							continue;
+
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, Vector3.forward, tempAngle);
+					}
+				}
+			}
+
+			for (int x= 6; x< 9; x++)
+			{
+				for (int y= 0; y< levelArray.GetLength(1); y++)
+				{
+					for (int z= 0; z< levelArray.GetLength(2); z++)
+					{
+						if(grid[x,y,z].cube == null)
+							continue;
+
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, Vector3.forward, tempAngle);
+					}
+				}
+			}
+
+			grid[3,5,1].cube.transform.RotateAround(tempPoint, Vector3.forward, tempAngle);
+			grid[4,5,1].cube.transform.RotateAround(tempPoint, Vector3.forward, tempAngle);
+			grid[5,5,1].cube.transform.RotateAround(tempPoint, Vector3.forward, tempAngle);
+			endAnimationParent.transform.RotateAround(tempPoint, Vector3.forward, tempAngle);
+
+			if((finishTimer >= 40) && (finishTimer < 124))
+			{
+				Transform weight = endAnimationParent.transform.GetChild(0);
+
+				weight.Translate (0,-0.25f,0);
+			}
+
 			return;
 		}
 
 		if(tempLevel == 14)
 		{
+			cubesParent.transform.rotation = Quaternion.AngleAxis(4 * Mathf.Sin(finishTimer / 15.0f), Vector3.forward);
+
+			if(finishTimer % 10 == 8)
+			{
+				GameObject cube = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+				cube.transform.parent = endAnimationParent.transform;
+				cube.transform.localScale = new Vector3(0.8f, 0.8f, 0.6f);
+				cube.transform.position = new Vector3(-1,-1,-3);
+				cube.renderer.materials = new Material[1];
+				cube.renderer.material = new Material(Shader.Find ("Transparent/Diffuse"));
+				cube.renderer.material.color = new Color(0.8f, 0.2f, 0.2f, 0.7f);
+
+				GameObject cube1 = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+				cube1.transform.parent = endAnimationParent.transform;
+				cube1.transform.localScale = new Vector3(0.8f, 0.8f, 0.4f);
+				cube1.transform.position = new Vector3(-1,-1,-3.5f);	
+				cube1.renderer.materials = new Material[1];
+				cube1.renderer.material = new Material(Shader.Find ("Transparent/Diffuse"));
+				cube1.renderer.material.color = new Color(0.8f, 0.5f, 0.2f, 0.7f);
+
+				GameObject cube2 = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+				cube2.transform.parent = endAnimationParent.transform;
+				cube2.transform.localScale = new Vector3(0.8f, 0.8f, 0.4f);
+				cube2.transform.position = new Vector3(-1,-1,-3.9f);	
+				cube2.renderer.materials = new Material[1];
+				cube2.renderer.material = new Material(Shader.Find ("Transparent/Diffuse"));
+				cube2.renderer.material.color = new Color(0.8f, 0.8f, 0.2f, 0.7f);
+
+				GameObject cube3 = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+				cube3.transform.parent = endAnimationParent.transform;
+				cube3.transform.localScale = new Vector3(0.8f, 0.8f, 0.6f);
+				cube3.transform.position = new Vector3(0,0,-3);
+				cube3.renderer.materials = new Material[1];
+				cube3.renderer.material = new Material(Shader.Find ("Transparent/Diffuse"));
+				cube3.renderer.material.color = new Color(0.8f, 0.2f, 0.2f, 0.7f);
+					
+				GameObject cube4 = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+				cube4.transform.parent = endAnimationParent.transform;
+				cube4.transform.localScale = new Vector3(0.8f, 0.8f, 0.4f);
+				cube4.transform.position = new Vector3(0,0,-3.5f);	
+				cube4.renderer.materials = new Material[1];
+				cube4.renderer.material = new Material(Shader.Find ("Transparent/Diffuse"));
+				cube4.renderer.material.color = new Color(0.8f, 0.5f, 0.2f, 0.7f);
+					
+				GameObject cube5 = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+				cube5.transform.parent = endAnimationParent.transform;
+				cube5.transform.localScale = new Vector3(0.8f, 0.8f, 0.4f);
+				cube5.transform.position = new Vector3(0,0,-3.9f);	
+				cube5.renderer.materials = new Material[1];
+				cube5.renderer.material = new Material(Shader.Find ("Transparent/Diffuse"));
+				cube5.renderer.material.color = new Color(0.8f, 0.8f, 0.2f, 0.7f);
+
+				GameObject cube6 = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+				cube6.transform.parent = endAnimationParent.transform;
+				cube6.transform.localScale = new Vector3(0.8f, 0.8f, 0.6f);
+				cube6.transform.position = new Vector3(1,-1,-3);
+				cube6.renderer.materials = new Material[1];
+				cube6.renderer.material = new Material(Shader.Find ("Transparent/Diffuse"));
+				cube6.renderer.material.color = new Color(0.8f, 0.2f, 0.2f, 0.7f);
+					
+				GameObject cube7 = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+				cube7.transform.parent = endAnimationParent.transform;
+				cube7.transform.localScale = new Vector3(0.8f, 0.8f, 0.4f);
+				cube7.transform.position = new Vector3(1,-1,-3.5f);	
+				cube7.renderer.materials = new Material[1];
+				cube7.renderer.material = new Material(Shader.Find ("Transparent/Diffuse"));
+				cube7.renderer.material.color = new Color(0.8f, 0.5f, 0.2f, 0.7f);
+					
+				GameObject cube8 = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+				cube8.transform.parent = endAnimationParent.transform;
+				cube8.transform.localScale = new Vector3(0.8f, 0.8f, 0.4f);
+				cube8.transform.position = new Vector3(1,-1,-3.9f);	
+				cube8.renderer.materials = new Material[1];
+				cube8.renderer.material = new Material(Shader.Find ("Transparent/Diffuse"));
+				cube8.renderer.material.color = new Color(0.8f, 0.8f, 0.2f, 0.7f);
+			}
+
+			for(int i=0; i < endAnimationParent.transform.childCount; i++)
+			{
+				Transform cube = endAnimationParent.transform.GetChild(i);
+
+				cube.Translate(0,0,-0.6f);
+
+				Color tempColor = cube.gameObject.renderer.material.color;
+				tempColor.a -= 0.05f;
+
+				cube.gameObject.renderer.material.color = tempColor;
+
+				if(cube.gameObject.renderer.material.color.a < 0.1f)
+				{
+					Destroy(cube.gameObject);
+				}
+			}
 			
 			
 			return;
@@ -2532,6 +2979,33 @@ public class GameScript : MonoBehaviour {
 
 		if(tempLevel == 15)
 		{
+			if(finishTimer % 2 == 1)
+			{
+				GameObject cube = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+				cube.transform.parent = endAnimationParent.transform;
+				cube.transform.localScale = new Vector3(0.2f, 1, 0.1f);
+				cube.transform.position = new Vector3(Random.Range(-7.0f,7.0f), 15,Random.Range(-7.0f,7.0f));
+				cube.renderer.materials = new Material[1];
+				cube.renderer.material = new Material(Shader.Find ("Transparent/Diffuse"));
+				cube.renderer.material.color = new Color(Random.Range(0.0f,1.0f),Random.Range(0.0f,1.0f),Random.Range(0.0f,1.0f),0.8f);
+			}
+
+			for(int i=0; i < endAnimationParent.transform.childCount; i++)
+			{
+				Transform cube = endAnimationParent.transform.GetChild(i);
+				
+				cube.Translate(0,-0.4f,0);
+				
+				Color tempColor = cube.gameObject.renderer.material.color;
+				tempColor.a -= 0.008f;
+				
+				cube.gameObject.renderer.material.color = tempColor;
+				
+				if(cube.gameObject.renderer.material.color.a < 0.01f)
+				{
+					Destroy(cube.gameObject);
+				}
+			}
 			
 			
 			return;
@@ -2746,18 +3220,6 @@ public class GameScript : MonoBehaviour {
 			
 			return;
 		}
-
-
-
-
-
-
-
-
-
-
-
-
 
 	}
 
