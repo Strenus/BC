@@ -9,7 +9,8 @@ public class ButtonIngameScript : MonoBehaviour
 	void Start () 
 	{
 		if((this.name == "buttonPause") || (this.name == "buttonEditPause") || (this.name == "buttonEditPlus") || (this.name == "buttonEditMinus") 
-		   || (this.name == "buttonEditOK") || (this.name == "buttonCamPlus") || (this.name == "buttonCamMinus"))
+		   || (this.name == "buttonEditOK") || (this.name == "buttonCamPlus") || (this.name == "buttonCamMinus") || (this.name == "buttonEditArrow")
+		   || (this.name == "buttonEditRotate"))
 		{
 			this.guiTexture.pixelInset = new Rect ( -Screen.height / 16, -Screen.height / 16 , Screen.height / 8, Screen.height / 8);
 			return;

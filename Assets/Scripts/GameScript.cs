@@ -14,6 +14,7 @@ public class GameScript : MonoBehaviour {
 	public GameObject cubesParent;
 	public GameObject endAnimationParent;
 	int[] endRandom;
+	public List<levelAnimation> animations = new List<levelAnimation>();
 
 	List<GameObject> fragments = new List<GameObject>();
 	List<Cube> creativeCubes = new List<Cube>();
@@ -68,7 +69,7 @@ public class GameScript : MonoBehaviour {
 		//--Load Progress---------------------------------------------------------------------
 		loadProgress();
 		//--Unlock all------------------------------------------------------------------------
-		//progress = 45;
+		progress = 45;
 		//saveProgress ();
 
 
@@ -100,8 +101,40 @@ public class GameScript : MonoBehaviour {
 		//Context.getCacheDir() or (which is way easier) the Environment.getExternalStorageDirectory().
 
 
+		//testConvert ();
+
+
 
 		savingTest ();
+	}
+
+	void testConvert()
+	{
+		for(int i=1; i <= 45;i++)
+		{
+			TextAsset bindata= Resources.Load("Levels/color" + i) as TextAsset;	
+			System.IO.StringReader fileIn = new System.IO.StringReader(bindata.text);
+
+			System.IO.StreamWriter fileOut = new System.IO.StreamWriter(Application.persistentDataPath + "/colori" + i + ".txt");
+
+			for(;;)
+			{
+				string tempString = fileIn.ReadLine();
+
+				if(tempString == null)
+					break;
+
+				Color tempColor = new Color(float.Parse(tempString), float.Parse(fileIn.ReadLine()), float.Parse(fileIn.ReadLine()));
+
+				fileOut.WriteLine(colorToHex(tempColor));
+			}
+
+			//grid[x,y,z].color = hexToColor(file.ReadLine());
+			//grid[x,y,z].color = new Color(float.Parse(file.ReadLine()), float.Parse(file.ReadLine()), float.Parse(file.ReadLine()), 1);
+
+			fileIn.Close();
+			fileOut.Close();
+		}
 	}
 
 	void Update () 
@@ -258,6 +291,323 @@ public class GameScript : MonoBehaviour {
 								}
 								else
 								{
+									//Creative Animations
+									if(buttonsEdit[6].activeSelf == true)
+									{
+										if(hit.collider.gameObject.tag != "cube")
+										{
+											return;
+										}
+
+										if(hit.collider.renderer.materials[0].color.Equals(new Color(0.5f,0.8f,0.8f,1)))
+										{
+
+											foreach(Cube cube in grid)
+											{
+												if(cube == null)
+													continue;
+
+												if(cube.cube.Equals(hit.collider.gameObject))
+												{
+													animations[animations.Count - 1].cubes.Remove(cube);
+													cube.cube.renderer.material.color = cube.color;
+
+													if(animations[animations.Count - 1].cubes.Count == 0)
+													{
+														Destroy(ClipArrow[0]);
+														Destroy(ClipArrow[1]);
+														Destroy(ClipArrow[2]);
+													}
+													else
+													{
+														Vector3 temp = animations[animations.Count - 1].cubes[animations[animations.Count - 1].cubes.Count - 1].cube.transform.position;
+
+														int x = 0;
+														int y = 0;
+														int z = 0;
+
+														for (int i=0; i<levelArray.GetLength(0); i++)
+														{
+															if((x != 0) || (y != 0) || (z != 0))
+																break;
+
+															for (int j=0; j<levelArray.GetLength(1); j++)
+															{
+																for (int k=0; k<levelArray.GetLength(2); k++)
+																{
+																	if(grid[i,j,k] == null)
+																		continue;
+
+																	if(temp.Equals(grid[i,j,k].cube.transform.position))
+																	{
+																		x = i;
+																		y = j;
+																		z = k;
+
+																		break;
+																	}
+																}
+															}
+														}
+
+														if((x > 1) && (grid[x - 1,y,z] != null))
+														{
+															ClipArrow[0].transform.position = new Vector3 (temp.x + 0.6f, temp.y, temp.z);
+															ClipArrow[0].transform.rotation = Quaternion.AngleAxis(-90.0f, Vector3.back);
+															Debug.Log("X flip");
+														}
+														else
+														{
+															ClipArrow[0].transform.position = new Vector3 (temp.x - 0.6f, temp.y, temp.z);
+															ClipArrow[0].transform.rotation = Quaternion.AngleAxis(90.0f, Vector3.back);
+														}
+														ClipArrow[0].transform.parent = grid[x,y,z].cube.transform;
+														
+														if((y < levelArray.GetLength(1) - 1) && (grid[x,y + 1,z] != null))
+														{
+															ClipArrow[1].transform.position = new Vector3 (temp.x, temp.y - 0.6f, temp.z);
+															ClipArrow[1].transform.rotation = Quaternion.AngleAxis(0.0f, Vector3.left);
+															Debug.Log("Y flip");
+														}
+														else
+														{
+															ClipArrow[1].transform.position = new Vector3 (temp.x, temp.y + 0.6f, temp.z);
+															ClipArrow[1].transform.rotation = Quaternion.AngleAxis(180.0f, Vector3.left);
+														}
+														ClipArrow[1].transform.parent = grid[x,y,z].cube.transform;
+														
+														if((z < levelArray.GetLength(2) - 1) && (grid[x,y,z + 1] != null))
+														{
+															ClipArrow[2].transform.position = new Vector3 (temp.x, temp.y, temp.z - 0.6f);
+															ClipArrow[2].transform.rotation = Quaternion.AngleAxis(-90.0f, Vector3.left);
+															Debug.Log("Z flip");
+														}
+														else
+														{
+															ClipArrow[2].transform.position = new Vector3 (temp.x, temp.y, temp.z + 0.6f);
+															ClipArrow[2].transform.rotation = Quaternion.AngleAxis(90.0f, Vector3.left);
+														}
+														ClipArrow[2].transform.parent = grid[x,y,z].cube.transform;
+													}
+													
+													Debug.Log("Removed  - " + animations[animations.Count - 1].cubes.Count);
+													break;
+												}
+											}
+
+											/*
+											for (int x=0; x<levelArray.GetLength(0); x++)
+											{
+												for (int y=0; y<levelArray.GetLength(1); y++)
+												{
+													for (int z=0; z<levelArray.GetLength(2); z++)
+													{
+														if(grid[x,y,z] == null)
+															continue;
+														
+														if(grid[x,y,z].cube.Equals(hit.collider.gameObject))
+														{
+															animations[animations.Count - 1].cubes.Remove(grid[x,y,z]);
+															grid[x,y,z].cube.renderer.material.color = grid[x,y,z].color;
+															
+															if(animations[animations.Count - 1].cubes.Count == 0)
+															{
+																Destroy(ClipArrow[0]);
+																Destroy(ClipArrow[1]);
+																Destroy(ClipArrow[2]);
+															}
+															else
+															{
+																Vector3 temp = animations[animations.Count - 1].cubes[animations[animations.Count - 1].cubes.Count - 1].cube.transform.position;
+																Debug.Log(temp);
+
+																if((x > 1) && (grid[x - 1,y,z] != null))
+																{
+																	ClipArrow[0].transform.position = new Vector3 (temp.x + 0.6f, temp.y, temp.z);
+																	ClipArrow[0].transform.rotation = Quaternion.AngleAxis(-90.0f, Vector3.back);
+																	Debug.Log("X flip");
+																}
+																else
+																{
+																	ClipArrow[0].transform.position = new Vector3 (temp.x - 0.6f, temp.y, temp.z);
+																	ClipArrow[0].transform.rotation = Quaternion.AngleAxis(90.0f, Vector3.back);
+																}
+																ClipArrow[0].transform.parent = grid[x,y,z].cube.transform;
+																
+																if((y < levelArray.GetLength(1) - 1) && (grid[x,y + 1,z] != null))
+																{
+																	ClipArrow[1].transform.position = new Vector3 (temp.x, temp.y - 0.6f, temp.z);
+																	ClipArrow[1].transform.rotation = Quaternion.AngleAxis(0.0f, Vector3.left);
+																	Debug.Log("Y flip");
+																}
+																else
+																{
+																	ClipArrow[1].transform.position = new Vector3 (temp.x, temp.y + 0.6f, temp.z);
+																	ClipArrow[1].transform.rotation = Quaternion.AngleAxis(180.0f, Vector3.left);
+																}
+																ClipArrow[1].transform.parent = grid[x,y,z].cube.transform;
+																
+																if((z < levelArray.GetLength(2) - 1) && (grid[x,y,z + 1] != null))
+																{
+																	ClipArrow[2].transform.position = new Vector3 (temp.x, temp.y, temp.z - 0.6f);
+																	ClipArrow[2].transform.rotation = Quaternion.AngleAxis(-90.0f, Vector3.left);
+																	Debug.Log("Z flip");
+																}
+																else
+																{
+																	ClipArrow[2].transform.position = new Vector3 (temp.x, temp.y, temp.z + 0.6f);
+																	ClipArrow[2].transform.rotation = Quaternion.AngleAxis(90.0f, Vector3.left);
+																}
+																ClipArrow[2].transform.parent = grid[x,y,z].cube.transform;
+															}
+															
+															Debug.Log("Removed  - " + animations[animations.Count - 1].cubes.Count);
+															break;
+														}
+													}
+												}
+											}
+											*/
+
+											//try to make arrows not clip into cubes;
+
+											justTouched = null;
+											return;
+										}
+
+										hit.collider.renderer.materials[0].color = new Color(0.5f,0.8f,0.8f,1);
+
+										/*
+										foreach(Cube cube in grid)
+										{
+											if(cube == null)
+												continue;
+
+											if(cube.cube.Equals(hit.collider.gameObject))
+											{
+												animations[animations.Count - 1].cubes.Add(cube);
+
+												Vector3 temp = cube.cube.transform.position;
+
+												if(animations[animations.Count - 1].cubes.Count == 1)
+												{
+													animations[animations.Count - 1].origin = cube.cube.transform.position;
+
+													ClipArrow[0] = GameObject.Instantiate(Resources.Load("Arrow")) as GameObject;
+													ClipArrow[0].name = "Arrow X";
+													ClipArrow[0].renderer.material.color = new Color (0.75f, 0.25f, 0.25f, 1.0f);
+													ClipArrow[0].transform.parent = cube.cube.transform;
+													ClipArrow[0].transform.Rotate (0.0f, 0.0f, 270.0f);
+
+													ClipArrow[1] = GameObject.Instantiate(Resources.Load("Arrow")) as GameObject;
+													ClipArrow[1].name = "Arrow Y";
+													ClipArrow[1].renderer.material.color = new Color (0.25f, 0.75f, 0.25f, 1.0f);
+													ClipArrow[1].transform.parent = cube.cube.transform;
+													ClipArrow[1].transform.Rotate (180.0f, 0.0f, 0.0f);
+
+													
+													ClipArrow[2] = GameObject.Instantiate(Resources.Load("Arrow")) as GameObject;
+													ClipArrow[2].name = "Arrow Z";
+													ClipArrow[2].renderer.material.color = new Color (0.25f, 0.25f, 0.75f, 1.0f);
+													ClipArrow[2].transform.parent = cube.cube.transform;
+													ClipArrow[2].transform.Rotate (270.0f, 0.0f, 0.0f);
+												}
+
+												ClipArrow[0].transform.position = new Vector3 (temp.x - 0.6f, temp.y, temp.z);
+												ClipArrow[1].transform.position = new Vector3 (temp.x, temp.y + 0.6f, temp.z);
+												ClipArrow[2].transform.position = new Vector3 (temp.x, temp.y, temp.z + 0.6f);
+
+												Debug.Log("Added  - " + animations[animations.Count - 1].cubes.Count);
+												break;
+											}
+										}
+										*/
+
+										for (int x=0; x<levelArray.GetLength(0); x++)
+										{
+											for (int y=0; y<levelArray.GetLength(1); y++)
+											{
+												for (int z=0; z<levelArray.GetLength(2); z++)
+												{
+													if(grid[x,y,z] == null)
+														continue;
+													
+													if(grid[x,y,z].cube.Equals(hit.collider.gameObject))
+													{
+														animations[animations.Count - 1].cubes.Add(grid[x,y,z]);
+														
+														Vector3 temp = grid[x,y,z].cube.transform.position;
+														Debug.Log(temp);
+														
+														if(animations[animations.Count - 1].cubes.Count == 1)
+														{
+															animations[animations.Count - 1].origin = grid[x,y,z].cube.transform.position;
+															
+															ClipArrow[0] = GameObject.Instantiate(Resources.Load("Arrow")) as GameObject;
+															ClipArrow[0].name = "Arrow X";
+															ClipArrow[0].renderer.material.color = new Color (0.75f, 0.25f, 0.25f, 1.0f);
+															
+															ClipArrow[1] = GameObject.Instantiate(Resources.Load("Arrow")) as GameObject;
+															ClipArrow[1].name = "Arrow Y";
+															ClipArrow[1].renderer.material.color = new Color (0.25f, 0.75f, 0.25f, 1.0f);
+															
+															
+															ClipArrow[2] = GameObject.Instantiate(Resources.Load("Arrow")) as GameObject;
+															ClipArrow[2].name = "Arrow Z";
+															ClipArrow[2].renderer.material.color = new Color (0.25f, 0.25f, 0.75f, 1.0f);
+														}
+														
+														if((x > 1) && (grid[x - 1,y,z] != null))
+														{
+															ClipArrow[0].transform.position = new Vector3 (temp.x + 0.6f, temp.y, temp.z);
+															ClipArrow[0].transform.rotation = Quaternion.AngleAxis(-90.0f, Vector3.back);
+															Debug.Log("X flip");
+														}
+														else
+														{
+															ClipArrow[0].transform.position = new Vector3 (temp.x - 0.6f, temp.y, temp.z);
+															ClipArrow[0].transform.rotation = Quaternion.AngleAxis(90.0f, Vector3.back);
+														}
+														ClipArrow[0].transform.parent = grid[x,y,z].cube.transform;
+														
+														if((y < levelArray.GetLength(1) - 1) && (grid[x,y + 1,z] != null))
+														{
+															ClipArrow[1].transform.position = new Vector3 (temp.x, temp.y - 0.6f, temp.z);
+															ClipArrow[1].transform.rotation = Quaternion.AngleAxis(0.0f, Vector3.left);
+															Debug.Log("Y flip");
+														}
+														else
+														{
+															ClipArrow[1].transform.position = new Vector3 (temp.x, temp.y + 0.6f, temp.z);
+															ClipArrow[1].transform.rotation = Quaternion.AngleAxis(180.0f, Vector3.left);
+														}
+														ClipArrow[1].transform.parent = grid[x,y,z].cube.transform;
+														
+														if((z < levelArray.GetLength(2) - 1) && (grid[x,y,z + 1] != null))
+														{
+															ClipArrow[2].transform.position = new Vector3 (temp.x, temp.y, temp.z - 0.6f);
+															ClipArrow[2].transform.rotation = Quaternion.AngleAxis(-90.0f, Vector3.left);
+															Debug.Log("Z flip");
+														}
+														else
+														{
+															ClipArrow[2].transform.position = new Vector3 (temp.x, temp.y, temp.z + 0.6f);
+															ClipArrow[2].transform.rotation = Quaternion.AngleAxis(90.0f, Vector3.left);
+														}
+														ClipArrow[2].transform.parent = grid[x,y,z].cube.transform;
+														
+														Debug.Log("Added  - " + animations[animations.Count - 1].cubes.Count);
+														break;
+													}
+
+												}
+											}
+										}
+													
+													justTouched = null;
+										return;
+									}
+
 									if(colorPalette.activeSelf)
 									{
 										justTouched = null;
@@ -540,6 +890,7 @@ public class GameScript : MonoBehaviour {
 					}
 				}
 
+				//--Camera control---------------------------------------------------------------------
 
 				cam.transform.LookAt (new Vector3(0, 0, 0), Vector3.up);
 				if((Input.GetTouch (0).phase == TouchPhase.Moved) && (justTouched == null))
@@ -705,7 +1056,7 @@ public class GameScript : MonoBehaviour {
 				{
 					//file = new System.IO.Strea
 					//file = new System.IO.StreamReader(Application.dataPath + "/Resources/Levels/color" + tempLevel + ".txt");
-					TextAsset bindata= Resources.Load("Levels/color" + tempLevel) as TextAsset;	
+					TextAsset bindata= Resources.Load("Levels/colori" + tempLevel) as TextAsset;	
 					file = new System.IO.StringReader(bindata.text);
 				}
 				else
@@ -720,10 +1071,14 @@ public class GameScript : MonoBehaviour {
 					{
 						for (int z=0; z<levelArray.GetLength(2); z++)
 						{
+
 							if(levelArray[x,y,z] == false)
 								continue;
-							
+
+							grid[x,y,z].color = hexToColor(file.ReadLine());
+							/*
 							grid[x,y,z].color = new Color(float.Parse(file.ReadLine()), float.Parse(file.ReadLine()), float.Parse(file.ReadLine()), 1);
+							*/
 						}
 					}
 				}
@@ -875,6 +1230,14 @@ public class GameScript : MonoBehaviour {
 
 	void moveArrow()
 	{
+		if(creative)
+		{
+
+
+			return;
+		}
+
+
 		Vector3 wantedPos = Camera.main.ScreenToWorldPoint(new Vector3 (Input.GetTouch(0).position.x , Input.GetTouch(0).position.y, 20.0f ));
 
 		if(movingArrow == 0)
@@ -1063,6 +1426,7 @@ public class GameScript : MonoBehaviour {
 
 			creativeColor = colorPaletteTexture.GetPixel(tempX, tempY);
 			buttonsEdit[2].guiTexture.color = creativeColor;
+
 		}
 	}
 
@@ -3256,10 +3620,38 @@ public class GameScript : MonoBehaviour {
 
 	void buttonEditOK()
 	{
-		convertEditToLevel ();
-		customStageCount++;
-		saveLevel (customStageCount);
-		pauseExit ();
+		if(buttonsEdit[6].activeSelf == true)
+		{
+			//Destroy(creativeCubes[i].cube);
+			//creativeCubes.Remove(creativeCubes[i]);
+			foreach(Cube cube in creativeCubes)
+			{
+				Destroy(cube.cube);
+			}
+			creativeCubes.Clear();
+
+			customStageCount++;
+			saveLevel (customStageCount);
+			animations.Clear();
+			pauseExit ();
+		}
+		else
+		{
+			convertEditToLevel ();
+
+			buttonsEdit[0].SetActive(false);
+			buttonsEdit[1].SetActive(false);
+			buttonsEdit[2].SetActive(false);
+
+			buttonsEdit[5].SetActive(true);
+			buttonsEdit[6].SetActive(true);
+
+			animations.Add(new levelAnimation());
+
+			breaking = true;
+			creativeColoring = false;
+		}
+
 	}
 
 	void buttonEditColor()
@@ -3285,6 +3677,28 @@ public class GameScript : MonoBehaviour {
 		buttonsEdit [1].guiTexture.color = new Color (0, 0, 0, 1);
 	}
 
+	void buttonEditArrow()
+	{
+		if(animations.Count > 0)
+		{
+			animations[animations.Count - 1].isRotation = false;
+		}
+
+		buttonsEdit [5].guiTexture.color = new Color (0.8f, 0.8f, 0.8f, 1);
+		buttonsEdit [6].guiTexture.color = new Color (0, 0, 0, 1);
+	}
+
+	void buttonEditRotate()
+	{
+		if(animations.Count > 0)
+		{
+			animations[animations.Count - 1].isRotation = true;
+		}
+
+		buttonsEdit [5].guiTexture.color = new Color (0, 0, 0, 1);
+		buttonsEdit [6].guiTexture.color = new Color (0.8f, 0.8f, 0.8f, 1);
+	}
+
 	void testButton()
 	{
 		try
@@ -3298,9 +3712,13 @@ public class GameScript : MonoBehaviour {
 				if(cube.cube == null)
 					continue;
 
+				file.WriteLine(colorToHex(cube.cube.renderer.material.color));
+
+				/*
 				file.WriteLine(cube.cube.renderer.material.color.r);
 				file.WriteLine(cube.cube.renderer.material.color.g);
 				file.WriteLine(cube.cube.renderer.material.color.b);
+				*/
 			}
 			
 			file.Close ();			
@@ -3327,6 +3745,9 @@ public class GameScript : MonoBehaviour {
 		{
 			go.SetActive(true);
 		}
+
+		buttonsEdit [5].SetActive (false);
+		buttonsEdit [6].SetActive (false);
 		
 		breaking = false;
 		pause = false;
@@ -3391,8 +3812,8 @@ public class GameScript : MonoBehaviour {
 
 							creativeCubes[i].color = creativeCubes[i].cube.renderer.material.color;
 							grid[lX,lY,lZ] = creativeCubes[i];
-							Destroy(creativeCubes[i].cube);
-							creativeCubes.Remove(creativeCubes[i]);
+							//Destroy(creativeCubes[i].cube);
+							//creativeCubes.Remove(creativeCubes[i]);
 							found = true;
 							break;
 
@@ -3405,6 +3826,21 @@ public class GameScript : MonoBehaviour {
 				}
 			}
 		}
+	}
+
+	string colorToHex(Color32 color)
+	{
+		string hex = color.r.ToString("X2") + color.g.ToString("X2") + color.b.ToString("X2");
+		return hex;
+	}
+	
+	Color hexToColor(string hex)
+	{
+		byte r = byte.Parse(hex.Substring(0,2), System.Globalization.NumberStyles.HexNumber);
+		byte g = byte.Parse(hex.Substring(2,2), System.Globalization.NumberStyles.HexNumber);
+		byte b = byte.Parse(hex.Substring(4,2), System.Globalization.NumberStyles.HexNumber);
+		
+		return new Color (r / 255.0f, g / 255.0f, b / 255.0f);
 	}
 
 	void savingTest()
@@ -3517,9 +3953,13 @@ public class GameScript : MonoBehaviour {
 				if((cube == null) || (cube.cube == null))
 					continue;
 					
+				file.WriteLine(colorToHex(cube.color));
+
+				/*
 				file.WriteLine(cube.cube.renderer.material.color.r);
 				file.WriteLine(cube.cube.renderer.material.color.g);
 				file.WriteLine(cube.cube.renderer.material.color.b);
+				*/
 			}
 				
 			file.Close ();			
@@ -3629,7 +4069,6 @@ public class GameScript : MonoBehaviour {
 		}
 
 	}
-
 }
 
 
@@ -3697,4 +4136,14 @@ public class Cube
 		cube.renderer.materials = mats;
 		cube.renderer.materials[side + 1].mainTextureOffset = sideOffset;
 	}
+}
+
+public class levelAnimation
+{
+	public List<Cube> cubes = new List<Cube>();
+	public bool isRotation;
+	public Vector3 origin;
+	public Vector3 axis;
+	public float angle;
+	public Vector3 translation;
 }
