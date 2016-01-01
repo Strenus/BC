@@ -15,6 +15,8 @@ public class GameScript : MonoBehaviour {
 	public GameObject endAnimationParent;
 	int[] endRandom;
 	public List<levelAnimation> animations = new List<levelAnimation>();
+	levelAnimation currentAnimation;
+	bool isRotation = false;
 
 	List<GameObject> fragments = new List<GameObject>();
 	List<Cube> creativeCubes = new List<Cube>();
@@ -106,35 +108,6 @@ public class GameScript : MonoBehaviour {
 
 
 		savingTest ();
-	}
-
-	void testConvert()
-	{
-		for(int i=1; i <= 45;i++)
-		{
-			TextAsset bindata= Resources.Load("Levels/color" + i) as TextAsset;	
-			System.IO.StringReader fileIn = new System.IO.StringReader(bindata.text);
-
-			System.IO.StreamWriter fileOut = new System.IO.StreamWriter(Application.persistentDataPath + "/colori" + i + ".txt");
-
-			for(;;)
-			{
-				string tempString = fileIn.ReadLine();
-
-				if(tempString == null)
-					break;
-
-				Color tempColor = new Color(float.Parse(tempString), float.Parse(fileIn.ReadLine()), float.Parse(fileIn.ReadLine()));
-
-				fileOut.WriteLine(colorToHex(tempColor));
-			}
-
-			//grid[x,y,z].color = hexToColor(file.ReadLine());
-			//grid[x,y,z].color = new Color(float.Parse(file.ReadLine()), float.Parse(file.ReadLine()), float.Parse(file.ReadLine()), 1);
-
-			fileIn.Close();
-			fileOut.Close();
-		}
 	}
 
 	void Update () 
@@ -233,13 +206,13 @@ public class GameScript : MonoBehaviour {
 
 				finishTimer++;
 
-				/*
+
 				if(finishTimer > 360)
 				{
 					pause = true;
 					openPauseMenu();
 				}
-				*/
+
 			}
 		}
 
@@ -294,6 +267,17 @@ public class GameScript : MonoBehaviour {
 									//Creative Animations
 									if(buttonsEdit[6].activeSelf == true)
 									{
+										levelAnimation tempAnim = currentAnimation;
+										
+										currentAnimation = new levelAnimation();
+										currentAnimation.origin = tempAnim.origin;
+										currentAnimation.cubes = new List<Cube>();
+										
+										foreach(Cube tempCube in tempAnim.cubes)
+										{
+											currentAnimation.cubes.Add(tempCube);
+										}
+
 										if(hit.collider.gameObject.tag != "cube")
 										{
 											return;
@@ -309,10 +293,10 @@ public class GameScript : MonoBehaviour {
 
 												if(cube.cube.Equals(hit.collider.gameObject))
 												{
-													animations[animations.Count - 1].cubes.Remove(cube);
+													currentAnimation.cubes.Remove(cube);
 													cube.cube.renderer.material.color = cube.color;
 
-													if(animations[animations.Count - 1].cubes.Count == 0)
+													if(currentAnimation.cubes.Count == 0)
 													{
 														Destroy(ClipArrow[0]);
 														Destroy(ClipArrow[1]);
@@ -320,7 +304,7 @@ public class GameScript : MonoBehaviour {
 													}
 													else
 													{
-														Vector3 temp = animations[animations.Count - 1].cubes[animations[animations.Count - 1].cubes.Count - 1].cube.transform.position;
+														Vector3 temp = currentAnimation.cubes[currentAnimation.cubes.Count - 1].cube.transform.position;
 
 														int x = 0;
 														int y = 0;
@@ -350,11 +334,10 @@ public class GameScript : MonoBehaviour {
 															}
 														}
 
-														if((x > 1) && (grid[x - 1,y,z] != null))
+														if((x > 0) && (grid[x - 1,y,z] != null))
 														{
 															ClipArrow[0].transform.position = new Vector3 (temp.x + 0.6f, temp.y, temp.z);
 															ClipArrow[0].transform.rotation = Quaternion.AngleAxis(-90.0f, Vector3.back);
-															Debug.Log("X flip");
 														}
 														else
 														{
@@ -367,7 +350,6 @@ public class GameScript : MonoBehaviour {
 														{
 															ClipArrow[1].transform.position = new Vector3 (temp.x, temp.y - 0.6f, temp.z);
 															ClipArrow[1].transform.rotation = Quaternion.AngleAxis(0.0f, Vector3.left);
-															Debug.Log("Y flip");
 														}
 														else
 														{
@@ -380,7 +362,6 @@ public class GameScript : MonoBehaviour {
 														{
 															ClipArrow[2].transform.position = new Vector3 (temp.x, temp.y, temp.z - 0.6f);
 															ClipArrow[2].transform.rotation = Quaternion.AngleAxis(-90.0f, Vector3.left);
-															Debug.Log("Z flip");
 														}
 														else
 														{
@@ -389,87 +370,9 @@ public class GameScript : MonoBehaviour {
 														}
 														ClipArrow[2].transform.parent = grid[x,y,z].cube.transform;
 													}
-													
-													Debug.Log("Removed  - " + animations[animations.Count - 1].cubes.Count);
 													break;
 												}
 											}
-
-											/*
-											for (int x=0; x<levelArray.GetLength(0); x++)
-											{
-												for (int y=0; y<levelArray.GetLength(1); y++)
-												{
-													for (int z=0; z<levelArray.GetLength(2); z++)
-													{
-														if(grid[x,y,z] == null)
-															continue;
-														
-														if(grid[x,y,z].cube.Equals(hit.collider.gameObject))
-														{
-															animations[animations.Count - 1].cubes.Remove(grid[x,y,z]);
-															grid[x,y,z].cube.renderer.material.color = grid[x,y,z].color;
-															
-															if(animations[animations.Count - 1].cubes.Count == 0)
-															{
-																Destroy(ClipArrow[0]);
-																Destroy(ClipArrow[1]);
-																Destroy(ClipArrow[2]);
-															}
-															else
-															{
-																Vector3 temp = animations[animations.Count - 1].cubes[animations[animations.Count - 1].cubes.Count - 1].cube.transform.position;
-																Debug.Log(temp);
-
-																if((x > 1) && (grid[x - 1,y,z] != null))
-																{
-																	ClipArrow[0].transform.position = new Vector3 (temp.x + 0.6f, temp.y, temp.z);
-																	ClipArrow[0].transform.rotation = Quaternion.AngleAxis(-90.0f, Vector3.back);
-																	Debug.Log("X flip");
-																}
-																else
-																{
-																	ClipArrow[0].transform.position = new Vector3 (temp.x - 0.6f, temp.y, temp.z);
-																	ClipArrow[0].transform.rotation = Quaternion.AngleAxis(90.0f, Vector3.back);
-																}
-																ClipArrow[0].transform.parent = grid[x,y,z].cube.transform;
-																
-																if((y < levelArray.GetLength(1) - 1) && (grid[x,y + 1,z] != null))
-																{
-																	ClipArrow[1].transform.position = new Vector3 (temp.x, temp.y - 0.6f, temp.z);
-																	ClipArrow[1].transform.rotation = Quaternion.AngleAxis(0.0f, Vector3.left);
-																	Debug.Log("Y flip");
-																}
-																else
-																{
-																	ClipArrow[1].transform.position = new Vector3 (temp.x, temp.y + 0.6f, temp.z);
-																	ClipArrow[1].transform.rotation = Quaternion.AngleAxis(180.0f, Vector3.left);
-																}
-																ClipArrow[1].transform.parent = grid[x,y,z].cube.transform;
-																
-																if((z < levelArray.GetLength(2) - 1) && (grid[x,y,z + 1] != null))
-																{
-																	ClipArrow[2].transform.position = new Vector3 (temp.x, temp.y, temp.z - 0.6f);
-																	ClipArrow[2].transform.rotation = Quaternion.AngleAxis(-90.0f, Vector3.left);
-																	Debug.Log("Z flip");
-																}
-																else
-																{
-																	ClipArrow[2].transform.position = new Vector3 (temp.x, temp.y, temp.z + 0.6f);
-																	ClipArrow[2].transform.rotation = Quaternion.AngleAxis(90.0f, Vector3.left);
-																}
-																ClipArrow[2].transform.parent = grid[x,y,z].cube.transform;
-															}
-															
-															Debug.Log("Removed  - " + animations[animations.Count - 1].cubes.Count);
-															break;
-														}
-													}
-												}
-											}
-											*/
-
-											//try to make arrows not clip into cubes;
 
 											justTouched = null;
 											return;
@@ -477,51 +380,6 @@ public class GameScript : MonoBehaviour {
 
 										hit.collider.renderer.materials[0].color = new Color(0.5f,0.8f,0.8f,1);
 
-										/*
-										foreach(Cube cube in grid)
-										{
-											if(cube == null)
-												continue;
-
-											if(cube.cube.Equals(hit.collider.gameObject))
-											{
-												animations[animations.Count - 1].cubes.Add(cube);
-
-												Vector3 temp = cube.cube.transform.position;
-
-												if(animations[animations.Count - 1].cubes.Count == 1)
-												{
-													animations[animations.Count - 1].origin = cube.cube.transform.position;
-
-													ClipArrow[0] = GameObject.Instantiate(Resources.Load("Arrow")) as GameObject;
-													ClipArrow[0].name = "Arrow X";
-													ClipArrow[0].renderer.material.color = new Color (0.75f, 0.25f, 0.25f, 1.0f);
-													ClipArrow[0].transform.parent = cube.cube.transform;
-													ClipArrow[0].transform.Rotate (0.0f, 0.0f, 270.0f);
-
-													ClipArrow[1] = GameObject.Instantiate(Resources.Load("Arrow")) as GameObject;
-													ClipArrow[1].name = "Arrow Y";
-													ClipArrow[1].renderer.material.color = new Color (0.25f, 0.75f, 0.25f, 1.0f);
-													ClipArrow[1].transform.parent = cube.cube.transform;
-													ClipArrow[1].transform.Rotate (180.0f, 0.0f, 0.0f);
-
-													
-													ClipArrow[2] = GameObject.Instantiate(Resources.Load("Arrow")) as GameObject;
-													ClipArrow[2].name = "Arrow Z";
-													ClipArrow[2].renderer.material.color = new Color (0.25f, 0.25f, 0.75f, 1.0f);
-													ClipArrow[2].transform.parent = cube.cube.transform;
-													ClipArrow[2].transform.Rotate (270.0f, 0.0f, 0.0f);
-												}
-
-												ClipArrow[0].transform.position = new Vector3 (temp.x - 0.6f, temp.y, temp.z);
-												ClipArrow[1].transform.position = new Vector3 (temp.x, temp.y + 0.6f, temp.z);
-												ClipArrow[2].transform.position = new Vector3 (temp.x, temp.y, temp.z + 0.6f);
-
-												Debug.Log("Added  - " + animations[animations.Count - 1].cubes.Count);
-												break;
-											}
-										}
-										*/
 
 										for (int x=0; x<levelArray.GetLength(0); x++)
 										{
@@ -534,14 +392,13 @@ public class GameScript : MonoBehaviour {
 													
 													if(grid[x,y,z].cube.Equals(hit.collider.gameObject))
 													{
-														animations[animations.Count - 1].cubes.Add(grid[x,y,z]);
+														currentAnimation.cubes.Add(grid[x,y,z]);
 														
 														Vector3 temp = grid[x,y,z].cube.transform.position;
-														Debug.Log(temp);
 														
-														if(animations[animations.Count - 1].cubes.Count == 1)
+														if(currentAnimation.cubes.Count == 1)
 														{
-															animations[animations.Count - 1].origin = grid[x,y,z].cube.transform.position;
+															currentAnimation.origin = grid[x,y,z].cube.transform.position;
 															
 															ClipArrow[0] = GameObject.Instantiate(Resources.Load("Arrow")) as GameObject;
 															ClipArrow[0].name = "Arrow X";
@@ -557,11 +414,10 @@ public class GameScript : MonoBehaviour {
 															ClipArrow[2].renderer.material.color = new Color (0.25f, 0.25f, 0.75f, 1.0f);
 														}
 														
-														if((x > 1) && (grid[x - 1,y,z] != null))
+														if((x > 0) && (grid[x - 1,y,z] != null))
 														{
 															ClipArrow[0].transform.position = new Vector3 (temp.x + 0.6f, temp.y, temp.z);
 															ClipArrow[0].transform.rotation = Quaternion.AngleAxis(-90.0f, Vector3.back);
-															Debug.Log("X flip");
 														}
 														else
 														{
@@ -574,7 +430,6 @@ public class GameScript : MonoBehaviour {
 														{
 															ClipArrow[1].transform.position = new Vector3 (temp.x, temp.y - 0.6f, temp.z);
 															ClipArrow[1].transform.rotation = Quaternion.AngleAxis(0.0f, Vector3.left);
-															Debug.Log("Y flip");
 														}
 														else
 														{
@@ -587,7 +442,6 @@ public class GameScript : MonoBehaviour {
 														{
 															ClipArrow[2].transform.position = new Vector3 (temp.x, temp.y, temp.z - 0.6f);
 															ClipArrow[2].transform.rotation = Quaternion.AngleAxis(-90.0f, Vector3.left);
-															Debug.Log("Z flip");
 														}
 														else
 														{
@@ -595,8 +449,7 @@ public class GameScript : MonoBehaviour {
 															ClipArrow[2].transform.rotation = Quaternion.AngleAxis(90.0f, Vector3.left);
 														}
 														ClipArrow[2].transform.parent = grid[x,y,z].cube.transform;
-														
-														Debug.Log("Added  - " + animations[animations.Count - 1].cubes.Count);
+
 														break;
 													}
 
@@ -899,11 +752,11 @@ public class GameScript : MonoBehaviour {
 					if(!(((cam.transform.position.y > 19.8f ) && (Input.GetTouch(0).deltaPosition.y < 0.0f))
 					     || ((cam.transform.position.y < -19.8f ) && (Input.GetTouch(0).deltaPosition.y > 0.0f))))
 					{
-						angle = -Input.GetTouch(0).deltaPosition.y * 800.0f * camSen / Screen.height;
+						angle = -Input.GetTouch(0).deltaPosition.y * 2400.0f * camSen / Screen.height;
 						cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.right, angle);
 						//cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.right, -Input.GetTouch(0).deltaPosition.y * 300.0f / Screen.height);
 					}
-					angle = Input.GetTouch(0).deltaPosition.x * 600.0f * camSen / Screen.height;
+					angle = Input.GetTouch(0).deltaPosition.x * 1800.0f * camSen / Screen.height;
 					float modifier = -0.04f* Mathf.Abs(cam.transform.position.y) + 1;
 					cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.up, angle * modifier);
 					//cam.transform.RotateAround (new Vector3 (0, 0, 0), cam.transform.up, Input.GetTouch(0).deltaPosition.x * 230.0f / Screen.height);
@@ -1201,6 +1054,7 @@ public class GameScript : MonoBehaviour {
 
 	void touchArrow(string name)
 	{
+
 		if(name == "Arrow X")
 		{
 			movingArrow = 0;
@@ -1233,6 +1087,148 @@ public class GameScript : MonoBehaviour {
 		if(creative)
 		{
 
+			levelAnimation anim = null;
+
+			foreach(levelAnimation animation in animations)
+			{
+				if(currentAnimation.cubes.Count != animation.cubes.Count)
+				{
+					continue;
+				}
+				if(isRotation && ( currentAnimation.origin != animation.origin))
+				{
+					continue;
+				}
+
+				int tempCount = 0;
+
+				foreach(Cube cube in currentAnimation.cubes)
+				{
+					if(animation.cubes.Contains(cube))
+					{
+						tempCount++;
+					}
+					else
+					{
+						break;
+					}
+				}
+
+				if(tempCount < animation.cubes.Count)
+				{
+					continue;
+				}
+
+				anim = animation;
+
+				break;
+			}
+
+			if(anim == null)
+			{
+				anim = new levelAnimation();
+				anim.origin = new Vector3(currentAnimation.origin.x, currentAnimation.origin.y, currentAnimation.origin.z);
+				anim.cubes = new List<Cube>();
+				foreach(Cube cube in grid)
+				{
+					if(cube == null)
+						continue;
+					
+					if(cube.cube.renderer.material.color.Equals(new Color(0.5f,0.8f,0.8f,1)))
+					{
+						anim.cubes.Add(cube);
+					}
+				}
+
+				animations.Add(anim);
+				Debug.Log("Anim Count: " + animations.Count);
+			}
+
+			if(movingArrow == 0)
+			{
+				foreach(Cube cube in anim.cubes)
+				{
+					if(cube.cube == null)
+					{
+						continue;
+					}
+
+					if(isRotation)
+					{
+						float tempAngle = Input.GetTouch(0).deltaPosition.x  * Camera.main.transform.forward.z + Input.GetTouch(0).deltaPosition.y  * Camera.main.transform.forward.y;
+
+						anim.angleRight += tempAngle / 5.0f;
+						cube.cube.transform.RotateAround(anim.origin, Vector3.right, tempAngle / 5.0f);
+					}
+					else
+					{
+						float tempTrans = Input.GetTouch(0).deltaPosition.x  * Camera.main.transform.forward.z -
+							Input.GetTouch(0).deltaPosition.y  * Camera.main.transform.forward.y * Camera.main.transform.forward.x * 2.0f;
+
+						anim.translation = new Vector3(anim.translation.x + tempTrans / 150.0f, anim.translation.y, anim.translation.z);
+						cube.cube.transform.Translate(tempTrans / 150.0f, 0, 0);
+					}
+				}
+			}
+
+			if(movingArrow == 1)
+			{
+				foreach(Cube cube in anim.cubes)
+				{
+					if(cube.cube == null)
+					{
+						continue;
+					}
+
+					if(isRotation)
+					{
+						Vector2 tempVect = new Vector2(-ClipArrow[1].transform.up.x * Camera.main.transform.forward.y, ClipArrow[1].transform.up.y);
+						float tempAngle = - Input.GetTouch(0).deltaPosition.x * tempVect.x + Input.GetTouch(0).deltaPosition.y * tempVect.y;
+						tempAngle *= - ClipArrow[1].transform.forward.z;
+
+						anim.angleForward += tempAngle / 5.0f;
+						cube.cube.transform.RotateAround(anim.origin, Vector3.forward, tempAngle / 5.0f);
+					}
+					else
+					{
+						float tempTrans = Input.GetTouch(0).deltaPosition.y;
+						
+						anim.translation = new Vector3(anim.translation.x, anim.translation.y + tempTrans / 200.0f, anim.translation.z);
+						cube.cube.transform.Translate(0, tempTrans / 200.0f, 0);
+					}
+				}
+			}
+
+			if(movingArrow == 2)
+			{
+				foreach(Cube cube in anim.cubes)
+				{
+					if(cube.cube == null)
+					{
+						continue;
+					}
+
+					if(isRotation)
+					{
+						Vector3 camVect = - 1.5f * Camera.main.transform.forward;
+						Vector2 tempVect = new Vector2(ClipArrow[2].transform.up.x, ClipArrow[2].transform.up.z);
+						float tempAngle = Input.GetTouch(0).deltaPosition.x * tempVect.x * camVect.z + 2 * Input.GetTouch(0).deltaPosition.y * tempVect.y * camVect.z * camVect.y;
+						tempAngle += Input.GetTouch(0).deltaPosition.x * camVect.x * -tempVect.y;
+
+						anim.angleUp += tempAngle / 5.0f;					
+						cube.cube.transform.RotateAround(anim.origin, Vector3.up, tempAngle / 5.0f);
+					}
+					else
+					{
+						float tempTrans = - Input.GetTouch(0).deltaPosition.x  * Camera.main.transform.forward.x - 
+							Input.GetTouch(0).deltaPosition.y  * Camera.main.transform.forward.y * Camera.main.transform.forward.z;
+
+						
+						anim.translation = new Vector3(anim.translation.x, anim.translation.y, anim.translation.z + tempTrans / 100.0f);
+						cube.cube.transform.Translate(0, 0, tempTrans / 100.0f);
+					}
+				}
+			}
 
 			return;
 		}
@@ -1462,6 +1458,7 @@ public class GameScript : MonoBehaviour {
 
 		grid = null;
 		creativeCubes.Clear ();
+		animations.Clear ();
 		creative = false;
 		pause = true;
 		inMenu = true;
@@ -2290,6 +2287,8 @@ public class GameScript : MonoBehaviour {
 		}
 		if(stage == 4)
 		{
+			this.level = level;
+
 			prepareToStart ();
 
 			try
@@ -2324,6 +2323,43 @@ public class GameScript : MonoBehaviour {
 				}
 
 				file.Close();
+
+				SpawnCubes ();
+
+				file = new System.IO.StreamReader(Application.persistentDataPath + "/custom" + level + "animation.txt");
+
+				animations.Clear();
+
+				int animCount = int.Parse(file.ReadLine());
+
+				for(int i = 0; i < animCount; i++)
+				{
+					levelAnimation animation = new levelAnimation();
+
+
+					int cubeCount = int.Parse(file.ReadLine());
+
+					for(int j = 0; j < cubeCount; j++)
+					{
+						int x = int.Parse(file.ReadLine());
+						int y = int.Parse(file.ReadLine());
+						int z = int.Parse(file.ReadLine());
+
+						animation.cubes.Add(grid[x,y,z]);
+					}
+
+					animation.origin = new Vector3(float.Parse(file.ReadLine()), float.Parse(file.ReadLine()), float.Parse(file.ReadLine()));
+
+					animation.translation = new Vector3(float.Parse(file.ReadLine()), float.Parse(file.ReadLine()), float.Parse(file.ReadLine()));
+
+					animation.angleRight = float.Parse(file.ReadLine());
+					animation.angleForward = float.Parse(file.ReadLine());
+					animation.angleUp = float.Parse(file.ReadLine());
+
+					animations.Add(animation);
+				}
+
+				file.Close();
 			}
 			catch (System.Exception e)
 			{
@@ -2336,6 +2372,7 @@ public class GameScript : MonoBehaviour {
 			{
 				File.Delete(Application.persistentDataPath + "/custom" + level + ".txt");
 				File.Delete(Application.persistentDataPath + "/custom" + level + "color.txt");
+				File.Delete(Application.persistentDataPath + "/custom" + level + "animation.txt");
 
 				for(uint i = level + 1; i < customStageCount + 1; i++)
 				{
@@ -2358,8 +2395,9 @@ public class GameScript : MonoBehaviour {
 		}
 
 		this.level = level;
-		
-		SpawnCubes ();
+
+		if(stage != 4)
+			SpawnCubes ();
 	}
 
 	void startEndAnimation()
@@ -2771,10 +2809,11 @@ public class GameScript : MonoBehaviour {
 	{
 		int finishTimer = this.finishTimer % 360;
 
+		if(this.finishTimer % 360 == 0)
+			Debug.Log("360");
+
 		foreach(Cube cube in grid)
 		{
-			
-			
 			if(cube.cube == null)
 				continue;
 			
@@ -2793,9 +2832,8 @@ public class GameScript : MonoBehaviour {
 				cube.cube.renderer.materials = new Material[1];
 				cube.cube.renderer.material = tempMat;
 			}
-			
-			
-			//cubesParent.transform.rotation = Quaternion.AngleAxis(finishTimer, Vector3.down);
+
+			//try to rotate camera around object
 		}
 		
 		uint tempLevel = (stage - 1) * 15 + level;
@@ -2805,6 +2843,29 @@ public class GameScript : MonoBehaviour {
 		for(int i = 0; i < cubes.Length; i++)
 		{
 			cubes[i] = endAnimationParent.transform.GetChild(i).gameObject;
+		}
+
+		if(stage == 4)
+		{
+			foreach(levelAnimation animation in animations)
+			{
+				foreach(Cube cube in animation.cubes)
+				{
+					float modif = 1.0f;
+					
+					if(this.finishTimer % 240 > 120)
+						modif = -1.0f;
+					
+					cube.cube.transform.RotateAround(animation.origin, Vector3.forward, modif * animation.angleForward / 120.0f);
+					cube.cube.transform.RotateAround(animation.origin, Vector3.right, modif * animation.angleRight / 120.0f);
+					cube.cube.transform.RotateAround(animation.origin, Vector3.up, modif * animation.angleUp / 120.0f);
+					
+					
+					cube.cube.transform.Translate(modif * animation.translation / 120.0f);
+				}
+			}
+			
+			return;
 		}
 
 		if(tempLevel == 1)
@@ -3048,7 +3109,7 @@ public class GameScript : MonoBehaviour {
 			backgroundImage.color = new Color(0.5f - finishTimer*0.0011f, 0.5f - finishTimer*0.0011f, 0.5f - finishTimer*0.0011f);
 
 			if(finishTimer < 350)
-				Camera.main.transform.GetChild(0).light.intensity = 0.3f - (finishTimer*0.0009f);
+				Camera.main.transform.GetChild(0).light.intensity = 0.3f - (finishTimer*0.00085f);
 
 			if(finishTimer == 200)
 			{
@@ -3633,6 +3694,8 @@ public class GameScript : MonoBehaviour {
 			customStageCount++;
 			saveLevel (customStageCount);
 			animations.Clear();
+			currentAnimation = null;
+
 			pauseExit ();
 		}
 		else
@@ -3646,7 +3709,7 @@ public class GameScript : MonoBehaviour {
 			buttonsEdit[5].SetActive(true);
 			buttonsEdit[6].SetActive(true);
 
-			animations.Add(new levelAnimation());
+			currentAnimation = new levelAnimation();
 
 			breaking = true;
 			creativeColoring = false;
@@ -3679,10 +3742,7 @@ public class GameScript : MonoBehaviour {
 
 	void buttonEditArrow()
 	{
-		if(animations.Count > 0)
-		{
-			animations[animations.Count - 1].isRotation = false;
-		}
+		isRotation = false;
 
 		buttonsEdit [5].guiTexture.color = new Color (0.8f, 0.8f, 0.8f, 1);
 		buttonsEdit [6].guiTexture.color = new Color (0, 0, 0, 1);
@@ -3690,10 +3750,7 @@ public class GameScript : MonoBehaviour {
 
 	void buttonEditRotate()
 	{
-		if(animations.Count > 0)
-		{
-			animations[animations.Count - 1].isRotation = true;
-		}
+		isRotation = true;
 
 		buttonsEdit [5].guiTexture.color = new Color (0, 0, 0, 1);
 		buttonsEdit [6].guiTexture.color = new Color (0.8f, 0.8f, 0.8f, 1);
@@ -3962,9 +4019,57 @@ public class GameScript : MonoBehaviour {
 				*/
 			}
 				
-			file.Close ();			
+			file.Close ();	
+
+			file = new System.IO.StreamWriter(Application.persistentDataPath + "/custom" + level + "animation.txt");
+			
+			file.WriteLine (animations.Count);
+
+			foreach(levelAnimation animation in animations)
+			{
+				file.WriteLine(animation.cubes.Count);
+
+				foreach(Cube cube in animation.cubes)
+				{
+					for (int x=0; x<levelArray.GetLength(0); x++)
+					{
+						for (int y=0; y<levelArray.GetLength(1); y++)
+						{
+							for (int z=0; z<levelArray.GetLength(2); z++)
+							{
+								if(grid[x,y,z] == null)
+									continue;
+
+								if(grid[x,y,z].Equals(cube))
+								{
+									file.WriteLine(x);
+									file.WriteLine(y);
+									file.WriteLine(z);
+
+									break;
+								}
+							}
+						}
+					}
+				}
+
+				file.WriteLine(animation.origin.x);
+				file.WriteLine(animation.origin.y);
+				file.WriteLine(animation.origin.z);
+
+				file.WriteLine(animation.translation.x);
+				file.WriteLine(animation.translation.y);
+				file.WriteLine(animation.translation.z);
+
+				file.WriteLine(animation.angleRight / animation.cubes.Count);
+				file.WriteLine(animation.angleForward / animation.cubes.Count);
+				file.WriteLine(animation.angleUp / animation.cubes.Count);
+			}
+			
+			file.Close ();
 
 			//TEST
+			/*
 			file = new System.IO.StreamWriter(Application.persistentDataPath + "/test" + level + ".txt");
 
 			file.Write("levelArray = new bool[");
@@ -4007,6 +4112,7 @@ public class GameScript : MonoBehaviour {
 			file.Write("};");
 			
 			file.Close ();
+			*/
 
 		}
 		catch (System.Exception e)
@@ -4141,9 +4247,9 @@ public class Cube
 public class levelAnimation
 {
 	public List<Cube> cubes = new List<Cube>();
-	public bool isRotation;
 	public Vector3 origin;
-	public Vector3 axis;
-	public float angle;
+	public float angleRight;
+	public float angleForward;
+	public float angleUp;
 	public Vector3 translation;
 }
