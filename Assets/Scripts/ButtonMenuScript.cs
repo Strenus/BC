@@ -71,9 +71,9 @@ public class ButtonMenuScript : MonoBehaviour
 			}
 		}
 	}
-	/*
+
 	void OnMouseDown()
 	{
 		GameObject.FindGameObjectWithTag("GameController").SendMessage(this.name);
-	}*/
+	}
 }

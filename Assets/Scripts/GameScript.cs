@@ -1,5 +1,4 @@
-﻿
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -74,9 +73,6 @@ public class GameScript : MonoBehaviour {
 		progress = 45;
 		//saveProgress ();
 
-
-		Debug.Log (progress);
-
 		foreach(GameObject go in starsIngame)
 		{
 			go.guiTexture.pixelInset = new Rect (-Screen.height / 20, -Screen.height / 20, Screen.height / 10, Screen.height / 10);
@@ -104,10 +100,6 @@ public class GameScript : MonoBehaviour {
 
 
 		//testConvert ();
-
-
-
-		savingTest ();
 	}
 
 	void Update () 
@@ -206,13 +198,13 @@ public class GameScript : MonoBehaviour {
 
 				finishTimer++;
 
-
+				/*
 				if(finishTimer > 360)
 				{
 					pause = true;
 					openPauseMenu();
 				}
-
+				*/
 			}
 		}
 
@@ -1146,6 +1138,19 @@ public class GameScript : MonoBehaviour {
 
 			if(movingArrow == 0)
 			{
+				float tempAngle = Input.GetTouch(0).deltaPosition.x  * Camera.main.transform.forward.z + Input.GetTouch(0).deltaPosition.y  * Camera.main.transform.forward.y;
+				float tempTrans = Input.GetTouch(0).deltaPosition.x  * Camera.main.transform.forward.z -
+					Input.GetTouch(0).deltaPosition.y  * Camera.main.transform.forward.y * Camera.main.transform.forward.x * 2.0f;
+				
+				if(isRotation)
+				{
+					anim.angleRight += tempAngle / 5.0f;
+				}
+				else
+				{
+					anim.translation = new Vector3(anim.translation.x + tempTrans / 150.0f, anim.translation.y, anim.translation.z);
+				}
+
 				foreach(Cube cube in anim.cubes)
 				{
 					if(cube.cube == null)
@@ -1155,17 +1160,10 @@ public class GameScript : MonoBehaviour {
 
 					if(isRotation)
 					{
-						float tempAngle = Input.GetTouch(0).deltaPosition.x  * Camera.main.transform.forward.z + Input.GetTouch(0).deltaPosition.y  * Camera.main.transform.forward.y;
-
-						anim.angleRight += tempAngle / 5.0f;
 						cube.cube.transform.RotateAround(anim.origin, Vector3.right, tempAngle / 5.0f);
 					}
 					else
 					{
-						float tempTrans = Input.GetTouch(0).deltaPosition.x  * Camera.main.transform.forward.z -
-							Input.GetTouch(0).deltaPosition.y  * Camera.main.transform.forward.y * Camera.main.transform.forward.x * 2.0f;
-
-						anim.translation = new Vector3(anim.translation.x + tempTrans / 150.0f, anim.translation.y, anim.translation.z);
 						cube.cube.transform.Translate(tempTrans / 150.0f, 0, 0);
 					}
 				}
@@ -1173,6 +1171,22 @@ public class GameScript : MonoBehaviour {
 
 			if(movingArrow == 1)
 			{
+				Vector2 tempVect = new Vector2(-ClipArrow[1].transform.up.x * Camera.main.transform.forward.y, ClipArrow[1].transform.up.y);
+
+				float tempAngle = - Input.GetTouch(0).deltaPosition.x * tempVect.x + Input.GetTouch(0).deltaPosition.y * tempVect.y;
+				tempAngle *= - ClipArrow[1].transform.forward.z;
+
+				float tempTrans = Input.GetTouch(0).deltaPosition.y;
+
+				if(isRotation)
+				{
+					anim.angleForward += tempAngle / 5.0f;
+				}
+				else
+				{
+					anim.translation = new Vector3(anim.translation.x, anim.translation.y + tempTrans / 200.0f, anim.translation.z);
+				}
+
 				foreach(Cube cube in anim.cubes)
 				{
 					if(cube.cube == null)
@@ -1182,18 +1196,10 @@ public class GameScript : MonoBehaviour {
 
 					if(isRotation)
 					{
-						Vector2 tempVect = new Vector2(-ClipArrow[1].transform.up.x * Camera.main.transform.forward.y, ClipArrow[1].transform.up.y);
-						float tempAngle = - Input.GetTouch(0).deltaPosition.x * tempVect.x + Input.GetTouch(0).deltaPosition.y * tempVect.y;
-						tempAngle *= - ClipArrow[1].transform.forward.z;
-
-						anim.angleForward += tempAngle / 5.0f;
 						cube.cube.transform.RotateAround(anim.origin, Vector3.forward, tempAngle / 5.0f);
 					}
 					else
 					{
-						float tempTrans = Input.GetTouch(0).deltaPosition.y;
-						
-						anim.translation = new Vector3(anim.translation.x, anim.translation.y + tempTrans / 200.0f, anim.translation.z);
 						cube.cube.transform.Translate(0, tempTrans / 200.0f, 0);
 					}
 				}
@@ -1201,6 +1207,24 @@ public class GameScript : MonoBehaviour {
 
 			if(movingArrow == 2)
 			{
+				Vector3 camVect = - 1.5f * Camera.main.transform.forward;
+				Vector2 tempVect = new Vector2(ClipArrow[2].transform.up.x, ClipArrow[2].transform.up.z);
+
+				float tempAngle = Input.GetTouch(0).deltaPosition.x * tempVect.x * camVect.z + 2 * Input.GetTouch(0).deltaPosition.y * tempVect.y * camVect.z * camVect.y;
+				tempAngle += Input.GetTouch(0).deltaPosition.x * camVect.x * -tempVect.y;
+
+				float tempTrans = - Input.GetTouch(0).deltaPosition.x  * Camera.main.transform.forward.x - 
+					Input.GetTouch(0).deltaPosition.y  * Camera.main.transform.forward.y * Camera.main.transform.forward.z;
+				
+				if(isRotation)
+				{
+					anim.angleUp += tempAngle / 5.0f;					
+				}
+				else
+				{
+					anim.translation = new Vector3(anim.translation.x, anim.translation.y, anim.translation.z + tempTrans / 100.0f);
+				}
+
 				foreach(Cube cube in anim.cubes)
 				{
 					if(cube.cube == null)
@@ -1209,22 +1233,11 @@ public class GameScript : MonoBehaviour {
 					}
 
 					if(isRotation)
-					{
-						Vector3 camVect = - 1.5f * Camera.main.transform.forward;
-						Vector2 tempVect = new Vector2(ClipArrow[2].transform.up.x, ClipArrow[2].transform.up.z);
-						float tempAngle = Input.GetTouch(0).deltaPosition.x * tempVect.x * camVect.z + 2 * Input.GetTouch(0).deltaPosition.y * tempVect.y * camVect.z * camVect.y;
-						tempAngle += Input.GetTouch(0).deltaPosition.x * camVect.x * -tempVect.y;
-
-						anim.angleUp += tempAngle / 5.0f;					
+					{				
 						cube.cube.transform.RotateAround(anim.origin, Vector3.up, tempAngle / 5.0f);
 					}
 					else
 					{
-						float tempTrans = - Input.GetTouch(0).deltaPosition.x  * Camera.main.transform.forward.x - 
-							Input.GetTouch(0).deltaPosition.y  * Camera.main.transform.forward.y * Camera.main.transform.forward.z;
-
-						
-						anim.translation = new Vector3(anim.translation.x, anim.translation.y, anim.translation.z + tempTrans / 100.0f);
 						cube.cube.transform.Translate(0, 0, tempTrans / 100.0f);
 					}
 				}
@@ -2701,14 +2714,132 @@ public class GameScript : MonoBehaviour {
 		
 		if(tempLevel == 31)
 		{
+			grid[0,3,2].cube.AddComponent<Rigidbody>();
+			grid[0,3,2].cube.rigidbody.AddTorque (new Vector3(Random.Range (-25f, 25f),Random.Range (-25f, 25f),Random.Range (-25f, 25f)));
+			grid[0,3,2].cube.rigidbody.AddForce (new Vector3(Random.Range (-100f, -50f),Random.Range (-200f, -100f),Random.Range (-100f, -50f)));
 			
+			grid[1,5,4].cube.AddComponent<Rigidbody>();
+			grid[1,5,4].cube.rigidbody.AddTorque (new Vector3(Random.Range (-25f, 25f),Random.Range (-25f, 25f),Random.Range (-25f, 25f)));
+			grid[1,5,4].cube.rigidbody.AddForce (new Vector3(Random.Range (-100f, -50f),Random.Range (-100f, -50f),Random.Range (-100f, -50f)));
+			
+			grid[2,6,5].cube.AddComponent<Rigidbody>();
+			grid[2,6,5].cube.rigidbody.AddTorque (new Vector3(Random.Range (-25f, 25f),Random.Range (-25f, 25f),Random.Range (-25f, 25f)));
+			grid[2,6,5].cube.rigidbody.AddForce (new Vector3(Random.Range (-100f, -50f),0,Random.Range (-100f, -50f)));
+			
+			grid[3,5,6].cube.AddComponent<Rigidbody>();
+			grid[3,5,6].cube.rigidbody.AddTorque (new Vector3(Random.Range (-25f, 25f),Random.Range (-25f, 25f),Random.Range (-25f, 25f)));
+			grid[3,5,6].cube.rigidbody.AddForce (new Vector3(Random.Range (-160f, -80f),250f,Random.Range (-50f, 50f)));
+			
+			grid[4,4,6].cube.AddComponent<Rigidbody>();
+			grid[4,4,6].cube.rigidbody.AddTorque (new Vector3(Random.Range (-25f, 25f),Random.Range (-25f, 25f),Random.Range (-25f, 25f)));
+			grid[4,4,6].cube.rigidbody.AddForce (new Vector3(Random.Range (200f, 150f),500f,Random.Range (-50f, 50f)));
+			
+			grid[5,5,5].cube.AddComponent<Rigidbody>();
+			grid[5,5,5].cube.rigidbody.AddTorque (new Vector3(Random.Range (-25f, 25f),Random.Range (-25f, 25f),Random.Range (-25f, 25f)));
+			grid[5,5,5].cube.rigidbody.AddForce (new Vector3(Random.Range (100f, 50f),250f,Random.Range (-100f, -50f)));
+			
+			grid[6,6,6].cube.AddComponent<Rigidbody>();
+			grid[6,6,6].cube.rigidbody.AddTorque (new Vector3(Random.Range (-25f, 25f),Random.Range (-25f, 25f),Random.Range (-25f, 25f)));
+			grid[6,6,6].cube.rigidbody.AddForce (new Vector3(Random.Range (100f, 50f),0,Random.Range (-50f, 50f)));
+			
+			grid[7,5,7].cube.AddComponent<Rigidbody>();
+			grid[7,5,7].cube.rigidbody.AddTorque (new Vector3(Random.Range (-25f, 25f),Random.Range (-25f, 25f),Random.Range (-25f, 25f)));
+			grid[7,5,7].cube.rigidbody.AddForce (new Vector3(Random.Range (100f, 50f),Random.Range (-100f, -50f),Random.Range (0f, 50f)));
 			
 			return;
 		}
 		
 		if(tempLevel == 32)
 		{
-			
+			{
+				GameObject cube = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+				cube.transform.parent = endAnimationParent.transform;
+				cube.transform.position = grid[0,0,5].cube.transform.position;
+				cube.renderer.materials = grid[0,0,5].cube.renderer.materials;
+				cube.transform.localScale = cube.transform.localScale * 0.98f;
+			}
+			{
+				GameObject cube = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+				cube.transform.parent = endAnimationParent.transform;	
+				cube.transform.position = grid[0,1,4].cube.transform.position;
+				cube.renderer.materials = grid[0,1,4].cube.renderer.materials;
+				cube.transform.localScale = cube.transform.localScale * 0.98f;
+			}
+			{
+				GameObject cube = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+				cube.transform.parent = endAnimationParent.transform;	
+				cube.transform.position = grid[0,2,5].cube.transform.position;
+				cube.renderer.materials = grid[0,2,5].cube.renderer.materials;
+				cube.transform.localScale = cube.transform.localScale * 0.98f;
+			}
+			{
+				GameObject cube = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+				cube.transform.parent = endAnimationParent.transform;	
+				cube.transform.position = grid[0,0,1].cube.transform.position;
+				cube.renderer.materials = grid[0,0,1].cube.renderer.materials;
+				cube.transform.localScale = cube.transform.localScale * 0.98f;
+			}
+			{
+				GameObject cube = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+				cube.transform.parent = endAnimationParent.transform;	
+				cube.transform.position = grid[0,1,2].cube.transform.position;
+				cube.renderer.materials = grid[0,1,2].cube.renderer.materials;
+				cube.transform.localScale = cube.transform.localScale * 0.98f;
+			}
+			{
+				GameObject cube = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+				cube.transform.parent = endAnimationParent.transform;	
+				cube.transform.position = grid[0,2,1].cube.transform.position;
+				cube.renderer.materials = grid[0,2,1].cube.renderer.materials;
+				cube.transform.localScale = cube.transform.localScale * 0.98f;
+			}
+			{
+				GameObject cube = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+				cube.transform.parent = endAnimationParent.transform;	
+				cube.transform.position = grid[6,0,5].cube.transform.position;
+				cube.renderer.materials = grid[6,0,5].cube.renderer.materials;
+				cube.transform.localScale = cube.transform.localScale * 0.98f;
+			}
+			{
+				GameObject cube = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+				cube.transform.parent = endAnimationParent.transform;	
+				cube.transform.position = grid[6,1,4].cube.transform.position;
+				cube.renderer.materials = grid[6,1,4].cube.renderer.materials;
+				cube.transform.localScale = cube.transform.localScale * 0.98f;
+			}
+			{
+				GameObject cube = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+				cube.transform.parent = endAnimationParent.transform;	
+				cube.transform.position = grid[6,2,5].cube.transform.position;
+				cube.renderer.materials = grid[6,2,5].cube.renderer.materials;
+				cube.transform.localScale = cube.transform.localScale * 0.98f;
+			}
+			{
+				GameObject cube = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+				cube.transform.parent = endAnimationParent.transform;	
+				cube.transform.position = grid[6,0,1].cube.transform.position;
+				cube.renderer.materials = grid[6,0,1].cube.renderer.materials;
+				cube.transform.localScale = cube.transform.localScale * 0.98f;
+			}
+			{
+				GameObject cube = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+				cube.transform.parent = endAnimationParent.transform;	
+				cube.transform.position = grid[6,1,2].cube.transform.position;
+				cube.renderer.materials = grid[6,1,2].cube.renderer.materials;
+				cube.transform.localScale = cube.transform.localScale * 0.98f;
+			}
+			{
+				GameObject cube = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+				cube.transform.parent = endAnimationParent.transform;	
+				cube.transform.position = grid[6,2,1].cube.transform.position;
+				cube.renderer.materials = grid[6,2,1].cube.renderer.materials;
+				cube.transform.localScale = cube.transform.localScale * 0.98f;
+			}
+
+			grid[0,1,6].cube.transform.localScale = grid[0,1,6].cube.transform.localScale * 0.98f;
+			grid[0,1,0].cube.transform.localScale = grid[0,1,0].cube.transform.localScale * 0.98f;
+			grid[6,1,6].cube.transform.localScale = grid[6,1,6].cube.transform.localScale * 0.98f;
+			grid[6,1,0].cube.transform.localScale = grid[6,1,0].cube.transform.localScale * 0.98f;
 			
 			return;
 		}
@@ -2743,7 +2874,14 @@ public class GameScript : MonoBehaviour {
 		
 		if(tempLevel == 37)
 		{
+			grid[0,7,6].cube.AddComponent<Rigidbody>();
+			grid[0,7,6].cube.rigidbody.AddForce (new Vector3(Random.Range (-100f, 100f),-200f,Random.Range (-100f, 100f)));
 			
+			grid[1,6,0].cube.AddComponent<Rigidbody>();
+			grid[1,6,0].cube.rigidbody.AddForce (new Vector3(-100f,-200f,-100f));
+			
+			grid[6,1,0].cube.AddComponent<Rigidbody>();
+			grid[6,1,0].cube.rigidbody.AddForce (new Vector3(Random.Range (-100f, 100f),-200f,Random.Range (-100f, 100f)));
 			
 			return;
 		}
@@ -3113,16 +3251,56 @@ public class GameScript : MonoBehaviour {
 
 			if(finishTimer == 200)
 			{
-				grid[2,1,1].cube.renderer.material = new Material(Shader.Find ("Self-Illumin/Diffuse"));
+				grid[2,1,1].cube.renderer.material = new Material(Shader.Find ("Diffuse"));
 				grid[2,1,1].cube.renderer.material.color = new Color(0.5f, 0.5f, 0);
 
-				grid[2,1,3].cube.renderer.material = new Material(Shader.Find ("Self-Illumin/Diffuse"));
+				grid[2,1,3].cube.renderer.material = new Material(Shader.Find ("Diffuse"));
 				grid[2,1,3].cube.renderer.material.color = new Color(0.5f, 0.5f, 0);
+
+				GameObject light1 = new GameObject();
+				light1.transform.parent = endAnimationParent.transform;
+				Light lightComp1 = light1.AddComponent<Light>();
+				lightComp1.type = LightType.Point;
+				lightComp1.intensity = 0.9f;
+				lightComp1.range = 4;
+
+				light1.transform.position = new Vector3(-1.0f, -1.0f, -1.0f);
+
+				GameObject light2 = new GameObject();
+				light2.transform.parent = endAnimationParent.transform;
+				Light lightComp2 = light2.AddComponent<Light>();
+				lightComp2 = lightComp1;
+				light2.transform.position = new Vector3(0.0f, -1.0f, -2.0f);
+
+				GameObject light3 = new GameObject();
+				light3.transform.parent = endAnimationParent.transform;
+				Light lightComp3 = light3.AddComponent<Light>();
+				lightComp3 = lightComp2;
+				light3.transform.position = new Vector3(-1.0f, -1.0f, 1.0f);
+
+				GameObject light4 = new GameObject();
+				light4.transform.parent = endAnimationParent.transform;
+				Light lightComp4 = light4.AddComponent<Light>();
+				lightComp4 = lightComp3;
+				light4.transform.position = new Vector3(1.0f, -1.0f, 1.0f);
+
+				GameObject light5 = new GameObject();
+				light5.transform.parent = endAnimationParent.transform;
+				Light lightComp5 = light5.AddComponent<Light>();
+				lightComp5 = lightComp4;
+				light5.transform.position = new Vector3(0.0f, -1.0f, 2.0f);
+
+				lightComp1 = lightComp5;
 			}
 
-			if(finishTimer > 359)
+			if(finishTimer > 358)
 			{
 				Camera.main.transform.GetChild(0).light.intensity = 0.3f;
+
+				for(int i = 0; i < endAnimationParent.transform.childCount; i++)
+				{
+					Destroy(endAnimationParent.transform.GetChild(i).gameObject);
+				}
 			}
 			
 			return;
@@ -3438,34 +3616,220 @@ public class GameScript : MonoBehaviour {
 
 		if(tempLevel == 16)
 		{
+			Vector3 tempPoint = new Vector3(0, 0.5f, 0.5f);
+
+			float tempAngle = - 1.1f * Mathf.Sin(finishTimer / 40.0f);
 			
+			grid[0,4,3].cube.transform.RotateAround(tempPoint, Vector3.left, tempAngle);
+			grid[1,4,3].cube.transform.RotateAround(tempPoint, Vector3.left, tempAngle);
+			grid[2,4,3].cube.transform.RotateAround(tempPoint, Vector3.left, tempAngle);
+			grid[0,5,3].cube.transform.RotateAround(tempPoint, Vector3.left, tempAngle);
+			grid[1,5,3].cube.transform.RotateAround(tempPoint, Vector3.left, tempAngle);
+			grid[2,5,3].cube.transform.RotateAround(tempPoint, Vector3.left, tempAngle);
+			grid[0,5,4].cube.transform.RotateAround(tempPoint, Vector3.left, tempAngle);
+			grid[2,5,4].cube.transform.RotateAround(tempPoint, Vector3.left, tempAngle);
+
+			grid[0,0,0].cube.transform.Translate(0,0,- tempAngle / 100.0f);
+			grid[0,0,3].cube.transform.Translate(0,0, tempAngle / 100.0f);
+			grid[2,0,1].cube.transform.Translate(0,0, tempAngle / 100.0f);
+			grid[2,0,3].cube.transform.Translate(0,0,- tempAngle / 100.0f);
 			
 			return;
 		}
 
 		if(tempLevel == 17)
 		{
-			
+			Vector3 tempPoint = grid[1,1,6].cube.transform.position;
+
+			grid[1,0,6].cube.transform.RotateAround(tempPoint, grid[1,0,6].cube.transform.right, 5.0f);
+			grid[1,1,5].cube.transform.RotateAround(tempPoint, grid[1,0,6].cube.transform.right, 5.0f);
+			grid[1,1,6].cube.transform.RotateAround(tempPoint, grid[1,0,6].cube.transform.right, 5.0f);
+			grid[1,1,7].cube.transform.RotateAround(tempPoint, grid[1,0,6].cube.transform.right, 5.0f);
+			grid[1,2,6].cube.transform.RotateAround(tempPoint, grid[1,0,6].cube.transform.right, 5.0f);
+
+			tempPoint = grid[1,1,1].cube.transform.position;
+
+			grid[1,0,1].cube.transform.RotateAround(tempPoint, grid[1,0,6].cube.transform.right, 5.0f);
+			grid[1,1,0].cube.transform.RotateAround(tempPoint, grid[1,0,6].cube.transform.right, 5.0f);
+			grid[1,1,1].cube.transform.RotateAround(tempPoint, grid[1,0,6].cube.transform.right, 5.0f);
+			grid[1,1,2].cube.transform.RotateAround(tempPoint, grid[1,0,6].cube.transform.right, 5.0f);
+			grid[1,2,1].cube.transform.RotateAround(tempPoint, grid[1,0,6].cube.transform.right, 5.0f);
+
+			tempPoint = grid[1,4,6].cube.transform.position;
+			float tempAngle = - 0.4f * Mathf.Sin(finishTimer / 60.0f - Mathf.PI / 2);
+
+			grid[0,4,6].cube.transform.RotateAround(tempPoint, Vector3.up, tempAngle);
+			grid[1,4,6].cube.transform.RotateAround(tempPoint, Vector3.up, tempAngle);
+			grid[1,4,7].cube.transform.RotateAround(tempPoint, Vector3.up, tempAngle);
+			grid[2,4,6].cube.transform.RotateAround(tempPoint, Vector3.up, tempAngle);
+
+			tempAngle = 0.4f * Mathf.Sin(finishTimer / 60.0f);
+
+			cubesParent.transform.rotation = Quaternion.AngleAxis(25 * tempAngle, Vector3.back);
 			
 			return;
 		}
 
 		if(tempLevel == 18)
 		{
-			
+			Vector3 tempPoint = grid[2,4,6].cube.transform.position;
+
+			grid[0,4,4].cube.transform.RotateAround(tempPoint, grid[2,4,6].cube.transform.up, 10.0f);
+			grid[0,4,8].cube.transform.RotateAround(tempPoint, grid[2,4,6].cube.transform.up, 10.0f);
+			grid[1,4,5].cube.transform.RotateAround(tempPoint, grid[2,4,6].cube.transform.up, 10.0f);
+			grid[1,4,7].cube.transform.RotateAround(tempPoint, grid[2,4,6].cube.transform.up, 10.0f);
+			grid[2,4,6].cube.transform.RotateAround(tempPoint, grid[2,4,6].cube.transform.up, 10.0f);
+			grid[3,4,5].cube.transform.RotateAround(tempPoint, grid[2,4,6].cube.transform.up, 10.0f);
+			grid[3,4,7].cube.transform.RotateAround(tempPoint, grid[2,4,6].cube.transform.up, 10.0f);
+			grid[4,4,4].cube.transform.RotateAround(tempPoint, grid[2,4,6].cube.transform.up, 10.0f);
+			grid[4,4,8].cube.transform.RotateAround(tempPoint, grid[2,4,6].cube.transform.up, 10.0f);
+
+			tempPoint = grid[1,2,1].cube.transform.position;
+
+			grid[1,1,1].cube.transform.RotateAround(tempPoint, grid[1,2,1].cube.transform.right, 10.0f);
+			grid[1,2,0].cube.transform.RotateAround(tempPoint, grid[1,2,1].cube.transform.right, 10.0f);
+			grid[1,2,1].cube.transform.RotateAround(tempPoint, grid[1,2,1].cube.transform.right, 10.0f);
+			grid[1,2,2].cube.transform.RotateAround(tempPoint, grid[1,2,1].cube.transform.right, 10.0f);
+			grid[1,3,1].cube.transform.RotateAround(tempPoint, grid[1,2,1].cube.transform.right, 10.0f);
+
+			cubesParent.transform.rotation = Quaternion.AngleAxis(20 * Mathf.Sin(finishTimer / 50.0f), new Vector3(1.0f,0.3f,0.8f));
 			
 			return;
 		}
 
 		if(tempLevel == 19)
 		{
+			if(finishTimer % 20 == 10)
+			{
+				GameObject cube = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+				cube.transform.parent = endAnimationParent.transform;
+				cube.transform.localScale = new Vector3(0.8f, 0.8f, 0.8f);
+				cube.transform.position = grid[2,5,7].cube.transform.position;
+				cube.renderer.materials = new Material[1];
+				cube.renderer.material = new Material(Shader.Find ("Transparent/Diffuse"));
+				cube.renderer.material.color = new Color(1, 1, 1, 0.5f);
+			}
+
+			for(int i=0; i < endAnimationParent.transform.childCount; i++)
+			{
+				Transform cube = endAnimationParent.transform.GetChild(i);
+				
+				cube.Translate(0,0.2f,0);
+				cube.localScale = new Vector3(cube.localScale.x + 0.02f, cube.localScale.y + 0.02f, cube.localScale.z + 0.02f);
+				
+				cube.gameObject.renderer.material.color = new Color(1,1,1, cube.gameObject.renderer.material.color.a - 0.01f);
+				
+				if(cube.gameObject.renderer.material.color.a < 0.01f)
+				{
+					Destroy(cube.gameObject);
+				}
+			}
+
+			Vector3 tempPoint = grid[0,0,0].cube.transform.position + grid[0,0,1].cube.transform.position +
+				grid[0,1,0].cube.transform.position + grid[0,1,1].cube.transform.position;
+			tempPoint /= 4;
 			
+			grid[0,0,0].cube.transform.RotateAround(tempPoint, grid[0,0,1].cube.transform.right, 10.0f);
+			grid[0,0,1].cube.transform.RotateAround(tempPoint, grid[0,0,1].cube.transform.right, 10.0f);
+			grid[0,1,0].cube.transform.RotateAround(tempPoint, grid[0,0,1].cube.transform.right, 10.0f);
+			grid[0,1,1].cube.transform.RotateAround(tempPoint, grid[0,0,1].cube.transform.right, 10.0f);
+
+			tempPoint = grid[0,0,3].cube.transform.position + grid[0,0,4].cube.transform.position +
+				grid[0,1,3].cube.transform.position + grid[0,1,4].cube.transform.position;
+			tempPoint /= 4;
+			
+			grid[0,0,3].cube.transform.RotateAround(tempPoint, grid[0,0,4].cube.transform.right, 10.0f);
+			grid[0,0,4].cube.transform.RotateAround(tempPoint, grid[0,0,4].cube.transform.right, 10.0f);
+			grid[0,1,3].cube.transform.RotateAround(tempPoint, grid[0,0,4].cube.transform.right, 10.0f);
+			grid[0,1,4].cube.transform.RotateAround(tempPoint, grid[0,0,4].cube.transform.right, 10.0f);
+
+			tempPoint = grid[0,0,6].cube.transform.position + grid[0,0,7].cube.transform.position +
+				grid[0,1,6].cube.transform.position + grid[0,1,7].cube.transform.position;
+			tempPoint /= 4;
+
+			grid[0,0,6].cube.transform.RotateAround(tempPoint, grid[0,0,7].cube.transform.right, 10.0f);
+			grid[0,0,7].cube.transform.RotateAround(tempPoint, grid[0,0,7].cube.transform.right, 10.0f);
+			grid[0,1,6].cube.transform.RotateAround(tempPoint, grid[0,0,7].cube.transform.right, 10.0f);
+			grid[0,1,7].cube.transform.RotateAround(tempPoint, grid[0,0,7].cube.transform.right, 10.0f);
+
+			tempPoint = grid[4,0,0].cube.transform.position + grid[4,0,1].cube.transform.position +
+				grid[4,1,0].cube.transform.position + grid[4,1,1].cube.transform.position;
+			tempPoint /= 4;
+			
+			grid[4,0,0].cube.transform.RotateAround(tempPoint, grid[0,0,1].cube.transform.right, 10.0f);
+			grid[4,0,1].cube.transform.RotateAround(tempPoint, grid[0,0,1].cube.transform.right, 10.0f);
+			grid[4,1,0].cube.transform.RotateAround(tempPoint, grid[0,0,1].cube.transform.right, 10.0f);
+			grid[4,1,1].cube.transform.RotateAround(tempPoint, grid[0,0,1].cube.transform.right, 10.0f);
+			
+			tempPoint = grid[4,0,3].cube.transform.position + grid[4,0,4].cube.transform.position +
+				grid[4,1,3].cube.transform.position + grid[4,1,4].cube.transform.position;
+			tempPoint /= 4;
+			
+			grid[4,0,3].cube.transform.RotateAround(tempPoint, grid[0,0,4].cube.transform.right, 10.0f);
+			grid[4,0,4].cube.transform.RotateAround(tempPoint, grid[0,0,4].cube.transform.right, 10.0f);
+			grid[4,1,3].cube.transform.RotateAround(tempPoint, grid[0,0,4].cube.transform.right, 10.0f);
+			grid[4,1,4].cube.transform.RotateAround(tempPoint, grid[0,0,4].cube.transform.right, 10.0f);
+			
+			tempPoint = grid[4,0,6].cube.transform.position + grid[4,0,7].cube.transform.position +
+				grid[4,1,6].cube.transform.position + grid[4,1,7].cube.transform.position;
+			tempPoint /= 4;
+			
+			grid[4,0,6].cube.transform.RotateAround(tempPoint, grid[0,0,7].cube.transform.right, 10.0f);
+			grid[4,0,7].cube.transform.RotateAround(tempPoint, grid[0,0,7].cube.transform.right, 10.0f);
+			grid[4,1,6].cube.transform.RotateAround(tempPoint, grid[0,0,7].cube.transform.right, 10.0f);
+			grid[4,1,7].cube.transform.RotateAround(tempPoint, grid[0,0,7].cube.transform.right, 10.0f);
+
+			cubesParent.transform.rotation = Quaternion.AngleAxis(0.2f * Mathf.Sin(finishTimer / 2.0f), new Vector3(1.0f,0.2f,0.0f));
 			
 			return;
 		}
 
 		if(tempLevel == 20)
 		{
+			Vector3 tempPoint = new Vector3(0.0f, 1.0f, -2.5f);
+			
+			float tempAngle = 0.1f * Mathf.Sin(finishTimer / 40.0f - Mathf.PI / 2);
+			
+			grid[1,6,0].cube.transform.RotateAround(tempPoint, new Vector3(1.0f,0.2f,0.0f), tempAngle);
+			grid[1,6,1].cube.transform.RotateAround(tempPoint, new Vector3(1.0f,0.2f,0.0f), tempAngle);
+			grid[1,6,2].cube.transform.RotateAround(tempPoint, new Vector3(1.0f,0.2f,0.0f), tempAngle);
+			grid[1,7,1].cube.transform.RotateAround(tempPoint, new Vector3(1.0f,0.2f,0.0f), tempAngle);
+			grid[1,7,2].cube.transform.RotateAround(tempPoint, new Vector3(1.0f,0.2f,0.0f), tempAngle);
+			grid[2,6,0].cube.transform.RotateAround(tempPoint, new Vector3(1.0f,0.2f,0.0f), tempAngle);
+			grid[2,6,1].cube.transform.RotateAround(tempPoint, new Vector3(1.0f,0.2f,0.0f), tempAngle);
+			grid[2,6,2].cube.transform.RotateAround(tempPoint, new Vector3(1.0f,0.2f,0.0f), tempAngle);
+			grid[2,7,1].cube.transform.RotateAround(tempPoint, new Vector3(1.0f,0.2f,0.0f), tempAngle);
+			grid[2,7,2].cube.transform.RotateAround(tempPoint, new Vector3(1.0f,0.2f,0.0f), tempAngle);
+
+			tempAngle = - 0.02f * Mathf.Sin(finishTimer / 20.0f);
+
+			grid[1,1,6].cube.transform.Translate(0,tempAngle,0);
+			grid[1,2,6].cube.transform.Translate(0,tempAngle,0);
+
+
+			tempPoint = new Vector3(0.0f, 0.0f, -2.5f);			
+			tempAngle = 0.1f * Mathf.Sin(finishTimer / 40.0f);
+			
+			grid[0,4,1].cube.transform.RotateAround(tempPoint, new Vector3(1.0f,0.1f,0.0f), tempAngle);
+			grid[0,4,2].cube.transform.RotateAround(tempPoint, new Vector3(1.0f,0.1f,0.0f), tempAngle);
+			grid[0,4,3].cube.transform.RotateAround(tempPoint, new Vector3(1.0f,0.1f,0.0f), tempAngle);
+			grid[1,4,3].cube.transform.RotateAround(tempPoint, new Vector3(1.0f,0.1f,0.0f), tempAngle);
+			grid[2,4,3].cube.transform.RotateAround(tempPoint, new Vector3(1.0f,0.1f,0.0f), tempAngle);
+			grid[2,3,3].cube.transform.RotateAround(tempPoint, new Vector3(1.0f,0.1f,0.0f), tempAngle);
+			grid[2,5,4].cube.transform.RotateAround(tempPoint, new Vector3(1.0f,0.1f,0.0f), tempAngle);
+			grid[2,6,4].cube.transform.RotateAround(tempPoint, new Vector3(1.0f,0.1f,0.0f), tempAngle);
+			grid[2,7,5].cube.transform.RotateAround(tempPoint, new Vector3(1.0f,0.1f,0.0f), tempAngle);
+			grid[2,8,6].cube.transform.RotateAround(tempPoint, new Vector3(1.0f,0.1f,0.0f), tempAngle);
+			grid[3,4,1].cube.transform.RotateAround(tempPoint, new Vector3(1.0f,0.1f,0.0f), tempAngle);
+			grid[3,4,2].cube.transform.RotateAround(tempPoint, new Vector3(1.0f,0.1f,0.0f), tempAngle);
+			grid[3,4,3].cube.transform.RotateAround(tempPoint, new Vector3(1.0f,0.1f,0.0f), tempAngle);
+
+
+			tempPoint = new Vector3(-0.5f, -2.0f, -1.5f);			
+			tempAngle = 0.1f * Mathf.Sin(finishTimer / 80.0f - Mathf.PI / 2);
+			
+			grid[1,1,2].cube.transform.RotateAround(tempPoint, new Vector3(1.0f,0.1f,0.0f), tempAngle);
+			grid[1,2,2].cube.transform.RotateAround(tempPoint, new Vector3(1.0f,0.1f,0.0f), tempAngle);
 			
 			
 			return;
@@ -3473,6 +3837,36 @@ public class GameScript : MonoBehaviour {
 
 		if(tempLevel == 21)
 		{
+			Vector3 tempPoint = grid[2,5,4].cube.transform.position;
+			float tempAngle = 0.55f * Mathf.Sin(finishTimer / 80.0f);
+			
+			grid[2,5,4].cube.transform.RotateAround(tempPoint, Vector3.down, tempAngle);
+			grid[2,6,4].cube.transform.RotateAround(tempPoint, Vector3.down, tempAngle);
+			grid[2,7,4].cube.transform.RotateAround(tempPoint, Vector3.down, tempAngle);
+			grid[2,8,4].cube.transform.RotateAround(tempPoint, Vector3.down, tempAngle);
+			grid[3,8,4].cube.transform.RotateAround(tempPoint, Vector3.down, tempAngle);
+
+
+			tempPoint = new Vector3(-0.5f, 2.5f, 0.5f);
+			tempAngle = 0.5f * Mathf.Sin(finishTimer / 30.0f);
+			
+			grid[1,5,2].cube.transform.RotateAround(tempPoint, Vector3.back, tempAngle);
+			grid[1,5,3].cube.transform.RotateAround(tempPoint, Vector3.back, tempAngle);
+			grid[1,6,2].cube.transform.RotateAround(tempPoint, Vector3.back, tempAngle);
+			grid[1,6,3].cube.transform.RotateAround(tempPoint, Vector3.back, tempAngle);
+
+			tempPoint = new Vector3(0.5f, 2.5f, 0.5f);
+			
+			grid[3,5,2].cube.transform.RotateAround(tempPoint, Vector3.back, -tempAngle);
+			grid[3,5,3].cube.transform.RotateAround(tempPoint, Vector3.back, -tempAngle);
+			grid[3,6,2].cube.transform.RotateAround(tempPoint, Vector3.back, -tempAngle);
+			grid[3,6,3].cube.transform.RotateAround(tempPoint, Vector3.back, -tempAngle);
+
+			tempPoint = grid[2,4,1].cube.transform.position;
+			tempAngle = 0.2f * Mathf.Sin(finishTimer / 60.0f - Mathf.PI / 2);
+			
+			grid[2,3,1].cube.transform.RotateAround(tempPoint, Vector3.back, -tempAngle);
+			grid[2,4,1].cube.transform.RotateAround(tempPoint, Vector3.back, -tempAngle);
 			
 			
 			return;
@@ -3480,6 +3874,77 @@ public class GameScript : MonoBehaviour {
 
 		if(tempLevel == 22)
 		{
+			Vector3 tempPoint = grid[1,4,3].cube.transform.position;
+			float tempAngle = 0.2f * Mathf.Sin(finishTimer / 60.0f - Mathf.PI / 2);
+			
+			grid[0,4,3].cube.transform.RotateAround(tempPoint, grid[0,4,3].cube.transform.forward, tempAngle);
+
+			tempPoint = grid[3,4,3].cube.transform.position;
+			
+			grid[4,4,3].cube.transform.RotateAround(tempPoint, grid[4,4,3].cube.transform.forward, -tempAngle);
+
+			tempPoint = grid[1,3,5].cube.transform.position;
+			tempAngle = 0.1f * Mathf.Sin(finishTimer / 20.0f);
+			
+			grid[1,2,5].cube.transform.RotateAround(tempPoint, grid[1,2,5].cube.transform.forward, -tempAngle);
+			grid[1,3,5].cube.transform.RotateAround(tempPoint, grid[1,2,5].cube.transform.forward, -tempAngle);
+
+			tempPoint = grid[3,3,5].cube.transform.position;
+			
+			grid[3,2,5].cube.transform.RotateAround(tempPoint, grid[3,2,5].cube.transform.forward, tempAngle);
+			grid[3,3,5].cube.transform.RotateAround(tempPoint, grid[3,2,5].cube.transform.forward, tempAngle);
+
+			tempPoint = grid[0,2,3].cube.transform.position;
+			tempAngle = - 0.5f * Mathf.Sin(finishTimer / 10.0f - Mathf.PI / 2);
+			
+			grid[0,0,4].cube.transform.RotateAround(tempPoint, grid[0,0,4].cube.transform.right, tempAngle);
+			grid[0,1,3].cube.transform.RotateAround(tempPoint, grid[0,0,4].cube.transform.right, tempAngle);
+			grid[0,2,3].cube.transform.RotateAround(tempPoint, grid[0,0,4].cube.transform.right, tempAngle);
+
+			tempPoint = grid[4,2,3].cube.transform.position;
+			
+			grid[4,0,2].cube.transform.RotateAround(tempPoint, grid[0,0,4].cube.transform.right, tempAngle);
+			grid[4,0,3].cube.transform.RotateAround(tempPoint, grid[0,0,4].cube.transform.right, tempAngle);
+			grid[4,1,2].cube.transform.RotateAround(tempPoint, grid[0,0,4].cube.transform.right, tempAngle);
+			grid[4,2,3].cube.transform.RotateAround(tempPoint, grid[0,0,4].cube.transform.right, tempAngle);
+
+
+			tempPoint = grid[2,2,0].cube.transform.position;
+			tempAngle = 1.2f * Mathf.Sin(finishTimer / 10.0f - Mathf.PI / 2);
+			
+			grid[2,3,0].cube.transform.RotateAround(tempPoint, Vector3.back, tempAngle);
+			grid[2,4,0].cube.transform.RotateAround(tempPoint, Vector3.back, tempAngle);
+
+			tempPoint = grid[2,2,1].cube.transform.position;
+			tempAngle = 0.04f * Mathf.Sin(finishTimer / 30.0f);
+
+			for (int x= 1; x< 4; x++)
+			{
+				for (int y= 1; y< levelArray.GetLength(1); y++)
+				{
+					for (int z= 2; z< levelArray.GetLength(2); z++)
+					{
+						if(grid[x,y,z].cube == null)
+							continue;
+
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, Vector3.left, tempAngle);
+					}
+					for (int z= 3; z< levelArray.GetLength(2); z++)
+					{
+						if(grid[x,y,z].cube == null)
+							continue;
+						
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, Vector3.left, tempAngle);
+					}
+					for (int z= 4; z< levelArray.GetLength(2); z++)
+					{
+						if(grid[x,y,z].cube == null)
+							continue;
+						
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, Vector3.left, tempAngle);
+					}
+				}
+			}
 			
 			
 			return;
@@ -3487,29 +3952,234 @@ public class GameScript : MonoBehaviour {
 
 		if(tempLevel == 23)
 		{
+			Vector3 tempPoint = grid[4,0,4].cube.transform.position;
+			float tempAngle = 0.4f * Mathf.Sin(finishTimer / 30.0f - Mathf.PI / 2);
+			Vector3 tempVector = grid[3,0,2].cube.transform.forward + grid[3,0,2].cube.transform.right;
 			
+			grid[0,0,7].cube.transform.RotateAround(tempPoint, tempVector, tempAngle);
+			grid[1,0,6].cube.transform.RotateAround(tempPoint, tempVector, tempAngle);
+			grid[1,0,7].cube.transform.RotateAround(tempPoint, tempVector, tempAngle);
+			grid[2,0,5].cube.transform.RotateAround(tempPoint, tempVector, tempAngle);
+			grid[2,0,6].cube.transform.RotateAround(tempPoint, tempVector, tempAngle);
+			grid[2,0,7].cube.transform.RotateAround(tempPoint, tempVector, tempAngle);
+			grid[3,0,5].cube.transform.RotateAround(tempPoint, tempVector, tempAngle);
+			grid[3,0,6].cube.transform.RotateAround(tempPoint, tempVector, tempAngle);
+
+			grid[5,0,2].cube.transform.RotateAround(tempPoint, tempVector, -tempAngle);
+			grid[5,0,3].cube.transform.RotateAround(tempPoint, tempVector, -tempAngle);
+			grid[6,0,1].cube.transform.RotateAround(tempPoint, tempVector, -tempAngle);
+			grid[6,0,2].cube.transform.RotateAround(tempPoint, tempVector, -tempAngle);
+			grid[6,0,3].cube.transform.RotateAround(tempPoint, tempVector, -tempAngle);
+			grid[7,0,0].cube.transform.RotateAround(tempPoint, tempVector, -tempAngle);
+			grid[7,0,1].cube.transform.RotateAround(tempPoint, tempVector, -tempAngle);
+			grid[7,0,2].cube.transform.RotateAround(tempPoint, tempVector, -tempAngle);
+
+			tempPoint = grid[4,0,4].cube.transform.position;
+			tempAngle = 0.2f * Mathf.Sin(finishTimer / 30.0f - Mathf.PI / 2);
+			tempVector = grid[5,0,5].cube.transform.up;
+			
+			grid[5,0,5].cube.transform.RotateAround(tempPoint, Vector3.up, tempAngle);
+			grid[5,0,6].cube.transform.RotateAround(tempPoint, Vector3.up, tempAngle);
+			grid[5,1,5].cube.transform.RotateAround(tempPoint, Vector3.up, tempAngle);
+			grid[5,1,6].cube.transform.RotateAround(tempPoint, Vector3.up, tempAngle);
+			grid[6,0,5].cube.transform.RotateAround(tempPoint, Vector3.up, tempAngle);
+			grid[6,0,6].cube.transform.RotateAround(tempPoint, Vector3.up, tempAngle);
+			grid[6,1,5].cube.transform.RotateAround(tempPoint, Vector3.up, tempAngle);
+			grid[6,1,6].cube.transform.RotateAround(tempPoint, Vector3.up, tempAngle);
+			grid[7,0,7].cube.transform.RotateAround(tempPoint, Vector3.up, tempAngle);
+
+			tempPoint = grid[3,0,3].cube.transform.position;
+			tempAngle = 0.1f * Mathf.Sin(finishTimer / 30.0f - Mathf.PI / 2);
+
+			tempVector = - grid[3,0,2].cube.transform.forward + grid[3,0,2].cube.transform.right;
+
+			grid[0,0,2].cube.transform.RotateAround(tempPoint, tempVector, tempAngle);
+			grid[1,0,2].cube.transform.RotateAround(tempPoint, tempVector, tempAngle);
+			grid[2,0,0].cube.transform.RotateAround(tempPoint, tempVector, tempAngle);
+			grid[2,0,1].cube.transform.RotateAround(tempPoint, tempVector, tempAngle);
+			grid[2,0,2].cube.transform.RotateAround(tempPoint, tempVector, tempAngle);
+			grid[2,0,3].cube.transform.RotateAround(tempPoint, tempVector, tempAngle);
+			grid[2,1,2].cube.transform.RotateAround(tempPoint, tempVector, tempAngle);
+			grid[3,0,2].cube.transform.RotateAround(tempPoint, tempVector, tempAngle);
+
+			tempVector = - grid[0,0,2].cube.transform.forward + grid[0,0,2].cube.transform.right;
+
+			grid[0,0,2].cube.transform.RotateAround(tempPoint, tempVector, tempAngle);
+			grid[1,0,2].cube.transform.RotateAround(tempPoint, tempVector, tempAngle);
+			grid[2,0,0].cube.transform.RotateAround(tempPoint, tempVector, tempAngle);
+			grid[2,0,1].cube.transform.RotateAround(tempPoint, tempVector, tempAngle);
+			grid[2,0,2].cube.transform.RotateAround(tempPoint, tempVector, tempAngle);
+
+			tempVector = grid[3,0,2].cube.transform.forward + grid[3,0,2].cube.transform.right;
+			cubesParent.transform.rotation = Quaternion.AngleAxis(5.0f * Mathf.Sin(finishTimer / 20.0f), tempVector);
 			
 			return;
 		}
 
 		if(tempLevel == 24)
 		{
+			Vector3 tempPoint = grid[0,2,3].cube.transform.position + grid[0,2,4].cube.transform.position +
+				grid[0,3,3].cube.transform.position + grid[0,3,4].cube.transform.position;
+			tempPoint /= 4;
+			float tempAngle = -1.0f * Mathf.Sin(finishTimer / 15.0f - Mathf.PI / 2);
+
+			grid[0,0,4].cube.transform.RotateAround(tempPoint, grid[0,0,4].cube.transform.right, tempAngle);
+			grid[0,1,3].cube.transform.RotateAround(tempPoint, grid[0,0,4].cube.transform.right, tempAngle);
+			grid[0,1,4].cube.transform.RotateAround(tempPoint, grid[0,0,4].cube.transform.right, tempAngle);
+			grid[0,2,3].cube.transform.RotateAround(tempPoint, grid[0,0,4].cube.transform.right, tempAngle);
+			grid[0,2,4].cube.transform.RotateAround(tempPoint, grid[0,0,4].cube.transform.right, tempAngle);
+			grid[0,3,3].cube.transform.RotateAround(tempPoint, grid[0,0,4].cube.transform.right, tempAngle);
+			grid[0,3,4].cube.transform.RotateAround(tempPoint, grid[0,0,4].cube.transform.right, tempAngle);
+
+
+			tempPoint = grid[0,1,0].cube.transform.position + grid[0,1,1].cube.transform.position +
+				grid[0,2,0].cube.transform.position + grid[0,2,1].cube.transform.position;
+			tempPoint /= 4;
 			
+			grid[0,0,0].cube.transform.RotateAround(tempPoint, grid[0,0,0].cube.transform.right, -tempAngle);
+			grid[0,1,0].cube.transform.RotateAround(tempPoint, grid[0,0,0].cube.transform.right, -tempAngle);
+			grid[0,1,1].cube.transform.RotateAround(tempPoint, grid[0,0,0].cube.transform.right, -tempAngle);
+			grid[0,2,0].cube.transform.RotateAround(tempPoint, grid[0,0,0].cube.transform.right, -tempAngle);
+			grid[0,2,1].cube.transform.RotateAround(tempPoint, grid[0,0,0].cube.transform.right, -tempAngle);
+
+
+			tempPoint = grid[4,2,3].cube.transform.position + grid[4,2,4].cube.transform.position +
+				grid[4,3,3].cube.transform.position + grid[4,3,4].cube.transform.position;
+			tempPoint /= 4;
+			
+			grid[4,0,4].cube.transform.RotateAround(tempPoint, grid[4,0,4].cube.transform.right, -tempAngle);
+			grid[4,1,3].cube.transform.RotateAround(tempPoint, grid[4,0,4].cube.transform.right, -tempAngle);
+			grid[4,1,4].cube.transform.RotateAround(tempPoint, grid[4,0,4].cube.transform.right, -tempAngle);
+			grid[4,2,3].cube.transform.RotateAround(tempPoint, grid[4,0,4].cube.transform.right, -tempAngle);
+			grid[4,2,4].cube.transform.RotateAround(tempPoint, grid[4,0,4].cube.transform.right, -tempAngle);
+			grid[4,3,3].cube.transform.RotateAround(tempPoint, grid[4,0,4].cube.transform.right, -tempAngle);
+			grid[4,3,4].cube.transform.RotateAround(tempPoint, grid[4,0,4].cube.transform.right, -tempAngle);
+
+			tempPoint = grid[4,1,0].cube.transform.position + grid[4,1,1].cube.transform.position +
+				grid[4,2,0].cube.transform.position + grid[4,2,1].cube.transform.position;
+			tempPoint /= 4;
+			
+			grid[4,0,0].cube.transform.RotateAround(tempPoint, grid[4,0,0].cube.transform.right, tempAngle);
+			grid[4,1,0].cube.transform.RotateAround(tempPoint, grid[4,0,0].cube.transform.right, tempAngle);
+			grid[4,1,1].cube.transform.RotateAround(tempPoint, grid[4,0,0].cube.transform.right, tempAngle);
+			grid[4,2,0].cube.transform.RotateAround(tempPoint, grid[4,0,0].cube.transform.right, tempAngle);
+			grid[4,2,1].cube.transform.RotateAround(tempPoint, grid[4,0,0].cube.transform.right, tempAngle);
+
+
+			tempPoint = grid[2,2,3].cube.transform.position + grid[2,3,3].cube.transform.position;
+			tempPoint /= 2;
+			tempAngle = 0.05f * Mathf.Sin(finishTimer / 15.0f - Mathf.PI / 2);
+
+			for (int x= 1; x< 4; x++)
+			{
+				for (int y= 1; y< 5; y++)
+				{
+					for (int z= 4; z< levelArray.GetLength(2); z++)
+					{
+						if(grid[x,y,z].cube == null)
+							continue;
+
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, grid[x,y,z].cube.transform.right, tempAngle);
+					}
+					for (int z= 5; z< levelArray.GetLength(2); z++)
+					{
+						if(grid[x,y,z].cube == null)
+							continue;
+						
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, grid[x,y,z].cube.transform.right, tempAngle);
+					}
+					for (int z= 6; z< levelArray.GetLength(2); z++)
+					{
+						if(grid[x,y,z].cube == null)
+							continue;
+						
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, grid[x,y,z].cube.transform.right, tempAngle);
+					}
+					for (int z= 7; z< levelArray.GetLength(2); z++)
+					{
+						if(grid[x,y,z].cube == null)
+							continue;
+						
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, grid[x,y,z].cube.transform.right, tempAngle);
+					}
+				}
+			}
+
+			Vector3 tempVector = cubesParent.transform.right + cubesParent.transform.forward * 0.8f + cubesParent.transform.up * 0.1f;
+			cubesParent.transform.rotation = Quaternion.AngleAxis(0.5f * Mathf.Sin(finishTimer / 5.0f), tempVector);
+
 			
 			return;
 		}
 
 		if(tempLevel == 25)
 		{
+			Vector3 tempPoint = new Vector3();
+			float tempAngle = 0.2f * Mathf.Sin(finishTimer / 15.0f);
+
+			for (int x= 0; x< levelArray.GetLength(0); x++)
+			{
+				for (int y= 1; y< levelArray.GetLength(1); y++)
+				{
+					for (int z= 0; z< levelArray.GetLength(2); z++)
+					{
+						if(grid[x,y,z].cube == null)
+							continue;
+						if((x == 0) && ((y == 1) || (y == 2)) && (z == 1))
+							continue;
+						if(((x == 0) || (x == 1)) && ((y == 5) || (y == 6)) && ((z == 1) || (z == 2)))
+							continue;
+
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, grid[x,y,z].cube.transform.up, tempAngle);
+
+						if (y > 2)
+							grid[x,y,z].cube.transform.RotateAround(tempPoint, grid[x,y,z].cube.transform.up, tempAngle);
+
+						if (y > 3)
+							grid[x,y,z].cube.transform.RotateAround(tempPoint, grid[x,y,z].cube.transform.up, tempAngle);
+					}
+				}
+			}
+
+			tempAngle = -0.007f * Mathf.Sin(finishTimer / 15.0f - Mathf.PI / 2);
 			
+			grid[1,1,2].cube.transform.Translate(0, tempAngle, 0);
+			grid[1,2,2].cube.transform.Translate(0, tempAngle, 0);
 			
 			return;
 		}
 
 		if(tempLevel == 26)
 		{
-			
-			
+			Vector3 tempPoint = grid[2,4,3].cube.transform.position;
+
+			for (int x= 1; x< 4; x++)
+			{
+				for (int y= 1; y< levelArray.GetLength(1); y++)
+				{
+					for (int z= 0; z< 7; z++)
+					{
+						if(grid[x,y,z].cube == null)
+							continue;
+
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, grid[x,y,z].cube.transform.right, -0.5f);
+					}
+				}
+			}
+
+			if(finishTimer % 30 == 15)
+			{
+				grid[3,0,0].cube.renderer.material.color = grid[3,0,levelArray.GetLength(2) - 1].cube.renderer.material.color;
+				grid[2,0,0].cube.renderer.material.color = grid[2,0,levelArray.GetLength(2) - 1].cube.renderer.material.color;
+				grid[1,0,0].cube.renderer.material.color = grid[1,0,levelArray.GetLength(2) - 1].cube.renderer.material.color;
+
+				for (int z= levelArray.GetLength(2) - 1; z > 0; z--)
+				{
+					grid[3,0,z].cube.renderer.material.color = grid[3,0,z - 1].cube.renderer.material.color;
+					grid[2,0,z].cube.renderer.material.color = grid[2,0,z - 1].cube.renderer.material.color;
+					grid[1,0,z].cube.renderer.material.color = grid[1,0,z - 1].cube.renderer.material.color;
+				}
+			}
 			return;
 		}
 
@@ -3522,91 +4192,903 @@ public class GameScript : MonoBehaviour {
 
 		if(tempLevel == 28)
 		{
-			
+			Vector3 tempPoint = grid[4,2,7].cube.transform.position;
+
+			grid[3,3,7].cube.transform.RotateAround(tempPoint, grid[3,3,7].cube.transform.forward, -20.0f);
+			grid[4,2,7].cube.transform.RotateAround(tempPoint, grid[4,2,7].cube.transform.forward, -20.0f);
+			grid[5,1,7].cube.transform.RotateAround(tempPoint, grid[5,1,7].cube.transform.forward, -20.0f);
+
+			tempPoint = grid[4,1,0].cube.transform.position * 0.5f + grid[4,1,1].cube.transform.position * 0.5f; 
+			float tempAngle = 0.2f * Mathf.Sin(finishTimer / 50.0f - Mathf.PI * 3 / 2);
+
+			grid[2,1,0].cube.transform.RotateAround(tempPoint, grid[2,1,0].cube.transform.right, tempAngle);
+			grid[3,1,0].cube.transform.RotateAround(tempPoint, grid[3,1,0].cube.transform.right, tempAngle);
+			grid[5,1,0].cube.transform.RotateAround(tempPoint, grid[5,1,0].cube.transform.right, tempAngle);
+			grid[6,1,0].cube.transform.RotateAround(tempPoint, grid[6,1,0].cube.transform.right, tempAngle);
+
+			Vector3 tempVect = cubesParent.transform.right * 0.8f + cubesParent.transform.up * 0.1f + cubesParent.transform.forward;
+			cubesParent.transform.rotation = Quaternion.AngleAxis(8.0f * Mathf.Sin(finishTimer / 50.0f),tempVect);
 			
 			return;
 		}
 
 		if(tempLevel == 29)
 		{
+			Vector3 tempPoint = grid[0,3,3].cube.transform.position;
+			float tempAngle = 24.0f * Mathf.Sin(finishTimer / 2.0f);
 			
+			grid[0,4,2].cube.transform.RotateAround(tempPoint, grid[0,4,2].cube.transform.forward, tempAngle);
+			grid[0,4,3].cube.transform.RotateAround(tempPoint, grid[0,4,3].cube.transform.forward, tempAngle);
+			grid[0,4,4].cube.transform.RotateAround(tempPoint, grid[0,4,4].cube.transform.forward, tempAngle);
+			grid[0,5,0].cube.transform.RotateAround(tempPoint, grid[0,5,0].cube.transform.forward, tempAngle);
+			grid[0,5,1].cube.transform.RotateAround(tempPoint, grid[0,5,1].cube.transform.forward, tempAngle);
+			grid[0,5,2].cube.transform.RotateAround(tempPoint, grid[0,5,2].cube.transform.forward, tempAngle);
+			grid[0,5,3].cube.transform.RotateAround(tempPoint, grid[0,5,3].cube.transform.forward, tempAngle);
+			grid[0,6,0].cube.transform.RotateAround(tempPoint, grid[0,6,0].cube.transform.forward, tempAngle);
+			grid[0,6,1].cube.transform.RotateAround(tempPoint, grid[0,6,1].cube.transform.forward, tempAngle);
+			grid[0,6,2].cube.transform.RotateAround(tempPoint, grid[0,6,2].cube.transform.forward, tempAngle);
+
+			tempPoint = grid[2,3,3].cube.transform.position;
+			
+			grid[2,4,2].cube.transform.RotateAround(tempPoint, grid[2,4,2].cube.transform.forward, -tempAngle);
+			grid[2,4,3].cube.transform.RotateAround(tempPoint, grid[2,4,3].cube.transform.forward, -tempAngle);
+			grid[2,4,4].cube.transform.RotateAround(tempPoint, grid[2,4,4].cube.transform.forward, -tempAngle);
+			grid[2,5,0].cube.transform.RotateAround(tempPoint, grid[2,5,0].cube.transform.forward, -tempAngle);
+			grid[2,5,1].cube.transform.RotateAround(tempPoint, grid[2,5,1].cube.transform.forward, -tempAngle);
+			grid[2,5,2].cube.transform.RotateAround(tempPoint, grid[2,5,2].cube.transform.forward, -tempAngle);
+			grid[2,5,3].cube.transform.RotateAround(tempPoint, grid[2,5,3].cube.transform.forward, -tempAngle);
+			grid[2,6,0].cube.transform.RotateAround(tempPoint, grid[2,6,0].cube.transform.forward, -tempAngle);
+			grid[2,6,1].cube.transform.RotateAround(tempPoint, grid[2,6,1].cube.transform.forward, -tempAngle);
+			grid[2,6,2].cube.transform.RotateAround(tempPoint, grid[2,6,2].cube.transform.forward, -tempAngle);
+
+			tempPoint = grid[1,4,6].cube.transform.position * 0.5f + grid[1,4,7].cube.transform.position * 0.5f;
+			tempAngle = - 0.3f * Mathf.Sin(finishTimer / 20.0f - Mathf.PI / 2);
+			
+			grid[0,5,6].cube.transform.RotateAround(tempPoint, grid[0,5,6].cube.transform.right, tempAngle);
+			grid[0,6,6].cube.transform.RotateAround(tempPoint, grid[0,6,6].cube.transform.right, tempAngle);
+			grid[0,6,7].cube.transform.RotateAround(tempPoint, grid[0,6,7].cube.transform.right, tempAngle);
+			grid[2,5,6].cube.transform.RotateAround(tempPoint, grid[2,5,6].cube.transform.right, tempAngle);
+			grid[2,6,6].cube.transform.RotateAround(tempPoint, grid[2,6,6].cube.transform.right, tempAngle);
+			grid[2,6,7].cube.transform.RotateAround(tempPoint, grid[2,6,7].cube.transform.right, tempAngle);
+
+			tempPoint.x = grid[1,3,5].cube.transform.position.x;
+			tempPoint.y = grid[1,2,5].cube.transform.position.y * 0.5f + grid[1,3,5].cube.transform.position.y * 0.5f;
+			tempPoint.z = grid[1,3,5].cube.transform.position.z * 0.5f + grid[1,3,6].cube.transform.position.z * 0.5f;
+			tempAngle = 0.3f * Mathf.Sin(finishTimer / 20.0f - Mathf.PI / 2);
+			
+			grid[0,1,7].cube.transform.RotateAround(tempPoint, grid[0,1,7].cube.transform.right, tempAngle);
+			grid[0,2,6].cube.transform.RotateAround(tempPoint, grid[0,2,6].cube.transform.right, tempAngle);
+			grid[2,1,7].cube.transform.RotateAround(tempPoint, grid[2,1,7].cube.transform.right, tempAngle);
+			grid[2,2,6].cube.transform.RotateAround(tempPoint, grid[2,2,6].cube.transform.right, tempAngle);
+
+			tempPoint.y = grid[0,1,5].cube.transform.position.y * 0.5f + grid[1,2,5].cube.transform.position.y * 0.5f;
+			tempAngle = 0.2f * Mathf.Sin(finishTimer / 20.0f - Mathf.PI * 1.3f / 2);
+			
+			grid[0,0,4].cube.transform.RotateAround(tempPoint, grid[0,1,7].cube.transform.right, tempAngle);
+			grid[0,1,5].cube.transform.RotateAround(tempPoint, grid[0,2,6].cube.transform.right, tempAngle);
+			grid[2,0,4].cube.transform.RotateAround(tempPoint, grid[2,1,7].cube.transform.right, tempAngle);
+			grid[2,1,5].cube.transform.RotateAround(tempPoint, grid[2,2,6].cube.transform.right, tempAngle);
+
+			tempPoint.z = grid[1,2,3].cube.transform.position.z * 0.5f + grid[1,2,4].cube.transform.position.z * 0.5f;
+			tempAngle = 0.15f * Mathf.Sin(finishTimer / 20.0f - Mathf.PI * 1.7f / 2);
+			
+			grid[0,0,2].cube.transform.RotateAround(tempPoint, grid[0,1,7].cube.transform.right, tempAngle);
+			grid[0,1,3].cube.transform.RotateAround(tempPoint, grid[0,2,6].cube.transform.right, tempAngle);
+			grid[2,0,2].cube.transform.RotateAround(tempPoint, grid[2,1,7].cube.transform.right, tempAngle);
+			grid[2,1,3].cube.transform.RotateAround(tempPoint, grid[2,2,6].cube.transform.right, tempAngle);
+
+			Vector3 tempVect = cubesParent.transform.right * 0.2f + cubesParent.transform.up * 0.1f + cubesParent.transform.forward;
+			cubesParent.transform.rotation = Quaternion.AngleAxis(4.0f * Mathf.Sin(finishTimer / 30.0f),tempVect);
 			
 			return;
 		}
 
 		if(tempLevel == 30)
 		{
-			
+			cubesParent.transform.rotation = Quaternion.AngleAxis(finishTimer,Vector3.up);
 			
 			return;
 		}
 
 		if(tempLevel == 31)
 		{
+			Vector3 tempPoint = grid[4,2,0].cube.transform.position * 0.5f + grid[3,2,0].cube.transform.position * 0.5f;
+			float tempAngle = - 1.5f * Mathf.Sin(finishTimer / 60.0f);
 			
+			grid[1,4,0].cube.transform.RotateAround(tempPoint, grid[1,4,0].cube.transform.right, tempAngle);
+			grid[2,3,0].cube.transform.RotateAround(tempPoint, grid[2,3,0].cube.transform.right, tempAngle);
+			grid[2,4,0].cube.transform.RotateAround(tempPoint, grid[2,4,0].cube.transform.right, tempAngle);
+			grid[3,2,0].cube.transform.RotateAround(tempPoint, grid[3,2,0].cube.transform.right, tempAngle);
+			grid[3,3,0].cube.transform.RotateAround(tempPoint, grid[3,3,0].cube.transform.right, tempAngle);
+			grid[4,2,0].cube.transform.RotateAround(tempPoint, grid[4,2,0].cube.transform.right, tempAngle);
+			grid[4,3,0].cube.transform.RotateAround(tempPoint, grid[4,3,0].cube.transform.right, tempAngle);
+			grid[5,3,0].cube.transform.RotateAround(tempPoint, grid[5,3,0].cube.transform.right, tempAngle);
+			grid[5,4,0].cube.transform.RotateAround(tempPoint, grid[5,4,0].cube.transform.right, tempAngle);
+			grid[6,4,0].cube.transform.RotateAround(tempPoint, grid[6,4,0].cube.transform.right, tempAngle);
+
+			tempPoint = grid[2,1,4].cube.transform.position;
+			tempAngle = 0.5f * Mathf.Sin(finishTimer / 20.0f - Mathf.PI / 2);
+			
+			grid[0,0,4].cube.transform.RotateAround(tempPoint, grid[0,0,4].cube.transform.forward, tempAngle);
+			grid[1,1,4].cube.transform.RotateAround(tempPoint, grid[1,1,4].cube.transform.forward, tempAngle);
+			grid[1,1,5].cube.transform.RotateAround(tempPoint, grid[1,1,5].cube.transform.forward, tempAngle);
+
+			tempPoint = grid[5,1,4].cube.transform.position;
+			grid[6,1,4].cube.transform.RotateAround(tempPoint, grid[6,1,4].cube.transform.forward, -tempAngle);
+			grid[6,1,5].cube.transform.RotateAround(tempPoint, grid[6,1,5].cube.transform.forward, -tempAngle);
+			grid[7,0,4].cube.transform.RotateAround(tempPoint, grid[7,0,4].cube.transform.forward, -tempAngle);
+
+			tempPoint = grid[3,1,4].cube.transform.position * 0.25f + grid[3,2,4].cube.transform.position * 0.25f +
+				grid[4,1,4].cube.transform.position * 0.25f + grid[4,2,4].cube.transform.position * 0.25f;
+			tempAngle = - 0.05f * Mathf.Sin(finishTimer / 60.0f - Mathf.PI / 2);
+
+			for (int x= 1; x< 7; x++)
+			{
+				for (int y= 0; y< 5; y++)
+				{
+					for (int z= 0; z< 4; z++)
+					{
+						if(grid[x,y,z].cube == null)
+							continue;
+
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, grid[x,y,z].cube.transform.right, tempAngle);
+
+						if(z < 3)
+							grid[x,y,z].cube.transform.RotateAround(tempPoint, grid[x,y,z].cube.transform.right, tempAngle);
+
+						if(z < 2)
+							grid[x,y,z].cube.transform.RotateAround(tempPoint, grid[x,y,z].cube.transform.right, tempAngle);
+
+
+					}
+				}
+			}
+
+			if(finishTimer % 40 == 30)
+			{
+				tempPoint = grid[3,3,6].cube.transform.position * 0.5f + grid[4,3,6].cube.transform.position * 0.5f;
+
+				GameObject cube = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+				cube.transform.parent = endAnimationParent.transform;
+				cube.transform.position = tempPoint;
+				cube.renderer.materials = new Material[1];
+				cube.renderer.material = new Material(Shader.Find ("Diffuse"));
+				cube.renderer.material.color = new Color(0.25f, 0.8f, 1);
+			}
+
+			for(int i=0; i < endAnimationParent.transform.childCount; i++)
+			{
+				GameObject cube = endAnimationParent.transform.GetChild(i).gameObject;
+
+				if(cube.transform.position.y < 1.2f)
+				{
+					Component tempC = cube.GetComponent<Rigidbody>();
+					if(tempC == null)
+						cube.transform.Translate(0,0.2f,0);
+				}
+
+				if(Mathf.Abs(cube.transform.position.y - 1.2f) < 0.05f)
+				{
+					Component tempC = cube.GetComponent<Rigidbody>();
+					if(tempC != null)
+						continue;
+					cube.AddComponent<Rigidbody>();
+					cube.rigidbody.AddTorque (new Vector3(Random.Range (-25f, 25f),Random.Range (-25f, 25f),Random.Range (-25f, 25f)));
+					cube.rigidbody.AddForce (new Vector3(Random.Range (-200f, 200f),400f,Random.Range (-200f, 200f)));
+				}
+
+				if(cube.transform.position.y < -20f)
+				{
+					Destroy(cube);
+				}
+
+			}
 			
 			return;
 		}
 
 		if(tempLevel == 32)
 		{
-			
+			Vector3 tempPoint = grid[0,1,5].cube.transform.position;
+			grid[0,1,6].cube.transform.RotateAround(tempPoint, grid[0,1,6].cube.transform.right, 2.0f);
+
+			for(int i = 0; i < endAnimationParent.transform.childCount; i++)
+			{
+				GameObject go = endAnimationParent.transform.GetChild(i).gameObject;
+
+				for(int j= 1; j< go.renderer.materials.Length; j++)
+				{
+					Color tempColor = go.renderer.materials[j].color;
+					tempColor.a -= 0.01f;
+					go.renderer.materials[j].color = tempColor;
+				}
+				
+				if((go.renderer.materials.Length > 1) && (go.renderer.materials[1].color.a < 0.01f))
+				{
+					Material tempMat = go.renderer.materials[0];
+					go.renderer.materials = new Material[1];
+					go.renderer.material = tempMat;
+				}
+
+				if(i>2)
+					tempPoint = grid[0,1,1].cube.transform.position;
+				if(i>5)
+					tempPoint = grid[6,1,5].cube.transform.position;
+				if(i>8)
+					tempPoint = grid[6,1,1].cube.transform.position;
+
+				go.transform.RotateAround(tempPoint, grid[0,1,5].cube.transform.right, 2.0f);
+			}
+
+			tempPoint = grid[0,1,1].cube.transform.position;
+			grid[0,1,0].cube.transform.RotateAround(tempPoint, grid[0,1,0].cube.transform.right, 2.0f);
+
+			tempPoint = grid[6,1,5].cube.transform.position;
+			grid[6,1,6].cube.transform.RotateAround(tempPoint, grid[6,1,6].cube.transform.right, 2.0f);
+
+			tempPoint = grid[6,1,1].cube.transform.position;
+			grid[6,1,0].cube.transform.RotateAround(tempPoint, grid[6,1,0].cube.transform.right, 2.0f);
+
+
+			float tempAngle = - 0.6f * Mathf.Sin(finishTimer / 80.0f - Mathf.PI / 2);
+			tempPoint = grid[3,2,1].cube.transform.position * 0.5f + grid[3,2,2].cube.transform.position * 0.5f;
+
+			for (int x= 1; x< 6; x++)
+			{
+				for (int y= 3; y< levelArray.GetLength(1); y++)
+				{
+					for (int z= 0; z< levelArray.GetLength(2); z++)
+					{
+						if(grid[x,y,z].cube == null)
+							continue;
+
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, grid[x,y,z].cube.transform.up, tempAngle);
+					}
+				}
+			}
+
+			Vector3 tempVect = cubesParent.transform.right + cubesParent.transform.up * 0.1f + cubesParent.transform.forward;
+			cubesParent.transform.rotation = Quaternion.AngleAxis(0.3f * Mathf.Sin(finishTimer / 5.0f),tempVect);
 			
 			return;
 		}
 
 		if(tempLevel == 33)
 		{
+			Vector3 tempPoint = grid[3,4,6].cube.transform.position;
+
+			float tempAngle = - 0.1f * Mathf.Sin(finishTimer / 60.0f);
 			
+			grid[2,3,4].cube.transform.RotateAround(tempPoint, grid[2,3,4].cube.transform.right, tempAngle);
+			grid[2,4,1].cube.transform.RotateAround(tempPoint, grid[2,4,1].cube.transform.right, tempAngle);
+			grid[2,5,1].cube.transform.RotateAround(tempPoint, grid[2,5,1].cube.transform.right, tempAngle);
+			grid[2,6,1].cube.transform.RotateAround(tempPoint, grid[2,5,1].cube.transform.right, tempAngle);
+			grid[3,3,4].cube.transform.RotateAround(tempPoint, grid[3,3,4].cube.transform.right, tempAngle);
+			grid[3,4,0].cube.transform.RotateAround(tempPoint, grid[3,3,4].cube.transform.right, tempAngle);
+			grid[3,4,1].cube.transform.RotateAround(tempPoint, grid[3,3,4].cube.transform.right, tempAngle);
+			grid[3,4,2].cube.transform.RotateAround(tempPoint, grid[3,3,4].cube.transform.right, tempAngle);
+			grid[3,4,3].cube.transform.RotateAround(tempPoint, grid[3,3,4].cube.transform.right, tempAngle);
+			grid[3,4,4].cube.transform.RotateAround(tempPoint, grid[3,3,4].cube.transform.right, tempAngle);
+			grid[3,4,5].cube.transform.RotateAround(tempPoint, grid[3,3,4].cube.transform.right, tempAngle);
+			grid[3,4,6].cube.transform.RotateAround(tempPoint, grid[3,3,4].cube.transform.right, tempAngle);
+			grid[3,4,7].cube.transform.RotateAround(tempPoint, grid[3,3,4].cube.transform.right, tempAngle);
+			grid[3,5,1].cube.transform.RotateAround(tempPoint, grid[3,3,4].cube.transform.right, tempAngle);
+			grid[3,6,1].cube.transform.RotateAround(tempPoint, grid[3,3,4].cube.transform.right, tempAngle);
+			grid[4,4,1].cube.transform.RotateAround(tempPoint, grid[3,3,4].cube.transform.right, tempAngle);
+			grid[4,5,1].cube.transform.RotateAround(tempPoint, grid[3,3,4].cube.transform.right, tempAngle);
+			grid[4,6,1].cube.transform.RotateAround(tempPoint, grid[3,3,4].cube.transform.right, tempAngle);
+
+			tempPoint = grid[1,5,5].cube.transform.position * 0.25f + grid[1,5,6].cube.transform.position * 0.25f +
+				grid[2,5,5].cube.transform.position * 0.25f + grid[2,5,6].cube.transform.position * 0.25f;
+			tempAngle = 0.1f * Mathf.Sin(finishTimer / 30.0f - Mathf.PI / 2);
+
+			for (int x= 0; x< 4; x++)
+			{
+				for (int y= 5; y< 7; y++)
+				{
+					for (int z= 4; z< 8; z++)
+					{
+						if(grid[x,y,z].cube == null)
+							continue;
+
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, grid[x,y,z].cube.transform.right, tempAngle);
+					}
+				}
+			}
+			grid[1,4,5].cube.transform.RotateAround(tempPoint, grid[1,4,5].cube.transform.right, tempAngle);
+			grid[1,4,6].cube.transform.RotateAround(tempPoint, grid[1,4,6].cube.transform.right, tempAngle);
+			grid[2,4,5].cube.transform.RotateAround(tempPoint, grid[2,4,5].cube.transform.right, tempAngle);
+			grid[2,4,6].cube.transform.RotateAround(tempPoint, grid[2,4,6].cube.transform.right, tempAngle);
+
+			tempPoint = grid[1,1,5].cube.transform.position * 0.5f + grid[1,1,6].cube.transform.position * 0.5f;
+			tempAngle = - 0.05f * Mathf.Sin(finishTimer / 60.0f);
+
+			for (int x= 0; x< levelArray.GetLength(0); x++)
+			{
+				for (int y= 1; y< levelArray.GetLength(1); y++)
+				{
+					for (int z= 0; z< levelArray.GetLength(2); z++)
+					{
+						if(grid[x,y,z].cube == null)
+							continue;
+						
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, grid[x,y,z].cube.transform.right, tempAngle);
+
+						if(y > 1)
+							grid[x,y,z].cube.transform.RotateAround(tempPoint, grid[x,y,z].cube.transform.right, tempAngle);
+						if(y > 2)
+							grid[x,y,z].cube.transform.RotateAround(tempPoint, grid[x,y,z].cube.transform.right, tempAngle);
+					}
+				}
+			}
+
+			grid[1,0,6].cube.transform.Translate(0,0,-tempAngle / 15.0f);
+
 			
 			return;
 		}
 
 		if(tempLevel == 34)
 		{
-			
+			Vector3 tempPoint = grid[2,2,4].cube.transform.position * 0.5f + grid[2,1,4].cube.transform.position * 0.5f;
+			float tempAngle = 0.01f * Mathf.Sin(finishTimer / 30.0f - Mathf.PI / 2);
+
+			for (int x= 0; x< levelArray.GetLength(0); x++)
+			{
+				for (int y= 2; y< levelArray.GetLength(1); y++)
+				{
+					for (int z= 0; z< levelArray.GetLength(2); z++)
+					{
+						if(grid[x,y,z].cube == null)
+							continue;
+
+						Vector3 tempV = grid[x,y,z].cube.transform.right + grid[x,y,z].cube.transform.up * 0.2f + grid[x,y,z].cube.transform.forward * 0.5f;
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+
+						if(y > 2)
+						{
+							tempV = grid[x,y,z].cube.transform.right + grid[x,y,z].cube.transform.up * 0.2f + grid[x,y,z].cube.transform.forward * 0.5f;
+							grid[x,y,z].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+						}
+						if(y > 3)
+						{
+							tempV = grid[x,y,z].cube.transform.right + grid[x,y,z].cube.transform.up * 0.2f + grid[x,y,z].cube.transform.forward * 0.5f;
+							grid[x,y,z].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+						}
+					}
+				}
+			}
 			
 			return;
 		}
 
 		if(tempLevel == 35)
 		{
+			Vector3 tempPoint = grid[0,0,5].cube.transform.position * 0.25f + grid[0,0,6].cube.transform.position * 0.25f +
+				grid[0,1,5].cube.transform.position * 0.25f + grid[0,1,6].cube.transform.position * 0.25f;
 			
+			grid[0,0,5].cube.transform.RotateAround(tempPoint, grid[0,0,5].cube.transform.right, -10.0f);
+			grid[0,0,6].cube.transform.RotateAround(tempPoint, grid[0,0,6].cube.transform.right, -10.0f);
+			grid[0,1,5].cube.transform.RotateAround(tempPoint, grid[0,1,5].cube.transform.right, -10.0f);
+			grid[0,1,6].cube.transform.RotateAround(tempPoint, grid[0,1,6].cube.transform.right, -10.0f);
+
+			tempPoint = grid[0,0,1].cube.transform.position * 0.25f + grid[0,0,2].cube.transform.position * 0.25f +
+				grid[0,1,1].cube.transform.position * 0.25f + grid[0,1,2].cube.transform.position * 0.25f;
+			
+			grid[0,0,1].cube.transform.RotateAround(tempPoint, grid[0,0,1].cube.transform.right, -10.0f);
+			grid[0,0,2].cube.transform.RotateAround(tempPoint, grid[0,0,2].cube.transform.right, -10.0f);
+			grid[0,1,1].cube.transform.RotateAround(tempPoint, grid[0,1,1].cube.transform.right, -10.0f);
+			grid[0,1,2].cube.transform.RotateAround(tempPoint, grid[0,1,2].cube.transform.right, -10.0f);
+
+			tempPoint = grid[4,0,5].cube.transform.position * 0.25f + grid[4,0,6].cube.transform.position * 0.25f +
+				grid[4,1,5].cube.transform.position * 0.25f + grid[4,1,6].cube.transform.position * 0.25f;
+			
+			grid[4,0,5].cube.transform.RotateAround(tempPoint, grid[4,0,5].cube.transform.right, -10.0f);
+			grid[4,0,6].cube.transform.RotateAround(tempPoint, grid[4,0,6].cube.transform.right, -10.0f);
+			grid[4,1,5].cube.transform.RotateAround(tempPoint, grid[4,1,5].cube.transform.right, -10.0f);
+			grid[4,1,6].cube.transform.RotateAround(tempPoint, grid[4,1,6].cube.transform.right, -10.0f);
+
+			tempPoint = grid[4,0,1].cube.transform.position * 0.25f + grid[4,0,2].cube.transform.position * 0.25f +
+				grid[4,1,1].cube.transform.position * 0.25f + grid[4,1,2].cube.transform.position * 0.25f;
+			
+			grid[4,0,1].cube.transform.RotateAround(tempPoint, grid[4,0,1].cube.transform.right, -10.0f);
+			grid[4,0,2].cube.transform.RotateAround(tempPoint, grid[4,0,2].cube.transform.right, -10.0f);
+			grid[4,1,1].cube.transform.RotateAround(tempPoint, grid[4,1,1].cube.transform.right, -10.0f);
+			grid[4,1,2].cube.transform.RotateAround(tempPoint, grid[4,1,2].cube.transform.right, -10.0f);
+
+			cubesParent.transform.rotation = Quaternion.AngleAxis(0.2f * Mathf.Sin(finishTimer / 2.0f), new Vector3(1.0f,0.1f,0.4f));
 			
 			return;
 		}
 
 		if(tempLevel == 36)
 		{
+			if(finishTimer % 20 == 10)
+			{
+				GameObject cube = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+				cube.transform.parent = endAnimationParent.transform;
+				cube.transform.localScale = new Vector3(0.8f, 0.8f, 0.8f);
+				cube.transform.position = grid[3,6,0].cube.transform.position;
+				cube.renderer.materials = new Material[1];
+				cube.renderer.material = new Material(Shader.Find ("Transparent/Diffuse"));
+				cube.renderer.material.color = new Color(1, 1, 1, 0.5f);
+			}
 			
+			for(int i=0; i < endAnimationParent.transform.childCount; i++)
+			{
+				Transform cube = endAnimationParent.transform.GetChild(i);
+				
+				cube.Translate(0,0.2f,0);
+				cube.localScale = new Vector3(cube.localScale.x + 0.02f, cube.localScale.y + 0.02f, cube.localScale.z + 0.02f);
+				
+				cube.gameObject.renderer.material.color = new Color(1,1,1, cube.gameObject.renderer.material.color.a - 0.01f);
+				
+				if(cube.gameObject.renderer.material.color.a < 0.01f)
+				{
+					Destroy(cube.gameObject);
+				}
+			}
+
+			Vector3 tempPoint = grid[3,2,2].cube.transform.position * 0.25f + grid[3,2,3].cube.transform.position * 0.25f +
+				grid[3,3,2].cube.transform.position * 0.25f + grid[3,3,3].cube.transform.position * 0.25f;
+			
+			float tempAngle = - 0.2f * Mathf.Sin(finishTimer / 60.0f - Mathf.PI / 2);
+			
+			grid[3,3,3].cube.transform.RotateAround(tempPoint, grid[3,3,3].cube.transform.right, tempAngle);
+			grid[3,4,3].cube.transform.RotateAround(tempPoint, grid[3,4,3].cube.transform.right, tempAngle);
+			grid[3,4,4].cube.transform.RotateAround(tempPoint, grid[3,4,4].cube.transform.right, tempAngle);
+			grid[3,5,4].cube.transform.RotateAround(tempPoint, grid[3,5,4].cube.transform.right, tempAngle);
+			grid[3,5,5].cube.transform.RotateAround(tempPoint, grid[3,5,5].cube.transform.right, tempAngle);
+			grid[3,6,5].cube.transform.RotateAround(tempPoint, grid[3,6,5].cube.transform.right, tempAngle);
+
+			for (int x= 2; x< 5; x++)
+			{
+				for (int y= 1; y< levelArray.GetLength(1); y++)
+				{
+					for (int z= 6; z< levelArray.GetLength(2); z++)
+					{
+						if(grid[x,y,z].cube == null)
+							continue;
+
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, grid[x,y,z].cube.transform.right, tempAngle);
+					}
+				}
+			}
+
+			tempPoint = grid[3,7,8].cube.transform.position;
+			
+			tempAngle = 0.4f * Mathf.Sin(finishTimer / 30.0f - Mathf.PI);
+			
+			grid[3,4,8].cube.transform.RotateAround(tempPoint, grid[3,4,8].cube.transform.right, tempAngle);
+			grid[3,5,8].cube.transform.RotateAround(tempPoint, grid[3,5,8].cube.transform.right, tempAngle);
+			grid[3,6,8].cube.transform.RotateAround(tempPoint, grid[3,6,8].cube.transform.right, tempAngle);
+			grid[3,7,8].cube.transform.RotateAround(tempPoint, grid[3,7,8].cube.transform.right, tempAngle);
+			
+			for (int x= 2; x< 5; x++)
+			{
+				for (int y= 1; y< 4; y++)
+				{
+					for (int z= 6; z< levelArray.GetLength(2); z++)
+					{
+						if(grid[x,y,z].cube == null)
+							continue;
+						
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, grid[x,y,z].cube.transform.right, tempAngle);
+					}
+				}
+			}
+
+			tempPoint = grid[3,3,8].cube.transform.position * 0.5f + grid[3,4,8].cube.transform.position * 0.5f;
+			
+			tempAngle = 0.4f * Mathf.Sin(finishTimer / 20.0f - Mathf.PI);
+
+			for (int x= 2; x< 5; x++)
+			{
+				for (int y= 1; y< 4; y++)
+				{
+					for (int z= 6; z< levelArray.GetLength(2); z++)
+					{
+						if(grid[x,y,z].cube == null)
+							continue;
+						
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, grid[x,y,z].cube.transform.right, tempAngle);
+					}
+				}
+			}
+
+			cubesParent.transform.rotation = Quaternion.AngleAxis(0.15f * Mathf.Sin(finishTimer / 3.0f), new Vector3(1.0f,0.1f,0.4f));
 			
 			return;
 		}
 
 		if(tempLevel == 37)
 		{
-			
+			if(finishTimer % 10 == 8)
+			{					
+				GameObject cube = GameObject.Instantiate(Resources.Load("Cube")) as GameObject;
+				cube.transform.parent = endAnimationParent.transform;
+				cube.transform.position = new Vector3(Random.Range(-4.0f,4.0f), 10, Random.Range(-4.0f,4.0f));
+				cube.transform.localScale = cube.transform.localScale * 0.8f;
+				cube.renderer.materials = new Material[1];
+				cube.renderer.material = new Material(Shader.Find ("Diffuse"));
+				cube.renderer.material.color = new Color(0.25f, 0.5f, 1);
+				cube.AddComponent<Rigidbody>();
+				cube.rigidbody.AddTorque (new Vector3(Random.Range (-25f, 25f),Random.Range (-25f, 25f),Random.Range (-25f, 25f)));
+				cube.rigidbody.AddForce (new Vector3(Random.Range (-100f, 100f),-200f,Random.Range (-100f, 100f)));
+				cube.rigidbody.mass = 0.01f;
+			}
+				
+			for(int i=0; i < endAnimationParent.transform.childCount; i++)
+			{
+				GameObject cube = endAnimationParent.transform.GetChild(i).gameObject;
+					
+				if(cube.transform.position.y < -20f)
+				{
+					Destroy(cube);
+				}
+				
+			}
 			
 			return;
 		}
 
 		if(tempLevel == 38)
-		{
+		{			
+			float tempAngle = - 0.007f * Mathf.Sin(finishTimer / 50.0f);
 			
+			grid[0,0,3].cube.transform.Translate(0,0,tempAngle);
+			grid[0,0,4].cube.transform.Translate(0,0,tempAngle);
+			grid[0,1,3].cube.transform.Translate(0,0,tempAngle);
+			grid[0,1,4].cube.transform.Translate(0,0,tempAngle);
+			grid[1,0,3].cube.transform.Translate(0,0,tempAngle);
+			grid[1,0,4].cube.transform.Translate(0,0,tempAngle);
+			grid[1,1,3].cube.transform.Translate(0,0,tempAngle);
+			grid[1,1,4].cube.transform.Translate(0,0,tempAngle);
+
+			grid[0,0,0].cube.transform.Translate(0,0,-tempAngle);
+			grid[0,0,1].cube.transform.Translate(0,0,-tempAngle);
+			grid[0,1,0].cube.transform.Translate(0,0,-tempAngle);
+			grid[0,1,1].cube.transform.Translate(0,0,-tempAngle);
+			grid[1,0,0].cube.transform.Translate(0,0,-tempAngle);
+			grid[1,0,1].cube.transform.Translate(0,0,-tempAngle);
+			grid[1,1,0].cube.transform.Translate(0,0,-tempAngle);
+			grid[1,1,1].cube.transform.Translate(0,0,-tempAngle);
+
+			grid[3,0,5].cube.transform.Translate(0,0,-tempAngle);
+			grid[3,0,6].cube.transform.Translate(0,0,-tempAngle);
+			grid[3,1,5].cube.transform.Translate(0,0,-tempAngle);
+			grid[3,1,6].cube.transform.Translate(0,0,-tempAngle);
+			grid[4,0,5].cube.transform.Translate(0,0,-tempAngle);
+			grid[4,0,6].cube.transform.Translate(0,0,-tempAngle);
+			grid[4,1,5].cube.transform.Translate(0,0,-tempAngle);
+			grid[4,1,6].cube.transform.Translate(0,0,-tempAngle);
+
+			grid[3,0,1].cube.transform.Translate(0,0,tempAngle);
+			grid[3,0,2].cube.transform.Translate(0,0,tempAngle);
+			grid[3,1,1].cube.transform.Translate(0,0,tempAngle);
+			grid[3,1,2].cube.transform.Translate(0,0,tempAngle);
+			grid[4,0,1].cube.transform.Translate(0,0,tempAngle);
+			grid[4,0,2].cube.transform.Translate(0,0,tempAngle);
+			grid[4,1,1].cube.transform.Translate(0,0,tempAngle);
+			grid[4,1,2].cube.transform.Translate(0,0,tempAngle);
+
+			Vector3 tempPoint = grid[2,3,3].cube.transform.position * 0.5f + grid[2,4,3].cube.transform.position * 0.5f;
+			tempAngle = 0.07f * Mathf.Sin(finishTimer / 30.0f - Mathf.PI / 2);
+			
+			for (int x= 0; x< levelArray.GetLength(0); x++)
+			{
+				for (int y= 2; y< levelArray.GetLength(1); y++)
+				{
+					for (int z= 4; z< levelArray.GetLength(2); z++)
+					{
+						if(grid[x,y,z].cube == null)
+							continue;
+
+						if(((x == 3) || (x == 4)) && (y == 2) && (z == 6))
+							continue;
+						
+						Vector3 tempV = grid[x,y,z].cube.transform.right + grid[x,y,z].cube.transform.up * 0.5f + grid[x,y,z].cube.transform.forward * 0.2f;
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+						
+						if(z > 4)
+						{
+							tempV = grid[x,y,z].cube.transform.right + grid[x,y,z].cube.transform.up * 0.5f + grid[x,y,z].cube.transform.forward * 0.2f;
+							grid[x,y,z].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+						}
+						if(z > 5)
+						{
+							tempV = grid[x,y,z].cube.transform.right + grid[x,y,z].cube.transform.up * 0.5f + grid[x,y,z].cube.transform.forward * 0.2f;
+							grid[x,y,z].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+						}
+					}
+				}
+			}
+
+			tempAngle = 0.03f * Mathf.Sin(finishTimer / 40.0f - Mathf.PI / 2);
+
+			for (int x= 0; x< levelArray.GetLength(0); x++)
+			{
+				for (int y= 0; y< levelArray.GetLength(1); y++)
+				{
+					for (int z= 0; z< 3; z++)
+					{
+						if(grid[x,y,z].cube == null)
+							continue;
+						
+						Vector3 tempV = grid[x,y,z].cube.transform.right * 0.5f + grid[x,y,z].cube.transform.up - grid[x,y,z].cube.transform.forward * 0.2f;
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+						
+						if(z < 2)
+						{
+							tempV = grid[x,y,z].cube.transform.right * 0.5f + grid[x,y,z].cube.transform.up - grid[x,y,z].cube.transform.forward * 0.2f;
+							grid[x,y,z].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+						}
+						if(z < 1)
+						{
+							tempV = grid[x,y,z].cube.transform.right * 0.5f + grid[x,y,z].cube.transform.up - grid[x,y,z].cube.transform.forward * 0.2f;
+							grid[x,y,z].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+						}
+					}
+				}
+			}
+
+			cubesParent.transform.rotation = Quaternion.AngleAxis(2.0f * Mathf.Sin(finishTimer / 60.0f), new Vector3(0.5f,0.1f,1.0f));
 			
 			return;
 		}
 
 		if(tempLevel == 39)
 		{
+			Vector3 tempPoint;
 			
+			float tempAngle;
+
+
+			if((finishTimer % 360 <= 120) &&(finishTimer >= 60))
+			{
+				tempPoint = grid[0,1,1].cube.transform.position * 0.5f + grid[0,2,2].cube.transform.position * 0.5f;
+				
+				tempAngle = - 1.5f * Mathf.Sin((finishTimer - 60) / 10.0f);
+
+				grid[0,0,0].cube.transform.RotateAround(tempPoint, grid[0,0,0].cube.transform.right, tempAngle);
+				grid[0,0,1].cube.transform.RotateAround(tempPoint, grid[0,0,1].cube.transform.right, tempAngle);
+				grid[0,0,2].cube.transform.RotateAround(tempPoint, grid[0,0,2].cube.transform.right, tempAngle);
+				grid[0,0,3].cube.transform.RotateAround(tempPoint, grid[0,0,3].cube.transform.right, tempAngle);
+				grid[0,1,0].cube.transform.RotateAround(tempPoint, grid[0,1,0].cube.transform.right, tempAngle);
+				grid[0,1,1].cube.transform.RotateAround(tempPoint, grid[0,1,1].cube.transform.right, tempAngle);
+
+				tempPoint = grid[5,1,1].cube.transform.position * 0.5f + grid[5,2,2].cube.transform.position * 0.5f;
+
+				grid[5,0,0].cube.transform.RotateAround(tempPoint, grid[5,0,0].cube.transform.right, tempAngle);
+				grid[5,0,1].cube.transform.RotateAround(tempPoint, grid[5,0,1].cube.transform.right, tempAngle);
+				grid[5,0,2].cube.transform.RotateAround(tempPoint, grid[5,0,2].cube.transform.right, tempAngle);
+				grid[5,0,3].cube.transform.RotateAround(tempPoint, grid[5,0,3].cube.transform.right, tempAngle);
+				grid[5,1,0].cube.transform.RotateAround(tempPoint, grid[5,1,0].cube.transform.right, tempAngle);
+				grid[5,1,1].cube.transform.RotateAround(tempPoint, grid[5,1,1].cube.transform.right, tempAngle);
+
+				tempPoint = grid[0,0,0].cube.transform.position * 0.5f + grid[0,1,0].cube.transform.position * 0.5f;			
+				tempAngle = 9.0f * Mathf.Sin((finishTimer - 60) / 10.0f);
+
+				grid[0,0,0].cube.transform.RotateAround(tempPoint, grid[0,0,0].cube.transform.right, tempAngle);
+				grid[0,0,1].cube.transform.RotateAround(tempPoint, grid[0,0,1].cube.transform.right, tempAngle);
+				grid[0,0,2].cube.transform.RotateAround(tempPoint, grid[0,0,2].cube.transform.right, tempAngle);
+				grid[0,0,3].cube.transform.RotateAround(tempPoint, grid[0,0,3].cube.transform.right, tempAngle);
+
+				tempPoint = grid[5,0,0].cube.transform.position * 0.5f + grid[5,1,0].cube.transform.position * 0.5f;			
+				tempAngle = 9.0f * Mathf.Sin((finishTimer - 60) / 10.0f);
+				
+				grid[5,0,0].cube.transform.RotateAround(tempPoint, grid[5,0,0].cube.transform.right, tempAngle);
+				grid[5,0,1].cube.transform.RotateAround(tempPoint, grid[5,0,1].cube.transform.right, tempAngle);
+				grid[5,0,2].cube.transform.RotateAround(tempPoint, grid[5,0,2].cube.transform.right, tempAngle);
+				grid[5,0,3].cube.transform.RotateAround(tempPoint, grid[5,0,3].cube.transform.right, tempAngle);
+
+				tempPoint = grid[0,2,4].cube.transform.position * 0.5f + grid[0,3,3].cube.transform.position * 0.5f;
+				tempAngle = - 0.5f * Mathf.Sin((finishTimer - 60) / 10.0f);
+				
+				grid[0,0,0].cube.transform.RotateAround(tempPoint, grid[0,0,0].cube.transform.right, 2 * tempAngle);
+				grid[0,0,1].cube.transform.RotateAround(tempPoint, grid[0,0,1].cube.transform.right, 2 * tempAngle);
+				grid[0,0,2].cube.transform.RotateAround(tempPoint, grid[0,0,2].cube.transform.right, 2 * tempAngle);
+				grid[0,0,3].cube.transform.RotateAround(tempPoint, grid[0,0,3].cube.transform.right, 2 * tempAngle);
+				grid[0,1,0].cube.transform.RotateAround(tempPoint, grid[0,1,0].cube.transform.right, 2 * tempAngle);
+				grid[0,1,1].cube.transform.RotateAround(tempPoint, grid[0,1,1].cube.transform.right, 2 * tempAngle);
+				grid[0,2,2].cube.transform.RotateAround(tempPoint, grid[0,2,2].cube.transform.right, 2 * tempAngle);
+				grid[0,2,3].cube.transform.RotateAround(tempPoint, grid[0,2,3].cube.transform.right, tempAngle);
+				grid[0,3,3].cube.transform.RotateAround(tempPoint, grid[0,3,3].cube.transform.right, tempAngle);
+
+				tempPoint = grid[5,2,4].cube.transform.position * 0.5f + grid[5,3,3].cube.transform.position * 0.5f;
+				
+				grid[5,0,0].cube.transform.RotateAround(tempPoint, grid[5,0,0].cube.transform.right, 2 * tempAngle);
+				grid[5,0,1].cube.transform.RotateAround(tempPoint, grid[5,0,1].cube.transform.right, 2 * tempAngle);
+				grid[5,0,2].cube.transform.RotateAround(tempPoint, grid[5,0,2].cube.transform.right, 2 * tempAngle);
+				grid[5,0,3].cube.transform.RotateAround(tempPoint, grid[5,0,3].cube.transform.right, 2 * tempAngle);
+				grid[5,1,0].cube.transform.RotateAround(tempPoint, grid[5,1,0].cube.transform.right, 2 * tempAngle);
+				grid[5,1,1].cube.transform.RotateAround(tempPoint, grid[5,1,1].cube.transform.right, 2 * tempAngle);
+				grid[5,2,2].cube.transform.RotateAround(tempPoint, grid[5,2,2].cube.transform.right, 2 * tempAngle);
+				grid[5,2,3].cube.transform.RotateAround(tempPoint, grid[5,2,3].cube.transform.right, tempAngle);
+				grid[5,3,3].cube.transform.RotateAround(tempPoint, grid[5,3,3].cube.transform.right, tempAngle);
+
+
+				tempPoint = grid[0,2,5].cube.transform.position;
+				
+				tempAngle = Mathf.Sin((finishTimer - 60) / 10.0f);
+				
+				grid[0,0,6].cube.transform.RotateAround(tempPoint, grid[0,0,6].cube.transform.right, tempAngle);
+				grid[0,0,7].cube.transform.RotateAround(tempPoint, grid[0,0,6].cube.transform.right, tempAngle);
+				grid[0,1,5].cube.transform.RotateAround(tempPoint, grid[0,1,5].cube.transform.right, tempAngle);
+				grid[0,2,5].cube.transform.RotateAround(tempPoint, grid[0,2,5].cube.transform.right, tempAngle);
+				grid[1,0,6].cube.transform.RotateAround(tempPoint, grid[1,0,6].cube.transform.right, tempAngle);
+				
+				tempPoint = grid[5,2,5].cube.transform.position;
+
+				grid[4,0,6].cube.transform.RotateAround(tempPoint, grid[4,0,6].cube.transform.right, tempAngle);
+				grid[5,0,6].cube.transform.RotateAround(tempPoint, grid[5,0,6].cube.transform.right, tempAngle);
+				grid[5,0,7].cube.transform.RotateAround(tempPoint, grid[5,0,7].cube.transform.right, tempAngle);
+				grid[5,1,5].cube.transform.RotateAround(tempPoint, grid[5,1,5].cube.transform.right, tempAngle);
+				grid[5,2,5].cube.transform.RotateAround(tempPoint, grid[5,2,5].cube.transform.right, tempAngle);
+
+				tempAngle = 2* Mathf.Sin((finishTimer - 60) / 10.0f);
+				tempPoint = grid[0,0,6].cube.transform.position * 0.5f + grid[0,1,5].cube.transform.position * 0.5f;
+				
+				grid[0,0,6].cube.transform.RotateAround(tempPoint, grid[0,0,6].cube.transform.right, tempAngle);
+				grid[0,0,7].cube.transform.RotateAround(tempPoint, grid[0,0,7].cube.transform.right, tempAngle);
+				grid[1,0,6].cube.transform.RotateAround(tempPoint, grid[1,0,6].cube.transform.right, tempAngle);
+
+				tempPoint = grid[5,0,6].cube.transform.position * 0.5f + grid[5,1,5].cube.transform.position * 0.5f;
+
+				grid[4,0,6].cube.transform.RotateAround(tempPoint, grid[4,0,6].cube.transform.right, tempAngle);
+				grid[5,0,6].cube.transform.RotateAround(tempPoint, grid[5,0,6].cube.transform.right, tempAngle);
+				grid[5,0,7].cube.transform.RotateAround(tempPoint, grid[5,0,7].cube.transform.right, tempAngle);
+			}
+
+			if((finishTimer >= 60) && (finishTimer <= 180))
+			{
+				cubesParent.transform.Translate(0, 0.2f * Mathf.Sin((finishTimer - 60) / 20.0f), 0);
+			}
+
+			if((finishTimer >= 120) && (finishTimer <= 180))
+			{
+				tempPoint = grid[0,2,5].cube.transform.position;
+				
+				tempAngle = 0.5f * Mathf.Sin((finishTimer - 60) / 10.0f);
+				
+				grid[0,0,6].cube.transform.RotateAround(tempPoint, grid[0,0,6].cube.transform.right, tempAngle);
+				grid[0,0,7].cube.transform.RotateAround(tempPoint, grid[0,0,6].cube.transform.right, tempAngle);
+				grid[0,1,5].cube.transform.RotateAround(tempPoint, grid[0,1,5].cube.transform.right, tempAngle);
+				grid[0,2,5].cube.transform.RotateAround(tempPoint, grid[0,2,5].cube.transform.right, tempAngle);
+				grid[1,0,6].cube.transform.RotateAround(tempPoint, grid[1,0,6].cube.transform.right, tempAngle);
+				
+				tempPoint = grid[5,2,5].cube.transform.position;
+				
+				grid[4,0,6].cube.transform.RotateAround(tempPoint, grid[4,0,6].cube.transform.right, tempAngle);
+				grid[5,0,6].cube.transform.RotateAround(tempPoint, grid[5,0,6].cube.transform.right, tempAngle);
+				grid[5,0,7].cube.transform.RotateAround(tempPoint, grid[5,0,7].cube.transform.right, tempAngle);
+				grid[5,1,5].cube.transform.RotateAround(tempPoint, grid[5,1,5].cube.transform.right, tempAngle);
+				grid[5,2,5].cube.transform.RotateAround(tempPoint, grid[5,2,5].cube.transform.right, tempAngle);
+				
+				tempAngle = Mathf.Sin((finishTimer - 60) / 10.0f);
+				tempPoint = grid[0,0,6].cube.transform.position * 0.5f + grid[0,1,5].cube.transform.position * 0.5f;
+				
+				grid[0,0,6].cube.transform.RotateAround(tempPoint, grid[0,0,6].cube.transform.right, tempAngle);
+				grid[0,0,7].cube.transform.RotateAround(tempPoint, grid[0,0,7].cube.transform.right, tempAngle);
+				grid[1,0,6].cube.transform.RotateAround(tempPoint, grid[1,0,6].cube.transform.right, tempAngle);
+				
+				tempPoint = grid[5,0,6].cube.transform.position * 0.5f + grid[5,1,5].cube.transform.position * 0.5f;
+				
+				grid[4,0,6].cube.transform.RotateAround(tempPoint, grid[4,0,6].cube.transform.right, tempAngle);
+				grid[5,0,6].cube.transform.RotateAround(tempPoint, grid[5,0,6].cube.transform.right, tempAngle);
+				grid[5,0,7].cube.transform.RotateAround(tempPoint, grid[5,0,7].cube.transform.right, tempAngle);
+			}
+
+			tempPoint = grid[2,2,4].cube.transform.position * 0.5f + grid[3,3,4].cube.transform.position * 0.5f;
+			tempAngle = 0.05f * Mathf.Sin(finishTimer / 30.0f - Mathf.PI / 2);
+
+			for (int x= 1; x< 5; x++)
+			{
+				for (int y= 2; y< 5; y++)
+				{
+					for (int z= 5; z< 8; z++)
+					{
+						if(grid[x,y,z].cube == null)
+							continue;
+
+						Vector3 tempV = grid[x,y,z].cube.transform.up * 0.2f + grid[x,y,z].cube.transform.right + grid[x,y,z].cube.transform.forward * 0.2f;
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+
+						if(z > 5)
+						{
+							tempV = grid[x,y,z].cube.transform.up * 0.2f + grid[x,y,z].cube.transform.right + grid[x,y,z].cube.transform.forward * 0.2f;
+							grid[x,y,z].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+						}
+					}
+				}
+			}
 			
 			return;
 		}
 
 		if(tempLevel == 40)
 		{
+			float tempAngle = - 0.01f * Mathf.Sin(finishTimer / 50.0f - Mathf.PI / 2);
 			
+			grid[1,0,5].cube.transform.Translate(0,0,tempAngle);
+			grid[1,1,5].cube.transform.Translate(0,0,tempAngle / 2.0f);
+
+			grid[1,0,1].cube.transform.Translate(0,0,-tempAngle);
+			grid[1,1,1].cube.transform.Translate(0,0,-tempAngle / 2.0f);
+
+			grid[3,0,4].cube.transform.Translate(0,0,-tempAngle);
+			grid[3,1,4].cube.transform.Translate(0,0,-tempAngle / 2.0f);
+
+			grid[3,0,1].cube.transform.Translate(0,0,tempAngle);
+			grid[3,1,1].cube.transform.Translate(0,0,tempAngle / 2.0f);
+
+
+			Vector3 tempPoint = grid[1,4,5].cube.transform.position * 0.5f + grid[2,4,5].cube.transform.position * 0.5f;
+			tempAngle = - 0.3f * Mathf.Sin(finishTimer / 60.0f - Mathf.PI / 2);
+			
+			grid[0,3,5].cube.transform.RotateAround(tempPoint, grid[0,3,5].cube.transform.up, -tempAngle);
+			grid[0,4,5].cube.transform.RotateAround(tempPoint, grid[0,4,5].cube.transform.up, -tempAngle);
+			grid[1,3,5].cube.transform.RotateAround(tempPoint, grid[1,3,5].cube.transform.up, -tempAngle);
+			grid[1,4,5].cube.transform.RotateAround(tempPoint, grid[1,4,5].cube.transform.up, -tempAngle);
+			grid[1,5,5].cube.transform.RotateAround(tempPoint, grid[1,5,5].cube.transform.up, -tempAngle);
+
+			tempPoint = grid[0,4,5].cube.transform.position * 0.5f + grid[1,4,5].cube.transform.position * 0.5f;
+			
+			grid[0,3,5].cube.transform.RotateAround(tempPoint, grid[0,3,5].cube.transform.up, -0.5f * tempAngle);
+			grid[0,4,5].cube.transform.RotateAround(tempPoint, grid[0,4,5].cube.transform.up, -0.5f * tempAngle);
+
+			tempPoint = grid[2,4,5].cube.transform.position * 0.5f + grid[3,4,5].cube.transform.position * 0.5f;
+			
+			grid[3,3,5].cube.transform.RotateAround(tempPoint, grid[3,3,5].cube.transform.up, tempAngle);
+			grid[3,4,5].cube.transform.RotateAround(tempPoint, grid[3,4,5].cube.transform.up, tempAngle);
+			grid[3,5,5].cube.transform.RotateAround(tempPoint, grid[3,5,5].cube.transform.up, tempAngle);
+			grid[4,3,5].cube.transform.RotateAround(tempPoint, grid[4,3,5].cube.transform.up, tempAngle);
+			grid[4,4,5].cube.transform.RotateAround(tempPoint, grid[4,4,5].cube.transform.up, tempAngle);
+
+			tempPoint = grid[3,4,5].cube.transform.position * 0.5f + grid[4,4,5].cube.transform.position * 0.5f;
+
+			grid[4,3,5].cube.transform.RotateAround(tempPoint, grid[4,3,5].cube.transform.up, 0.5f * tempAngle);
+			grid[4,4,5].cube.transform.RotateAround(tempPoint, grid[4,4,5].cube.transform.up, 0.5f * tempAngle);
+
+			tempPoint = grid[2,2,0].cube.transform.position;
+			tempAngle = Mathf.Sin(finishTimer / 40.0f - Mathf.PI / 2);
+			
+			grid[2,1,0].cube.transform.RotateAround(tempPoint, grid[2,1,0].cube.transform.forward, tempAngle);
+			grid[2,2,0].cube.transform.RotateAround(tempPoint, grid[2,2,0].cube.transform.forward, tempAngle);
+
+
+			tempPoint = grid[2,3,5].cube.transform.position * 0.5f + grid[2,3,6].cube.transform.position * 0.5f;
+			tempAngle = 0.2f * Mathf.Sin(finishTimer / 40.0f - Mathf.PI / 2);
+			
+			grid[2,0,8].cube.transform.RotateAround(tempPoint, grid[2,0,8].cube.transform.right, tempAngle);
+			grid[2,1,8].cube.transform.RotateAround(tempPoint, grid[2,1,8].cube.transform.right, tempAngle);
+			grid[2,2,6].cube.transform.RotateAround(tempPoint, grid[2,2,6].cube.transform.right, tempAngle);
+			grid[2,2,8].cube.transform.RotateAround(tempPoint, grid[2,2,8].cube.transform.right, tempAngle);
+			grid[2,3,6].cube.transform.RotateAround(tempPoint, grid[2,3,6].cube.transform.right, tempAngle);
+			grid[2,3,7].cube.transform.RotateAround(tempPoint, grid[2,3,6].cube.transform.right, tempAngle);
+			grid[2,3,8].cube.transform.RotateAround(tempPoint, grid[2,3,8].cube.transform.right, tempAngle);
+			grid[2,4,6].cube.transform.RotateAround(tempPoint, grid[2,4,6].cube.transform.right, tempAngle);
+			grid[2,4,7].cube.transform.RotateAround(tempPoint, grid[2,4,7].cube.transform.right, tempAngle);
+
+			tempPoint = grid[2,3,6].cube.transform.position * 0.5f + grid[2,4,7].cube.transform.position * 0.5f;
+			tempAngle = 0.1f * Mathf.Sin(finishTimer / 40.0f - Mathf.PI / 2);
+			
+			grid[2,0,8].cube.transform.RotateAround(tempPoint, grid[2,0,8].cube.transform.right, tempAngle);
+			grid[2,1,8].cube.transform.RotateAround(tempPoint, grid[2,1,8].cube.transform.right, tempAngle);
+			grid[2,2,8].cube.transform.RotateAround(tempPoint, grid[2,2,8].cube.transform.right, tempAngle);
+			grid[2,3,7].cube.transform.RotateAround(tempPoint, grid[2,3,6].cube.transform.right, tempAngle);
+			grid[2,3,8].cube.transform.RotateAround(tempPoint, grid[2,3,8].cube.transform.right, tempAngle);
+			grid[2,4,7].cube.transform.RotateAround(tempPoint, grid[2,4,7].cube.transform.right, tempAngle);
+
+			tempPoint = grid[2,3,8].cube.transform.position * 0.5f + grid[2,4,7].cube.transform.position * 0.5f;
+			tempAngle = 0.3f * Mathf.Sin(finishTimer / 50.0f - Mathf.PI / 2);
+			
+			grid[2,0,8].cube.transform.RotateAround(tempPoint, grid[2,0,8].cube.transform.right, tempAngle);
+			grid[2,1,8].cube.transform.RotateAround(tempPoint, grid[2,1,8].cube.transform.right, tempAngle);
+			grid[2,2,8].cube.transform.RotateAround(tempPoint, grid[2,2,8].cube.transform.right, tempAngle);
+			grid[2,3,8].cube.transform.RotateAround(tempPoint, grid[2,3,8].cube.transform.right, tempAngle);
+
+			cubesParent.transform.rotation = Quaternion.AngleAxis(2.0f * Mathf.Sin(finishTimer / 60.0f), new Vector3(0.5f,0.1f,1.0f));
 			
 			return;
 		}
@@ -3900,45 +5382,6 @@ public class GameScript : MonoBehaviour {
 		return new Color (r / 255.0f, g / 255.0f, b / 255.0f);
 	}
 
-	void savingTest()
-	{
-		string fileName = Application.persistentDataPath + "/test.txt";
-		
-		try
-		{
-			
-			if (!File.Exists(fileName))
-			{
-				Debug.Log("Opened file!");
-
-				File.WriteAllText(fileName,"5 0 2 5 0");
-			}
-			
-			else
-			{
-				Debug.Log("File is exist! Loading!");
-				loadFile();
-			}
-		}
-		
-		catch (System.Exception e)
-		{
-			Debug.Log(e);
-		}
-	}
-
-	void loadFile()
-	{
-		Debug.Log("Reading");
-		
-		string fileName = Application.persistentDataPath + "/test.txt";
-		
-		string testText = File.ReadAllText(fileName);
-		
-		
-		Debug.Log (testText);
-	}
-	
 	uint loadLevelCount()
 	{
 		uint levelCount = 0;
@@ -3959,16 +5402,6 @@ public class GameScript : MonoBehaviour {
 		customStageCount = levelCount;
 
 		return levelCount;
-	}
-
-	void testSaveLevel()
-	{
-		levelArray = new bool[3, 5, 5] { { { true, false, false, true, true }, { true, true, true, false, false }, { false, false, true, true, true }, { false, false, true, true, false },
-				{ false, false, true, false, false }}, { { false, false, false, false, false }, { true, true, true, false, false }, { false, false, true, true, true }, 
-				{ false, false, true, true, false },{ false, false, false, false, false }},{ { true, false, false, true, true }, { true, true, true, false, false }, 
-				{ false, false, true, true, true }, { false, false, true, true, false },{ false, false, true, false, false }}};
-	
-		saveLevel (1);
 	}
 
 	void saveLevel(uint level)
