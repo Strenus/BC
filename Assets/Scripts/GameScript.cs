@@ -30,6 +30,7 @@ public class GameScript : MonoBehaviour {
 	public List<GameObject> buttonsPause = new List<GameObject>();
 	public List<GameObject> buttonsLevels = new List<GameObject>();
 	public List<GameObject> buttonsEdit = new List<GameObject>();
+	Color brushColor = new Color (0.5f, 0.8f, 0.8f);
 
 	uint progress = 0;
 	ushort[] scores = new ushort[45];
@@ -70,7 +71,7 @@ public class GameScript : MonoBehaviour {
 		//--Load Progress---------------------------------------------------------------------
 		loadProgress();
 		//--Unlock all------------------------------------------------------------------------
-		progress = 45;
+		//progress = 45;
 		//saveProgress ();
 
 		foreach(GameObject go in starsIngame)
@@ -79,9 +80,6 @@ public class GameScript : MonoBehaviour {
 		}
 
 		spawnMenuCubes ();
-
-		Debug.Log (Screen.width);
-		Debug.Log (Screen.height);
 
 
 		//--Configure Color Palette----------------------------------------------------------------
@@ -94,6 +92,8 @@ public class GameScript : MonoBehaviour {
 		colorPalette.guiTexture.pixelInset = new Rect(- Screen.width / 3, - Screen.height / 3, Screen.width * 2 / 3, Screen.height * 2 / 3);*/
 
 		colorPaletteTexture = colorPalette.guiTexture.texture as Texture2D;
+
+		buttonsMenu[16].guiTexture.color = brushColor;
 
 		//colorPalette.guiTexture.pixelInset = new Rect(- Screen.width / 3, - Screen.height / 3, Screen.width * 2 / 3, Screen.height * 2 / 3);
 		//Context.getCacheDir() or (which is way easier) the Environment.getExternalStorageDirectory().
@@ -111,7 +111,6 @@ public class GameScript : MonoBehaviour {
 			{
 				if(buttonsMenu[1].activeSelf)
 				{
-					Debug.Log ("exit");
 					Application.Quit();
 				}
 
@@ -163,11 +162,38 @@ public class GameScript : MonoBehaviour {
 
 		//---TickCount---------------------------------------------------------
 
+		if(inMenu && (Input.touchCount > 0))
+		{
+			if(colorPalette.activeSelf == true)
+			{
+				readingPalette();
+				
+				if((Input.GetTouch(0).position.x < Screen.width / 6) || (Input.GetTouch(0).position.x > Screen.width * 5 / 6)
+				   || (Input.GetTouch(0).position.y < Screen.height / 6) || (Input.GetTouch(0).position.y > Screen.height * 5 / 6))
+				{
+					if(Input.GetTouch(0).phase == TouchPhase.Began)
+					{
+						colorPalette.SetActive(false);
+					}
+				}
+
+				if((Mathf.Abs(brushColor.r - 0.8f) < 0.1f) && (Mathf.Abs(brushColor.g - 0.8f) < 0.1f) && (Mathf.Abs(brushColor.b - 0.8f) < 0.1f))
+				{
+					brushColor = new Color(0.5f, 0.8f, 0.8f);
+					buttonsMenu[16].guiTexture.color = brushColor;
+				}
+
+				saveProgress();
+				
+				return;
+			}
+		}
+		
 		if(!pause && !creative)
 		{
 			ticks++;
 
-			if (ticks % 60 == 0)
+			if (ticks % 10 == 0)
 			{
 				if(checkCompletion())
 				{
@@ -178,14 +204,15 @@ public class GameScript : MonoBehaviour {
 						completedLevel();
 						solved = true;
 						finishTimer = 0;
+						justTouched = null;
 
-						/*uint tempLevel = (stage - 1) * 15 + level;
+						uint tempLevel = (stage - 1) * 15 + level;
 						if((progress < tempLevel) && (stage < 4))
 						{
 							progress = tempLevel;
 							scores[tempLevel - 1] = score;
 							saveProgress();
-						}*/
+						}
 					}
 				}
 			}
@@ -198,13 +225,13 @@ public class GameScript : MonoBehaviour {
 
 				finishTimer++;
 
-				/*
+
 				if(finishTimer > 360)
 				{
 					pause = true;
 					openPauseMenu();
 				}
-				*/
+
 			}
 		}
 
@@ -215,7 +242,7 @@ public class GameScript : MonoBehaviour {
 		{
 			if (Input.touchCount == 1)
 			{
-				if(Input.GetTouch(0).phase == TouchPhase.Began)
+				if((Input.GetTouch(0).phase == TouchPhase.Began) && (!solved))
 				{
 					Ray ray = cam.ScreenPointToRay (Input.GetTouch(0).position);
 					RaycastHit hit = new RaycastHit();
@@ -236,7 +263,7 @@ public class GameScript : MonoBehaviour {
 					moveArrow();
 				}
 				
-				if(Input.GetTouch(0).phase == TouchPhase.Ended)
+				if((Input.GetTouch(0).phase == TouchPhase.Ended) && (!solved))
 				{
 					movingArrow = -1;
 
@@ -272,6 +299,7 @@ public class GameScript : MonoBehaviour {
 
 										if(hit.collider.gameObject.tag != "cube")
 										{
+											justTouched = null;
 											return;
 										}
 
@@ -803,9 +831,9 @@ public class GameScript : MonoBehaviour {
 		//---Cleaning cube fragments------------------------------------------
 		fragments.ForEach(delegate(GameObject fragment)
 		{
-			fragment.transform.localScale = new Vector3(fragment.transform.localScale.x - 0.015f, fragment.transform.localScale.y - 0.015f, fragment.transform.localScale.z - 0.015f);
+			fragment.transform.localScale = new Vector3(fragment.transform.localScale.x - 0.05f, fragment.transform.localScale.y - 0.05f, fragment.transform.localScale.z - 0.05f);
 			
-			if(fragment.transform.localScale.x < 0)
+			if(fragment.transform.localScale.x < 0.06f)
 			{
 				fragments.Remove(fragment);
 				GameObject.Destroy(fragment);
@@ -901,7 +929,7 @@ public class GameScript : MonoBehaviour {
 				{
 					//file = new System.IO.Strea
 					//file = new System.IO.StreamReader(Application.dataPath + "/Resources/Levels/color" + tempLevel + ".txt");
-					TextAsset bindata= Resources.Load("Levels/colori" + tempLevel) as TextAsset;	
+					TextAsset bindata= Resources.Load("Levels/color" + tempLevel) as TextAsset;	
 					file = new System.IO.StringReader(bindata.text);
 				}
 				else
@@ -1011,7 +1039,7 @@ public class GameScript : MonoBehaviour {
 
 		if (breaking)
 		{
-			if(cube.renderer.materials[0].color.r == 0.8f)
+			if(!cube.renderer.materials[0].color.Equals(brushColor))
 			{
 				for (int x=0; x<levelArray.GetLength(0); x++)
 				{
@@ -1133,7 +1161,6 @@ public class GameScript : MonoBehaviour {
 				}
 
 				animations.Add(anim);
-				Debug.Log("Anim Count: " + animations.Count);
 			}
 
 			if(movingArrow == 0)
@@ -1377,7 +1404,7 @@ public class GameScript : MonoBehaviour {
 	void breakWrongCube (GameObject cube)
 	{
 		cube.renderer.material = Resources.Load ("Materials/cubeCracks") as Material;
-		cube.renderer.material.color = new Color(0.5f,0.8f,0.8f,1);
+		cube.renderer.material.color = brushColor;
 
 		score--;
 
@@ -1394,13 +1421,14 @@ public class GameScript : MonoBehaviour {
 
 	void brushCube (GameObject cube)
 	{
-		if(cube.renderer.materials[0].color.r == 0.8f)
+		if(cube.renderer.materials[0].color.Equals(brushColor))
 		{
-			cube.renderer.materials[0].color = new Color(0.5f,0.8f,0.8f,1);
+			cube.renderer.materials[0].color = new Color(0.8f,0.8f,0.8f,1);
+
 		}
 		else
 		{
-			cube.renderer.materials[0].color = new Color(0.8f,0.8f,0.8f,1);
+			cube.renderer.materials[0].color = brushColor;
 		}
 	}
 
@@ -1433,9 +1461,25 @@ public class GameScript : MonoBehaviour {
 			int tempX = (int) ((Input.GetTouch(0).position.x - Screen.width / 6) * (512.0f / (Screen.width * 2 / 3)));
 			int tempY = (int) ((Input.GetTouch(0).position.y - Screen.height / 6) * (512.0f / (Screen.height * 2 / 3)));
 
-			creativeColor = colorPaletteTexture.GetPixel(tempX, tempY);
-			buttonsEdit[2].guiTexture.color = creativeColor;
 
+
+			if(creative)
+			{
+				creativeColor = colorPaletteTexture.GetPixel(tempX, tempY);
+				buttonsEdit[2].guiTexture.color = creativeColor;
+			}
+			else
+			{
+				brushColor = colorPaletteTexture.GetPixel(tempX, tempY);
+
+				if((Mathf.Abs(brushColor.r - 0.8f) < 0.1f) && (Mathf.Abs(brushColor.g - 0.8f) < 0.1f) && (Mathf.Abs(brushColor.b - 0.8f) < 0.1f))
+				{
+					brushColor = new Color(0.5f, 0.8f, 0.8f);
+
+				}
+
+				buttonsMenu[16].guiTexture.color = brushColor;
+			}
 		}
 	}
 
@@ -1616,6 +1660,7 @@ public class GameScript : MonoBehaviour {
 		buttonsMenu[10].SetActive (true);
 		buttonsMenu[11].SetActive (true);
 		buttonsMenu[12].SetActive (true);
+		buttonsMenu[16].SetActive (true);
 	}
 
 	void buttonCamera()
@@ -1647,11 +1692,15 @@ public class GameScript : MonoBehaviour {
 
 	void buttonReset()
 	{
+		if (colorPalette.activeSelf == true)
+			return;
+
 		buttonsMenu[8].SetActive (false);
 		buttonsMenu[9].SetActive (false);
 		buttonsMenu[10].SetActive (false);
 		buttonsMenu[11].SetActive (false);
 		buttonsMenu[12].SetActive (false);
+		buttonsMenu[16].SetActive (false);
 
 		buttonsMenu[13].SetActive (true);
 		buttonsMenu[14].SetActive (true);
@@ -1662,6 +1711,7 @@ public class GameScript : MonoBehaviour {
 	{
 		progress = 0;
 		scores = new ushort[45];
+		brushColor = new Color (0.5f, 0.8f, 0.8f);
 
 		saveProgress ();
 
@@ -1670,6 +1720,9 @@ public class GameScript : MonoBehaviour {
 		buttonsMenu[10].SetActive (true);
 		buttonsMenu[11].SetActive (true);
 		buttonsMenu[12].SetActive (true);
+		buttonsMenu[16].SetActive (true);
+
+		buttonsMenu[16].guiTexture.color = brushColor;
 
 		buttonsMenu[13].SetActive (false);
 		buttonsMenu[14].SetActive (false);
@@ -1683,6 +1736,7 @@ public class GameScript : MonoBehaviour {
 		buttonsMenu[10].SetActive (true);
 		buttonsMenu[11].SetActive (true);
 		buttonsMenu[12].SetActive (true);
+		buttonsMenu[16].SetActive (true);
 
 		buttonsMenu[13].SetActive (false);
 		buttonsMenu[14].SetActive (false);
@@ -1691,11 +1745,17 @@ public class GameScript : MonoBehaviour {
 
 	void buttonBack()
 	{
+		if (colorPalette.activeSelf == true)
+			return;
+
 		buttonPicube ();
 	}
 
 	void buttonCamPlus()
 	{
+		if (colorPalette.activeSelf == true)
+			return;
+
 		if(camSen < 2.95f)
 			camSen += 0.1f;
 
@@ -1706,12 +1766,30 @@ public class GameScript : MonoBehaviour {
 
 	void buttonCamMinus()
 	{
+		if (colorPalette.activeSelf == true)
+			return;
+
 		if(camSen > 0.15f)
 			camSen -= 0.1f;
 
 		int sens = 10 * Mathf.RoundToInt (camSen * 10.0f);
 		
 		buttonsMenu [8].GetComponentInChildren<GUIText> ().text = "Camera Sensitivity: " + sens + "%";
+	}
+
+	void buttonSetColor()
+	{
+		creativeColoring = true;
+		breaking = true;
+		
+		if(colorPalette.activeSelf)
+		{
+			colorPalette.SetActive(false);
+		}
+		else
+		{
+			colorPalette.SetActive(true);
+		}
 	}
 
 	void prepareToStart()
@@ -1923,8 +2001,11 @@ public class GameScript : MonoBehaviour {
 			}
 			else
 			{
-				stage++;
-				buttonLevel(1);
+				if(stage < 3)
+				{
+					stage++;
+					buttonLevel(1);
+				}
 			}
 		}
 		else
@@ -2945,11 +3026,6 @@ public class GameScript : MonoBehaviour {
 	
 	void endAnimationUpdate()
 	{
-		int finishTimer = this.finishTimer % 360;
-
-		if(this.finishTimer % 360 == 0)
-			Debug.Log("360");
-
 		foreach(Cube cube in grid)
 		{
 			if(cube.cube == null)
@@ -4352,8 +4428,8 @@ public class GameScript : MonoBehaviour {
 				cube.transform.parent = endAnimationParent.transform;
 				cube.transform.position = tempPoint;
 				cube.renderer.materials = new Material[1];
-				cube.renderer.material = new Material(Shader.Find ("Diffuse"));
-				cube.renderer.material.color = new Color(0.25f, 0.8f, 1);
+				cube.renderer.material = new Material(Shader.Find ("Transparent/Diffuse"));
+				cube.renderer.material.color = new Color(0.25f, 0.8f, 0.8f, 0.5f);
 			}
 
 			for(int i=0; i < endAnimationParent.transform.childCount; i++)
@@ -4567,34 +4643,34 @@ public class GameScript : MonoBehaviour {
 			Vector3 tempPoint = grid[0,0,5].cube.transform.position * 0.25f + grid[0,0,6].cube.transform.position * 0.25f +
 				grid[0,1,5].cube.transform.position * 0.25f + grid[0,1,6].cube.transform.position * 0.25f;
 			
-			grid[0,0,5].cube.transform.RotateAround(tempPoint, grid[0,0,5].cube.transform.right, -10.0f);
-			grid[0,0,6].cube.transform.RotateAround(tempPoint, grid[0,0,6].cube.transform.right, -10.0f);
-			grid[0,1,5].cube.transform.RotateAround(tempPoint, grid[0,1,5].cube.transform.right, -10.0f);
-			grid[0,1,6].cube.transform.RotateAround(tempPoint, grid[0,1,6].cube.transform.right, -10.0f);
+			grid[0,0,5].cube.transform.RotateAround(tempPoint, grid[0,0,5].cube.transform.right, 10.0f);
+			grid[0,0,6].cube.transform.RotateAround(tempPoint, grid[0,0,6].cube.transform.right, 10.0f);
+			grid[0,1,5].cube.transform.RotateAround(tempPoint, grid[0,1,5].cube.transform.right, 10.0f);
+			grid[0,1,6].cube.transform.RotateAround(tempPoint, grid[0,1,6].cube.transform.right, 10.0f);
 
 			tempPoint = grid[0,0,1].cube.transform.position * 0.25f + grid[0,0,2].cube.transform.position * 0.25f +
 				grid[0,1,1].cube.transform.position * 0.25f + grid[0,1,2].cube.transform.position * 0.25f;
 			
-			grid[0,0,1].cube.transform.RotateAround(tempPoint, grid[0,0,1].cube.transform.right, -10.0f);
-			grid[0,0,2].cube.transform.RotateAround(tempPoint, grid[0,0,2].cube.transform.right, -10.0f);
-			grid[0,1,1].cube.transform.RotateAround(tempPoint, grid[0,1,1].cube.transform.right, -10.0f);
-			grid[0,1,2].cube.transform.RotateAround(tempPoint, grid[0,1,2].cube.transform.right, -10.0f);
+			grid[0,0,1].cube.transform.RotateAround(tempPoint, grid[0,0,1].cube.transform.right, 10.0f);
+			grid[0,0,2].cube.transform.RotateAround(tempPoint, grid[0,0,2].cube.transform.right, 10.0f);
+			grid[0,1,1].cube.transform.RotateAround(tempPoint, grid[0,1,1].cube.transform.right, 10.0f);
+			grid[0,1,2].cube.transform.RotateAround(tempPoint, grid[0,1,2].cube.transform.right, 10.0f);
 
 			tempPoint = grid[4,0,5].cube.transform.position * 0.25f + grid[4,0,6].cube.transform.position * 0.25f +
 				grid[4,1,5].cube.transform.position * 0.25f + grid[4,1,6].cube.transform.position * 0.25f;
 			
-			grid[4,0,5].cube.transform.RotateAround(tempPoint, grid[4,0,5].cube.transform.right, -10.0f);
-			grid[4,0,6].cube.transform.RotateAround(tempPoint, grid[4,0,6].cube.transform.right, -10.0f);
-			grid[4,1,5].cube.transform.RotateAround(tempPoint, grid[4,1,5].cube.transform.right, -10.0f);
-			grid[4,1,6].cube.transform.RotateAround(tempPoint, grid[4,1,6].cube.transform.right, -10.0f);
+			grid[4,0,5].cube.transform.RotateAround(tempPoint, grid[4,0,5].cube.transform.right, 10.0f);
+			grid[4,0,6].cube.transform.RotateAround(tempPoint, grid[4,0,6].cube.transform.right, 10.0f);
+			grid[4,1,5].cube.transform.RotateAround(tempPoint, grid[4,1,5].cube.transform.right, 10.0f);
+			grid[4,1,6].cube.transform.RotateAround(tempPoint, grid[4,1,6].cube.transform.right, 10.0f);
 
 			tempPoint = grid[4,0,1].cube.transform.position * 0.25f + grid[4,0,2].cube.transform.position * 0.25f +
 				grid[4,1,1].cube.transform.position * 0.25f + grid[4,1,2].cube.transform.position * 0.25f;
 			
-			grid[4,0,1].cube.transform.RotateAround(tempPoint, grid[4,0,1].cube.transform.right, -10.0f);
-			grid[4,0,2].cube.transform.RotateAround(tempPoint, grid[4,0,2].cube.transform.right, -10.0f);
-			grid[4,1,1].cube.transform.RotateAround(tempPoint, grid[4,1,1].cube.transform.right, -10.0f);
-			grid[4,1,2].cube.transform.RotateAround(tempPoint, grid[4,1,2].cube.transform.right, -10.0f);
+			grid[4,0,1].cube.transform.RotateAround(tempPoint, grid[4,0,1].cube.transform.right, 10.0f);
+			grid[4,0,2].cube.transform.RotateAround(tempPoint, grid[4,0,2].cube.transform.right, 10.0f);
+			grid[4,1,1].cube.transform.RotateAround(tempPoint, grid[4,1,1].cube.transform.right, 10.0f);
+			grid[4,1,2].cube.transform.RotateAround(tempPoint, grid[4,1,2].cube.transform.right, 10.0f);
 
 			cubesParent.transform.rotation = Quaternion.AngleAxis(0.2f * Mathf.Sin(finishTimer / 2.0f), new Vector3(1.0f,0.1f,0.4f));
 			
@@ -4710,8 +4786,8 @@ public class GameScript : MonoBehaviour {
 				cube.transform.position = new Vector3(Random.Range(-4.0f,4.0f), 10, Random.Range(-4.0f,4.0f));
 				cube.transform.localScale = cube.transform.localScale * 0.8f;
 				cube.renderer.materials = new Material[1];
-				cube.renderer.material = new Material(Shader.Find ("Diffuse"));
-				cube.renderer.material.color = new Color(0.25f, 0.5f, 1);
+				cube.renderer.material = new Material(Shader.Find ("Transparent/Diffuse"));
+				cube.renderer.material.color = new Color(0.25f, 0.5f, 0.5f, 0.5f);
 				cube.AddComponent<Rigidbody>();
 				cube.rigidbody.AddTorque (new Vector3(Random.Range (-25f, 25f),Random.Range (-25f, 25f),Random.Range (-25f, 25f)));
 				cube.rigidbody.AddForce (new Vector3(Random.Range (-100f, 100f),-200f,Random.Range (-100f, 100f)));
@@ -5095,35 +5171,469 @@ public class GameScript : MonoBehaviour {
 
 		if(tempLevel == 41)
 		{
+			Vector3 tempPoint = grid[1,3,3].cube.transform.position;
+			float tempAngle = 0.15f * Mathf.Sin(finishTimer / 30.0f);
+			float tempAngle2 = 0.15f * Mathf.Sin(finishTimer / 15.0f);
+
+			if(finishTimer >= 180)
+				tempAngle2 = 0.15f * Mathf.Sin((finishTimer - 180) / 15.0f);
+			if(finishTimer % 180 >= 90)
+				tempAngle2 = 0;
+			
+			grid[1,0,3].cube.transform.RotateAround(tempPoint, grid[1,0,3].cube.transform.right - grid[1,0,3].cube.transform.forward, -tempAngle / 3.0f);
+			grid[1,0,4].cube.transform.RotateAround(tempPoint, grid[1,0,4].cube.transform.right - grid[1,0,4].cube.transform.forward, -tempAngle / 3.0f);
+			grid[1,1,3].cube.transform.RotateAround(tempPoint, grid[1,1,3].cube.transform.right - grid[1,1,3].cube.transform.forward, -tempAngle / 3.0f);
+			grid[1,2,3].cube.transform.RotateAround(tempPoint, grid[1,2,3].cube.transform.right - grid[1,2,3].cube.transform.forward, -tempAngle / 3.0f);
+			grid[2,0,3].cube.transform.RotateAround(tempPoint, grid[2,0,3].cube.transform.right - grid[2,0,3].cube.transform.forward, -tempAngle / 3.0f);
+
+
+			grid[1,0,3].cube.transform.Translate(tempAngle / 20.0f, tempAngle2 / 20.0f, tempAngle / 20.0f);
+			grid[1,0,4].cube.transform.Translate(tempAngle / 20.0f, tempAngle2 / 20.0f, tempAngle / 20.0f);
+			grid[1,1,3].cube.transform.Translate(tempAngle / 20.0f, tempAngle2 / 20.0f, tempAngle / 20.0f);
+			grid[1,2,3].cube.transform.Translate(tempAngle / 20.0f, tempAngle2 / 20.0f, tempAngle / 20.0f);
+			grid[2,0,3].cube.transform.Translate(tempAngle / 20.0f, tempAngle2 / 20.0f, tempAngle / 20.0f);
+
+
+			tempPoint = grid[4,3,2].cube.transform.position;
+			tempAngle = -0.15f * Mathf.Sin(finishTimer / 30.0f);
+			tempAngle2 = -0.15f * Mathf.Sin((finishTimer - 90) / 15.0f);
+			
+			if(finishTimer >= 180)
+				tempAngle2 = -0.15f * Mathf.Sin((finishTimer - 180) / 15.0f);
+			if(finishTimer % 180 < 90)
+				tempAngle2 = 0;			
+			
+			grid[4,0,2].cube.transform.RotateAround(tempPoint, grid[4,0,2].cube.transform.right - grid[4,0,2].cube.transform.forward, tempAngle / 3.0f);
+			grid[4,0,3].cube.transform.RotateAround(tempPoint, grid[4,0,3].cube.transform.right - grid[4,0,3].cube.transform.forward, tempAngle / 3.0f);
+			grid[4,1,2].cube.transform.RotateAround(tempPoint, grid[4,1,2].cube.transform.right - grid[4,1,2].cube.transform.forward, tempAngle / 3.0f);
+			grid[4,2,2].cube.transform.RotateAround(tempPoint, grid[4,2,2].cube.transform.right - grid[4,2,2].cube.transform.forward, tempAngle / 3.0f);
+			grid[5,0,2].cube.transform.RotateAround(tempPoint, grid[5,0,2].cube.transform.right - grid[5,0,2].cube.transform.forward, tempAngle / 3.0f);
 			
 			
+			grid[4,0,2].cube.transform.Translate(tempAngle / 20.0f, -tempAngle2 / 20.0f, tempAngle / 20.0f);
+			grid[4,0,3].cube.transform.Translate(tempAngle / 20.0f, -tempAngle2 / 20.0f, tempAngle / 20.0f);
+			grid[4,1,2].cube.transform.Translate(tempAngle / 20.0f, -tempAngle2 / 20.0f, tempAngle / 20.0f);
+			grid[4,2,2].cube.transform.Translate(tempAngle / 20.0f, -tempAngle2 / 20.0f, tempAngle / 20.0f);
+			grid[5,0,2].cube.transform.Translate(tempAngle / 20.0f, -tempAngle2 / 20.0f, tempAngle / 20.0f);
+
+
+			tempPoint = grid[3,5,3].cube.transform.position * 0.5f + grid[2,5,2].cube.transform.position * 0.5f;
+			tempAngle = -0.05f * Mathf.Sin(finishTimer / 60.0f - Mathf.PI / 2);
+			Vector3 tempV;
+
+			for (int x= 3; x< 7; x++)
+			{
+				for (int y= 4; y< 8; y++)
+				{
+					for (int z= 3; z< 7; z++)
+					{
+						if(grid[x,y,z].cube == null)
+							continue;
+
+						tempV = grid[x,y,z].cube.transform.up + grid[x,y,z].cube.transform.right * 0.5f  + grid[x,y,z].cube.transform.forward * 0.5f;
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+
+						if(((x == 3) && (z == 4)) || ((x == 4) && (z == 3)))
+							continue;
+
+						if(y > 3)
+						{
+							tempV = grid[x,y,z].cube.transform.up + grid[x,y,z].cube.transform.right * 0.5f  + grid[x,y,z].cube.transform.forward * 0.5f;
+							grid[x,y,z].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+						}
+					}
+				}
+			}
+
+			tempPoint = grid[2,4,2].cube.transform.position * 0.5f + grid[3,4,3].cube.transform.position * 0.5f;
+			tempAngle = -0.1f * Mathf.Sin(finishTimer / 40.0f - Mathf.PI / 2);
+			tempV = grid[2,4,2].cube.transform.up * 0.5f + grid[2,4,2].cube.transform.right - grid[2,4,2].cube.transform.forward;
+
+			grid[0,3,1].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+			grid[1,3,0].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+			grid[1,3,1].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+			grid[1,3,2].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+			grid[1,4,2].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+			grid[2,3,1].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+			grid[2,3,2].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+			grid[2,4,1].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+			grid[2,4,2].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+			grid[2,5,2].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+
+			tempPoint = grid[1,3,1].cube.transform.position * 0.5f + grid[2,3,2].cube.transform.position * 0.5f;
+			
+			grid[0,3,1].cube.transform.RotateAround(tempPoint, tempV, tempAngle * 1.5f);
+			grid[1,3,0].cube.transform.RotateAround(tempPoint, tempV, tempAngle * 1.5f);
+			grid[1,3,1].cube.transform.RotateAround(tempPoint, tempV, tempAngle * 1.5f);
+
+			tempV = cubesParent.transform.right + cubesParent.transform.up * 0.1f + cubesParent.transform.forward;
+
+			cubesParent.transform.rotation = Quaternion.AngleAxis(3.0f * Mathf.Sin(finishTimer / 30.0f - Mathf.PI), tempV);
+
 			return;
 		}
 
 		if(tempLevel == 42)
 		{
+			Vector3 tempPoint = grid[2,0,3].cube.transform.position * 0.5f + grid[6,0,3].cube.transform.position * 0.5f;
+			float tempAngle = - 0.05f * Mathf.Sin(finishTimer / 60.0f - Mathf.PI / 2);
+			Vector3 tempV = grid[4,0,0].cube.transform.right + grid[4,0,0].cube.transform.up * 0.2f + grid[4,0,0].cube.transform.forward * 0.2f;
+
+			grid[4,0,0].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+
+			for (int x= 0; x< levelArray.GetLength(0); x++)
+			{
+				for (int y= 1; y< levelArray.GetLength(1); y++)
+				{
+					for (int z= 0; z< levelArray.GetLength(2); z++)
+					{
+						if(grid[x,y,z].cube == null)
+							continue;
+
+						tempV = grid[x,y,z].cube.transform.right + grid[x,y,z].cube.transform.up * 0.2f + grid[x,y,z].cube.transform.forward * 0.2f;
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+
+						if((y == 1) && (z == 3))
+							continue;
+
+						tempPoint = grid[5,1,3].cube.transform.position * 0.5f + grid[3,1,3].cube.transform.position * 0.5f;
+						tempPoint = tempPoint * 0.5f + grid[4,2,2].cube.transform.position * 0.5f;
+						tempV = grid[x,y,z].cube.transform.right + grid[x,y,z].cube.transform.up * 0.2f + grid[x,y,z].cube.transform.forward * 0.2f;
+
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, tempV, 1.5f * tempAngle);
+					}
+				}
+			}
+
+			tempV = grid[4,0,0].cube.transform.right + grid[4,0,0].cube.transform.up * 0.2f + grid[4,0,0].cube.transform.forward * 0.2f;
+			grid[4,0,0].cube.transform.RotateAround(tempPoint, tempV, 1.5f * tempAngle);
+
+
+			tempPoint = grid[4,4,3].cube.transform.position * 0.5f;
+			tempAngle = - 0.1f * Mathf.Sin(finishTimer / 80.0f - Mathf.PI / 2);
+
+			for (int x= 2; x< 7; x++)
+			{
+				for (int y= 3; y< levelArray.GetLength(1); y++)
+				{
+					for (int z= 3; z< 7; z++)
+					{
+						if(grid[x,y,z].cube == null)
+							continue;
+						
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, grid[x,y,z].cube.transform.forward, tempAngle);
+						
+
+						if(z > 3)
+						{
+							grid[x,y,z].cube.transform.RotateAround(tempPoint, grid[x,y,z].cube.transform.forward, 1.5f * tempAngle);
+						}
+					}
+				}
+			}
+
+			tempPoint = grid[1,6,3].cube.transform.position * 0.5f + grid[2,4,3].cube.transform.position * 0.5f;
+			tempAngle = -0.5f * Mathf.Sin(finishTimer / 40.0f);
 			
+			grid[0,3,1].cube.transform.RotateAround(tempPoint, grid[0,3,1].cube.transform.forward, tempAngle);
+			grid[0,4,1].cube.transform.RotateAround(tempPoint, grid[0,4,1].cube.transform.forward, tempAngle);
+			grid[0,5,2].cube.transform.RotateAround(tempPoint, grid[0,5,2].cube.transform.forward, tempAngle);
+			grid[0,5,3].cube.transform.RotateAround(tempPoint, grid[0,5,3].cube.transform.forward, tempAngle);
+			grid[0,6,3].cube.transform.RotateAround(tempPoint, grid[0,6,3].cube.transform.forward, tempAngle);
+			grid[1,3,2].cube.transform.RotateAround(tempPoint, grid[1,3,2].cube.transform.forward, tempAngle);
+			grid[1,4,2].cube.transform.RotateAround(tempPoint, grid[1,4,2].cube.transform.forward, tempAngle);
+			grid[1,4,3].cube.transform.RotateAround(tempPoint, grid[1,4,3].cube.transform.forward, tempAngle);
+			grid[1,5,3].cube.transform.RotateAround(tempPoint, grid[1,5,3].cube.transform.forward, tempAngle);
+			grid[1,6,3].cube.transform.RotateAround(tempPoint, grid[1,6,3].cube.transform.forward, tempAngle);
+			grid[1,6,4].cube.transform.RotateAround(tempPoint, grid[1,6,4].cube.transform.forward, tempAngle);
+
+			tempPoint = grid[7,6,3].cube.transform.position * 0.5f + grid[6,4,3].cube.transform.position * 0.5f;
+			tempAngle = 0.5f * Mathf.Sin(finishTimer / 40.0f);
+			
+			grid[7,3,2].cube.transform.RotateAround(tempPoint, grid[7,3,2].cube.transform.forward, tempAngle);
+			grid[7,4,2].cube.transform.RotateAround(tempPoint, grid[7,4,2].cube.transform.forward, tempAngle);
+			grid[7,4,3].cube.transform.RotateAround(tempPoint, grid[7,4,3].cube.transform.forward, tempAngle);
+			grid[7,5,3].cube.transform.RotateAround(tempPoint, grid[7,5,3].cube.transform.forward, tempAngle);
+			grid[7,6,3].cube.transform.RotateAround(tempPoint, grid[7,6,3].cube.transform.forward, tempAngle);
+			grid[7,6,4].cube.transform.RotateAround(tempPoint, grid[7,6,4].cube.transform.forward, tempAngle);
+			grid[8,3,1].cube.transform.RotateAround(tempPoint, grid[8,3,1].cube.transform.forward, tempAngle);
+			grid[8,4,1].cube.transform.RotateAround(tempPoint, grid[8,4,1].cube.transform.forward, tempAngle);
+			grid[8,5,2].cube.transform.RotateAround(tempPoint, grid[8,5,2].cube.transform.forward, tempAngle);
+			grid[8,5,3].cube.transform.RotateAround(tempPoint, grid[8,5,3].cube.transform.forward, tempAngle);
+			grid[8,6,3].cube.transform.RotateAround(tempPoint, grid[8,6,3].cube.transform.forward, tempAngle);
 			
 			return;
 		}
 
 		if(tempLevel == 43)
 		{
+			Vector3 tempPoint = grid[4,1,2].cube.transform.position * 0.5f + grid[5,1,3].cube.transform.position * 0.5f;
+			float tempAngle;
+			Vector3 tempV = grid[4,1,2].cube.transform.up + grid[4,1,2].cube.transform.right * 0.01f - grid[4,1,2].cube.transform.forward * 0.01f;
 			
+			grid[3,1,2].cube.transform.RotateAround(tempPoint, tempV, 2.0f);
+			grid[3,1,3].cube.transform.RotateAround(tempPoint, tempV, 2.0f);
+			grid[4,1,1].cube.transform.RotateAround(tempPoint, tempV, 2.0f);
+			grid[4,1,2].cube.transform.RotateAround(tempPoint, tempV, 2.0f);
+			grid[4,1,3].cube.transform.RotateAround(tempPoint, tempV, 2.0f);
+			grid[4,1,4].cube.transform.RotateAround(tempPoint, tempV, 2.0f);
+			grid[5,1,1].cube.transform.RotateAround(tempPoint, tempV, 2.0f);
+			grid[5,1,2].cube.transform.RotateAround(tempPoint, tempV, 2.0f);
+			grid[5,1,3].cube.transform.RotateAround(tempPoint, tempV, 2.0f);
+			grid[5,1,4].cube.transform.RotateAround(tempPoint, tempV, 2.0f);
+			grid[6,1,2].cube.transform.RotateAround(tempPoint, tempV, 2.0f);
+			grid[6,1,3].cube.transform.RotateAround(tempPoint, tempV, 2.0f);
+
+			if((finishTimer >= 90) && (finishTimer < 130))
+				grid[4,3,2].cube.transform.RotateAround(grid[4,2,1].cube.transform.position, grid[4,2,1].cube.transform.right, 1.0f);
+
+			
+			grid[0,0,3].cube.transform.RotateAround(grid[2,0,2].cube.transform.position, grid[2,0,2].cube.transform.right, -1.0f);
+			grid[1,0,2].cube.transform.RotateAround(grid[2,0,2].cube.transform.position, grid[2,0,2].cube.transform.right, -1.0f);
+			grid[1,0,3].cube.transform.RotateAround(grid[2,0,2].cube.transform.position, grid[2,0,2].cube.transform.right, -1.0f);
+			grid[2,0,2].cube.transform.RotateAround(grid[2,0,2].cube.transform.position, grid[2,0,2].cube.transform.right, -1.0f);
+
+			tempPoint = grid[3,4,0].cube.transform.position;
+			tempAngle = -0.02f * Mathf.Sin(finishTimer / 10.0f - Mathf.PI / 2);
+			tempV = grid[3,4,0].cube.transform.forward * 0.2f - grid[3,4,0].cube.transform.right + grid[3,4,0].cube.transform.up;
+
+			grid[3,4,0].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+			grid[3,4,1].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+			grid[3,5,1].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+			grid[3,5,2].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+
+			for (int x= 0; x< 7; x++)
+			{
+				for (int y= 2; y< 9; y++)
+				{
+					for (int z= 3; z< 7; z++)
+					{
+						if(grid[x,y,z].cube == null)
+							continue;
+						
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, tempV, tempAngle * 1.5f);
+					}
+				}
+			}
 			
 			return;
 		}
 
 		if(tempLevel == 44)
 		{
-			
+			if(finishTimer >= 90)
+			{
+				if(grid[2,5,4].cube.transform.position.y >= -1.0f)
+				{
+					grid[2,5,4].cube.transform.localScale = grid[2,5,4].cube.transform.localScale * 0.999f;
+					grid[4,2,7].cube.transform.localScale = grid[4,2,7].cube.transform.localScale * 0.999f;
+					grid[2,5,4].cube.transform.Translate(0,-0.4f * Mathf.Sin((finishTimer - 90) / 40.0f),0);
+				}
+			}
+
+			if(finishTimer >= 200)
+			{
+				if(grid[4,5,6].cube.transform.position.y >= -1.0f)
+				{
+					grid[4,5,6].cube.transform.localScale = grid[4,5,6].cube.transform.localScale * 0.999f;
+					grid[4,5,6].cube.transform.Translate(0,-0.4f * Mathf.Sin((finishTimer - 200) / 40.0f),0);
+				}
+			}
+
+			if(finishTimer % 10 == 5)
+			{
+				for (int x= 0; x< levelArray.GetLength(0); x++)
+				{
+					for (int z= 0; z< levelArray.GetLength(2); z++)
+					{
+						if(grid[x,0,z].cube == null)
+							continue;
+
+						if(Random.Range(0,50) != 10)
+							continue;
+
+						if((Mathf.Abs(grid[x,0,z].cube.renderer.material.color.g - 0.75f) < 0.1f) && (grid[x,0,z].cube.renderer.material.color.r != 1.0f))
+						{
+							grid[x,0,z].cube.renderer.material.color = new Color(0.25f, 0.5f, 1.0f);
+							continue;
+						}
+
+						if((Mathf.Abs(grid[x,0,z].cube.renderer.material.color.g - 0.5f) < 0.1f) && (grid[x,0,z].cube.renderer.material.color.r != 1.0f))
+						{
+							grid[x,0,z].cube.renderer.material.color = new Color(0.25f, 0.75f, 1.0f);
+						}
+					}
+				}
+			}
+
+			Vector3 tempPoint;
+			float tempAngle = -0.02f * Mathf.Sin(finishTimer / 60.0f - Mathf.PI / 2);
+			Vector3 tempV;
+
+			for (int x= 0; x< levelArray.GetLength(0); x++)
+			{
+				for (int y= 3; y< levelArray.GetLength(1); y++)
+				{
+					for (int z= 0; z< levelArray.GetLength(2); z++)
+					{
+						tempV = - Vector3.right + Vector3.up * 0.2f - Vector3.forward;
+
+						if(grid[x,y,z].cube == null)
+							continue;
+
+						//2,5,4 / 4,5,6
+						if((y == 5) && (grid[x,y,z].cube.transform.position.y < 1.8f))
+						{
+							if((x == 2) && (z==4))
+							{
+								continue;
+							}
+							if((x == 4) && (z==6))
+							{
+								continue;
+							}
+						}
+
+						tempPoint = grid[3,2,5].cube.transform.position * 0.5f + grid[3,3,5].cube.transform.position * 0.5f;
+						tempV = grid[x,y,z].cube.transform.right + grid[x,y,z].cube.transform.up * 0.2f + grid[x,y,z].cube.transform.forward;
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+
+						if(y > 3)
+						{
+							tempPoint = grid[3,3,5].cube.transform.position * 0.5f + grid[3,4,5].cube.transform.position * 0.5f;
+							tempV = grid[x,y,z].cube.transform.right + grid[x,y,z].cube.transform.up * 0.2f + grid[x,y,z].cube.transform.forward;
+							grid[x,y,z].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+						}
+
+						if(y > 4)
+						{
+							tempPoint = grid[3,4,5].cube.transform.position * 0.5f + grid[3,5,5].cube.transform.position * 0.5f;
+							tempV = grid[x,y,z].cube.transform.right + grid[x,y,z].cube.transform.up * 0.2f + grid[x,y,z].cube.transform.forward;
+							grid[x,y,z].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+						}
+					}
+				}
+			}
+
+			tempAngle = -0.002f * Mathf.Sin(finishTimer / 30.0f);
+			grid[0,5,5].cube.transform.Translate(0.0f, -tempAngle, 0.0f);
+			grid[3,5,2].cube.transform.Translate(0.0f, -tempAngle, 0.0f);
+			grid[3,5,8].cube.transform.Translate(0.0f, -tempAngle, 0.0f);
+			grid[6,5,5].cube.transform.Translate(0.0f, -tempAngle, 0.0f);
 			
 			return;
 		}
 
 		if(tempLevel == 45)
 		{
+			Vector3 tempPoint = grid[0,5,5].cube.transform.position * 0.5f + grid[1,4,4].cube.transform.position * 0.5f;
+			float tempAngle = 2.0f * Mathf.Sin(finishTimer / 30.0f);
+			Vector3 tempV;
+
+			for (int x= 0; x< 2; x++)
+			{
+				for (int y= 4; y< 9; y++)
+				{
+					for (int z= 4; z< 8; z++)
+					{
+						if(grid[x,y,z].cube == null)
+							continue;
+						
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, grid[x,y,z].cube.transform.right, tempAngle);
+					}
+				}
+			}
+
+			tempPoint = grid[7,4,4].cube.transform.position * 0.5f + grid[8,5,5].cube.transform.position * 0.5f;
+
+			for (int x= 7; x< 9; x++)
+			{
+				for (int y= 0; y< 6; y++)
+				{
+					for (int z= 4; z< 9; z++)
+					{
+						if(grid[x,y,z].cube == null)
+							continue;
+						
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, grid[x,y,z].cube.transform.right, -tempAngle);
+					}
+				}
+			}
+
+			tempPoint = grid[1,0,1].cube.transform.position * 0.5f + grid[2,1,0].cube.transform.position * 0.5f;
+			tempAngle = 0.15f * Mathf.Sin(finishTimer / 30.0f);
+			float tempAngle2 = 0.15f * Mathf.Sin(finishTimer / 15.0f);
 			
+			if(finishTimer >= 180)
+				tempAngle2 = 0.15f * Mathf.Sin((finishTimer - 180) / 15.0f);
+			if(finishTimer % 180 >= 90)
+				tempAngle2 = 0;
+
+			for (int x= 1; x< 3; x++)
+			{
+				for (int y= 0; y< 3; y++)
+				{
+					for (int z= 0; z< 3; z++)
+					{
+						if(grid[x,y,z].cube == null)
+							continue;
+
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, grid[x,y,z].cube.transform.right, -tempAngle / 3.0f);
+						grid[x,y,z].cube.transform.Translate(0.0f, tempAngle2 / 20.0f, 0.0f);
+					}
+				}
+			}
+
+			tempPoint = grid[4,3,2].cube.transform.position;
+			tempAngle = -0.15f * Mathf.Sin(finishTimer / 30.0f);
+			tempAngle2 = -0.15f * Mathf.Sin((finishTimer - 90) / 15.0f);
+			
+			if(finishTimer >= 180)
+				tempAngle2 = -0.15f * Mathf.Sin((finishTimer - 180) / 15.0f);
+			if(finishTimer % 180 < 90)
+				tempAngle2 = 0;			
+
+			for (int x= 6; x< 8; x++)
+			{
+				for (int y= 0; y< 3; y++)
+				{
+					for (int z= 0; z< 3; z++)
+					{
+						if(grid[x,y,z].cube == null)
+							continue;
+						
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, grid[x,y,z].cube.transform.right, tempAngle / 3.0f);
+						grid[x,y,z].cube.transform.Translate(0.0f, -tempAngle2 / 20.0f, 0.0f);
+					}
+				}
+			}
+
+			tempPoint = grid[4,5,4].cube.transform.position * 0.5f + grid[4,6,4].cube.transform.position * 0.5f;
+			tempAngle = -0.1f * Mathf.Sin(finishTimer / 30.0f - Mathf.PI / 2);
+
+			for (int x= 3; x< 6; x++)
+			{
+				for (int y= 4; y< 8; y++)
+				{
+					for (int z= 4; z< 8; z++)
+					{
+						if(grid[x,y,z].cube == null)
+							continue;
+
+						tempV = - grid[x,y,z].cube.transform.up - grid[x,y,z].cube.transform.right + grid[x,y,z].cube.transform.forward;
+						grid[x,y,z].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+
+						if(z > 4)
+						{
+							tempV = - grid[x,y,z].cube.transform.up - grid[x,y,z].cube.transform.right + grid[x,y,z].cube.transform.forward;
+							grid[x,y,z].cube.transform.RotateAround(tempPoint, tempV, tempAngle);
+						}
+					}
+				}
+			}
+
+			tempV = cubesParent.transform.right + cubesParent.transform.up * 0.1f + cubesParent.transform.forward;
+			cubesParent.transform.rotation = Quaternion.AngleAxis(2.0f * Mathf.Sin(finishTimer / 30.0f - Mathf.PI), tempV);
 			
 			return;
 		}
@@ -5287,7 +5797,8 @@ public class GameScript : MonoBehaviour {
 
 		buttonsEdit [5].SetActive (false);
 		buttonsEdit [6].SetActive (false);
-		
+
+		creativeColoring = false;
 		breaking = false;
 		pause = false;
 		inMenu = false;
@@ -5494,9 +6005,9 @@ public class GameScript : MonoBehaviour {
 				file.WriteLine(animation.translation.y);
 				file.WriteLine(animation.translation.z);
 
-				file.WriteLine(animation.angleRight / animation.cubes.Count);
-				file.WriteLine(animation.angleForward / animation.cubes.Count);
-				file.WriteLine(animation.angleUp / animation.cubes.Count);
+				file.WriteLine(animation.angleRight);
+				file.WriteLine(animation.angleForward);
+				file.WriteLine(animation.angleUp);
 			}
 			
 			file.Close ();
@@ -5566,6 +6077,8 @@ public class GameScript : MonoBehaviour {
 				file.WriteLine(scores[i].ToString());
 			}
 
+			file.WriteLine(colorToHex(brushColor));
+
 			file.Close();
 		}
 		catch (System.Exception e)
@@ -5578,13 +6091,13 @@ public class GameScript : MonoBehaviour {
 	{
 		try
 		{
-			System.IO.StreamReader file = new System.IO.StreamReader (Application.persistentDataPath + "/progress.txt");
-
-			if (file == null)
+			if(!File.Exists(Application.persistentDataPath + "/progress.txt"))
 			{
 				saveProgress ();
 				return;
 			}
+
+			System.IO.StreamReader file = new System.IO.StreamReader (Application.persistentDataPath + "/progress.txt");
 
 			//progress = ushort.Parse (file.ReadToEnd ());
 			progress = 0;
@@ -5599,12 +6112,13 @@ public class GameScript : MonoBehaviour {
 				}
 			}
 
+			brushColor = hexToColor(file.ReadLine());
+
 			file.Close ();
 		}
 		catch (System.Exception e)
 		{
 			Debug.Log(e);
-			saveProgress();
 		}
 
 	}

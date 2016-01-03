@@ -40,8 +40,10 @@ public class ButtonLevelScript : MonoBehaviour
 		}	
 	}
 
+	/*
 	void OnMouseDown()
 	{
 		GameObject.FindGameObjectWithTag("GameController").SendMessage("buttonLevel",uint.Parse(this.name));
 	}
+	*/
 }
